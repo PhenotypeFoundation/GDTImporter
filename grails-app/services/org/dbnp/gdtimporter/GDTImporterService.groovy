@@ -26,6 +26,7 @@ import dbnp.studycapturing.*
 
 class GDTImporterService {
     def authenticationService
+    def GdtService
     static transactional = true
 
     /**
@@ -40,13 +41,102 @@ class GDTImporterService {
      * This method reads the header from the workbook.
      *
 	 * @param wb high level representation of the workbook
-	 * @param sheetindex sheet to use within the workbook
-     * @param headerrow row where the header starts
-     * @param datamatrix_start row where the actual data starts
+	 * @param sheetIndex sheet to use within the workbook
+     * @param headerRow row where the header starts
+     * @param datamatrixStart row where the actual data starts
      * @param theEntity type of entity we are reading
 	 * @return header representation as a MappingColumn hashmap
 	 */
-    def getHeader(Workbook workbook, int sheetIndex, int headerRow, int datamatrixStart, theEntity = null) {        
+    def getHeader(Workbook workbook, int sheetIndex, int headerRow, int datamatrixStart, theEntity = null) {
+        def sheet = workbookb.getSheetAt(sheetIndex)
+		def datamatrixRow = sheet.getRow(datamatrixStart)		
+		def header = []
+		def df = new DataFormatter()
+		def property = new String()
+
+		// Loop through all columns from the first row in the datamatrix and try to
+        // determine the type of values stored (integer, string, float)
+        (0..datamatrixRow.getLastCellNum() - 1).each { columnIndex ->
+          
+			// Get the current cell type, formatted cell value and the Cell object
+            def cellType = datamatrixRow.getCell(columnIndex, Row.CREATE_NULL_AS_BLANK).getCellType()
+			def cellData = df.formatCellValue(datamatrixRow.getCell(columnIndex))
+			def cellObject = datamatrixRow.getCell(columnIndex)
+			
+            // Get the header for the current column
+            def columnHeaderCell = sheet.getRow(headerRow + sheet.getFirstRowNum()).getCell(columnIndex)
+			
+            // Default TemplateFieldType is a String
+            def defaultTemplateFieldType = TemplateFieldType.STRING
+            
+            // Create the MappingColumn object for the current column and store it in the header HashMap
+            header[columnIndex] = new dbnp.importer.MappingColumn(name: df.formatCellValue(columnHeaderCell),
+							templatefieldtype: defaultTemplateFieldType,
+							index: columnIndex,
+							entityclass: theEntity,
+							property: property);
+
+			// Check for every CellType
+			switch (cellType) {
+				case Cell.CELL_TYPE_STRING:
+                    // Parse cell value as Double
+					def doubleBoolean = true
+					def fieldType = TemplateFieldType.STRING
+
+                    // Is this string perhaps a Double?
+					try {
+						formatValue(cellData, TemplateFieldType.DOUBLE)
+					} catch (NumberFormatException nfe) { doubleBoolean = false }
+					finally {
+						if (doubleBoolean) fieldType = TemplateFieldType.DOUBLE
+					}
+
+					// Set the TemplateFieldType for the current column
+                    header[columnIndex].templatefieldtype = fieldType							
+					break
+				case Cell.CELL_TYPE_NUMERIC:
+					def fieldtype = TemplateFieldType.LONG
+					def doubleBoolean = true
+					def longBoolean = true
+
+                    // Is this cell really an Integer?
+					try {
+						Long.valueOf(datamatrix_celldata)
+					} catch (NumberFormatException nfe) { longBoolean = false }
+					finally {
+						if (longBoolean) fieldtype = TemplateFieldType.LONG
+					}
+
+                    // It's not a Long, perhaps a Double?
+					if (!longBoolean)
+						try {
+							formatValue(cellData, TemplateFieldType.DOUBLE)
+						} catch (NumberFormatException nfe) { doubleBoolean = false }
+						finally {
+							if (doubleBoolean) fieldtype = TemplateFieldType.DOUBLE
+						}
+
+					// Is the cell object perhaps a Date object?
+                    if (DateUtil.isCellDateFormatted(cellObject)) fieldtype = TemplateFieldType.DATE
+
+					// Set the TemplateFieldType for the current column
+                    header[columnIndex].templatefieldtype = fieldType
+                    
+					break
+				case Cell.CELL_TYPE_BLANK:
+                    // Set the TemplateFieldType for the current column
+                    header[columnIndex].templatefieldtype = fieldType							
+					
+                    break
+				default:
+					// Set the TemplateFieldType for the current column
+                    header[columnIndex].templatefieldtype = fieldType							
+					
+                    break
+			}
+		}
+		
+        header
     }
 
     /**
@@ -56,7 +146,7 @@ class GDTImporterService {
 	 * @param workbook Workbook class object
 	 * @param sheetIndex sheet index used
      * @param datamatrixStartRow
-	 * @param count amount of rows of data to read starting at datamatrixStartRow
+	 * @param count amount of rows of data to read, starting at datamatrixStartRow
 	 * @return two dimensional array (matrix) of Cell objects
 	 */
     Object[][] getDatamatrixAsCells(Workbook workbook, header, int sheetIndex, int datamatrixStartRow, int count) {
@@ -88,29 +178,31 @@ class GDTImporterService {
 	 * @param workbook POI horrible spreadsheet formatted Workbook class object
 	 * @param mcmap linked hashmap (preserved order) of MappingColumns
 	 * @param sheetIndex sheet to use when using multiple sheets
-	 * @param rowIndex first row to start with reading the actual data (NOT the header)
+	 * @param datamatrixRowIndex first row to start with reading the actual data (NOT the header)
 	 * @return list containing entities
 	 *
 	 * @see org.dbnp.gdtimporter.MappingColumn
 	 */
-	def getDatamatrixAsEntityList(template, Workbook workbook, int sheetIndex, int rowIndex, mcmap) {
+	def getDatamatrixAsEntityList(theEntity, theTemplate, Workbook workbook, int sheetIndex, int datamatrixRowIndex, mcmap) {
 		def sheet = wb.getSheetAt(sheetIndex)		
-		def table = []
-		def failedcells = [] // list of records
+		def entityList = []
+		def errorList = []
 
-		// walk through all rows and fill the table with records
-		(rowIndex..sheet.getLastRowNum()).each { i ->
-			// Create an entity record based on a row read from Excel and store the cells which failed to be mapped
-			def (record, failed) = createRecord(template, sheet.getRow(i), mcmap)
+		// Walk through all rows and fill the table with entities
+		(datamatrixRowIndex..sheet.getLastRowNum()).each { i ->
+			
+            // Create an entity record based on a row read from Excel and store the cells which failed to be mapped
+			def (entity, error) = createEntity(theEntity, theTemplate, sheet.getRow(i), mcmap)
 
-			// Add record with entity and its values to the table
-			table.add(record)
+			// Add entity to the table
+			table.add(entity)
 
-			// If failed cells have been found, add them to the failed cells list
-			if (failed?.importcells?.size() > 0) failedcells.add(failed)
+			// If failed cells have been found, add them to the error list
+            // Error contains the entity+identifier+property and the original (failed) value
+			if (errorList) errorList.add(error)
 		}
 
-		return [table, failedcells]
+		return [entityList, errorList]
 	}
 
     /**
@@ -177,18 +269,77 @@ class GDTImporterService {
         // return useful information
 	}
 
-
     /**
-	 * This method creates a record (array) containing entities with values
+	 * This method reads an Excel row and returns it as filled entity
 	 *
-	 * @param template_id template identifier
-	 * @param excelrow POI based Excel row containing the cells
+     * @param theEntity entity to use
+	 * @param theTemplate Template object
+	 * @param row POI based Excel row containing Cell objects
 	 * @param mcmap map containing MappingColumn objects
 	 * @return list of entities and list of failed cells
 	 */
-    def createRecord(template, Row excelrow, mcmap) {
-        
+    def createEntity(theEntity, theTemplate, Row theRow, mcmap) {
+        def df = new DataFormatter()
+		def tft = TemplateFieldType		
+
+		// Initialize the entity with the chosen template
+		def entity = GdtService.getInstanceByEntity(theEntity)
+        entity.template = theTemplate
+
+		// Read every cell in the Excel row
+		for (Cell cell: theRow) {
+			
+            // Get the MappingColumn information of the current cell
+			def mc = mcmap[cell.getColumnIndex()]
+			def value
+
+			// Check if column must be imported
+			if (mc != null) if (!mc.dontimport) {
+				try {					
+                    // Format the cell conform the TemplateFieldType
+                    value = formatValue(df.formatCellValue(cell), mc.templatefieldtype)                
+                } catch (NumberFormatException nfe) {                    
+                    // Formatting went wrong, so set the value to an empty string
+					value = ""                    
+				}
+
+				// Try to set the value for this entity
+                try {				
+                        entity.setFieldValue(mc.property, value)					
+				} catch (Exception iae) {
+					
+                    // The entity field value could not be set
+                    log.error ".import wizard error could not set property `" + mc.property + "` to value `" + value + "`"					
+                    
+					// Store the error value (might improve this with name of entity instead of "entity_")
+                    // as a map containing the entity+identifier+property and the original value which failed
+                    def error = [ entity: "entity_" + entity.getIdentifier() + "_" + mc.property, originalValue: value]
+				}
+			}
+		}		
+		
+        [entity, error]
     }
+    
+    /**
+	 * Method to parse a value conform a TemplateFieldType
+     * 
+	 * @param value string containing the value to be formatted
+     * @param templateFieldType TemplateFieldType to cast this value to
+	 * @return object corresponding to the TemplateFieldType
+	 */
+	def formatValue(String value, TemplateFieldType templateFieldType) throws NumberFormatException {
+		switch (templateFieldType) {
+			case TemplateFieldType.STRING: return value.trim()
+			case TemplateFieldType.TEXT: return value.trim()
+			case TemplateFieldType.LONG: return (long) Double.valueOf(value)			
+			case TemplateFieldType.DOUBLE: return Double.valueOf(value.replace(",", "."));
+			case TemplateFieldType.STRINGLIST: return value.trim()
+			case TemplateFieldType.ONTOLOGYTERM: return value.trim()
+			case TemplateFieldType.DATE: return value
+			default: return value
+		}
+	}
 
 	static def similarity(l_seq, r_seq, degree = 2) {
 		def l_histo = countNgramFrequency(l_seq, degree)
