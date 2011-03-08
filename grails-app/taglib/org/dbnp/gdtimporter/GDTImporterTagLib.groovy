@@ -21,11 +21,16 @@
 
 package org.dbnp.gdtimporter
 
+import org.dbnp.gdt.*
+
 /**
  * The GDTImporter tag library contains easy tags for displaying and
  * working with imported data
  */
 
 class GDTImporterTagLib {
+    static namespace = 'gdtimporter'
+	def ImporterService
+	def GdtService
 
 }

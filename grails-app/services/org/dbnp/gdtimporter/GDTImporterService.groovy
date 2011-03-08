@@ -52,7 +52,10 @@ class GDTImporterService {
 		def datamatrixRow = sheet.getRow(datamatrixStart)		
 		def header = []
 		def df = new DataFormatter()
-		def property = new String()
+		
+        // By default the property is a String anyway; the property is set in the GUI
+        // and is an alias for a fieldname chosen from a template
+        def property = new String()
 
 		// Loop through all columns from the first row in the datamatrix and try to
         // determine the type of values stored (integer, string, float)
@@ -147,7 +150,7 @@ class GDTImporterService {
 	 * @param sheetIndex sheet index used
      * @param datamatrixStartRow
 	 * @param count amount of rows of data to read, starting at datamatrixStartRow
-	 * @return two dimensional array (matrix) of Cell objects
+	 * @return two dimensional array (datamatrix) of Cell objects
 	 */
     Object[][] getDatamatrixAsCells(Workbook workbook, header, int sheetIndex, int datamatrixStartRow, int count) {
         def sheet = workbook.getSheetAt(sheetIndex)
@@ -167,7 +170,7 @@ class GDTImporterService {
 			rows.add(row)
 		}
 
-		return rows
+		rows
     }
 
     /**
@@ -202,11 +205,12 @@ class GDTImporterService {
 			if (errorList) errorList.add(error)
 		}
 
-		return [entityList, errorList]
+		[entityList, errorList]
 	}
 
     /**
 	 * Method to store a list containing entities.
+     * TODO: change to a generic way, something like addToEntity?
 	 *
 	 * @param study entity Study
      * @param entities list of entities
@@ -215,19 +219,20 @@ class GDTImporterService {
      *
      * @return 
 	 */
-	static saveEntities(Study study, entities, authenticationService, log) {
-		def validatedSuccesfully = 0
-		def entitystored = null
+	static saveEntities(Study study, entityList, authenticationService, log) {
 
-		// Study passed? Sync data
+		// Study passed? Sync data        
 		if (study != null) study.refresh()
 
-			entities.each { entity ->
+			entityList.each { entity ->
 				switch (entity.getClass()) {
 					case Study: log.info ".importer wizard, persisting Study `" + entity + "`: "
-						entity.owner = authenticationService.getLoggedInUser()
+						
+                        // Set the owner of this study
+                        entity.owner = authenticationService.getLoggedInUser()
 
-						if (study.validate()) {
+						// Validate the study and try to save it
+                        if (study.validate()) {
 							if (!entity.save(flush:true)) {
 								log.error ".importer wizard, study could not be saved: " + entity
 								throw new Exception('.importer wizard, study could not be saved: ' + entity)
@@ -238,16 +243,20 @@ class GDTImporterService {
 						}
 
 						break
-					case Subject: log.info ".importer wizard, persisting Subject `" + entity + "`: "
+					case Subject: 
+                        log.info ".importer wizard, persisting Subject `" + entity + "`: "
 						study.addToSubjects(entity)
 						break
-					case Event: log.info ".importer wizard, persisting Event `" + entity + "`: "
+					case Event:
+                        log.info ".importer wizard, persisting Event `" + entity + "`: "
 						study.addToEvents(entity)
 						break
-					case Sample: log.info ".importer wizard, persisting Sample `" + entity + "`: "
+					case Sample:
+                        log.info ".importer wizard, persisting Sample `" + entity + "`: "
 						study.addToSamples(entity)
 						break
-					case SamplingEvent: log.info ".importer wizard, persisting SamplingEvent `" + entity + "`: "
+					case SamplingEvent:
+                        log.info ".importer wizard, persisting SamplingEvent `" + entity + "`: "
 						study.addToSamplingEvents(entity)
 						break
 					default: log.info ".importer wizard, skipping persisting of `" + entity.getclass() + "`"
@@ -255,7 +264,7 @@ class GDTImporterService {
 				}
             }
 
-		// validate study
+		// All entities have been added to the study, now validate and store the study
 		if (study.validate()) {
 			if (!study.save(flush: true)) {
 				//this.appendErrors(flow.study, flash.wizardErrors)
@@ -264,9 +273,9 @@ class GDTImporterService {
 		} else {
 			throw new Exception('.importer wizard [saveDatamatrix] study does not validate')
 		}
-
-		//return true
-        // return useful information
+        
+        // If there was no validation or save exception, this function returns true
+        true
 	}
 
     /**
