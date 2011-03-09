@@ -21,8 +21,8 @@
 
 package org.dbnp.gdtimporter
 
+import org.dbnp.gdt.*
 import org.apache.poi.ss.usermodel.*
-import dbnp.studycapturing.*
 
 class GDTImporterService {
     def authenticationService
@@ -45,7 +45,7 @@ class GDTImporterService {
      * @param headerRow row where the header starts
      * @param datamatrixStart row where the actual data starts
      * @param theEntity type of entity we are reading
-	 * @return header representation as a MappingColumn hashmap
+	 * @return header representation as a GDTMappingColumn hashmap
 	 */
     def getHeader(Workbook workbook, int sheetIndex, int headerRow, int datamatrixStart, theEntity = null) {
         def sheet = workbookb.getSheetAt(sheetIndex)
@@ -72,8 +72,8 @@ class GDTImporterService {
             // Default TemplateFieldType is a String
             def defaultTemplateFieldType = TemplateFieldType.STRING
             
-            // Create the MappingColumn object for the current column and store it in the header HashMap
-            header[columnIndex] = new dbnp.importer.MappingColumn(name: df.formatCellValue(columnHeaderCell),
+            // Create the GDTMappingColumn object for the current column and store it in the header HashMap
+            header[columnIndex] = new GDTMappingColumn(name: df.formatCellValue(columnHeaderCell),
 							templatefieldtype: defaultTemplateFieldType,
 							index: columnIndex,
 							entityclass: theEntity,
@@ -150,27 +150,36 @@ class GDTImporterService {
 	 * @param sheetIndex sheet index used
      * @param datamatrixStartRow
 	 * @param count amount of rows of data to read, starting at datamatrixStartRow
-	 * @return two dimensional array (datamatrix) of Cell objects
+	 * @return two dimensional array (datamatrix) of cell values
 	 */
-    Object[][] getDatamatrixAsCells(Workbook workbook, header, int sheetIndex, int datamatrixStartRow, int count) {
+    String[][] getDatamatrix(Workbook workbook, header, int sheetIndex, int datamatrixStartRow, int count) {
         def sheet = workbook.getSheetAt(sheetIndex)
-		def rows = []
+        def df = new DataFormatter()
+		def datamatrix = []
 
 		count = (count < sheet.getLastRowNum()) ? count : sheet.getLastRowNum()
 
-		// walk through all rows
+		// Walk through all rows
 		((datamatrixStartRow + sheet.getFirstRowNum())..count).each { rowIndex ->
-			def row = []
+			def datamatrixRow = []
+            def excelRow = sheet.getRow(rowIndex)
 
-			(0..header.size() - 1).each { columnIndex ->
-				if (sheet.getRow(rowIndex))
-					row.add( sheet.getRow(rowIndex).getCell(columnIndex, Row.CREATE_NULL_AS_BLANK) )
-			}
+            if (excelRow)
+                (0..header.size() - 1).each { columnIndex ->
 
-			rows.add(row)
+                    def cell = excelRow.getCell(columnIndex, Row.CREATE_NULL_AS_BLANK)
+
+                    switch (cell.getCellType()) {
+                        case Cell.CELL_TYPE_STRING :    datamatrixRow.add( cell.getStringCellValue() )
+                                                        break
+                        case Cell.CELL_TYPE_NUMERIC:    datamatrixRow.add( df.formatCellValue(cell) )
+                                                        break
+                    }
+                }
+			datamatrix.add(datamatrixRow)
 		}
 
-		rows
+		datamatrix
     }
 
     /**
@@ -179,12 +188,12 @@ class GDTImporterService {
 	 *
 	 * @param template Template to use
 	 * @param workbook POI horrible spreadsheet formatted Workbook class object
-	 * @param mcmap linked hashmap (preserved order) of MappingColumns
+	 * @param mcmap linked hashmap (preserved order) of GDTMappingColumns
 	 * @param sheetIndex sheet to use when using multiple sheets
 	 * @param datamatrixRowIndex first row to start with reading the actual data (NOT the header)
 	 * @return list containing entities
 	 *
-	 * @see org.dbnp.gdtimporter.MappingColumn
+	 * @see org.dbnp.gdtimporter.GDTMappingColumn
 	 */
 	def getDatamatrixAsEntityList(theEntity, theTemplate, Workbook workbook, int sheetIndex, int datamatrixRowIndex, mcmap) {
 		def sheet = wb.getSheetAt(sheetIndex)		
@@ -198,7 +207,7 @@ class GDTImporterService {
 			def (entity, error) = createEntity(theEntity, theTemplate, sheet.getRow(i), mcmap)
 
 			// Add entity to the table
-			table.add(entity)
+			entityList.add(entity)
 
 			// If failed cells have been found, add them to the error list
             // Error contains the entity+identifier+property and the original (failed) value
@@ -212,27 +221,24 @@ class GDTImporterService {
 	 * Method to store a list containing entities.
      * TODO: change to a generic way, something like addToEntity?
 	 *
-	 * @param study entity Study
+	 * @param parentEntity parent entity (Study) to add entities to
      * @param entities list of entities
      * @param authenticationService authentication service
      * @param log log
      *
      * @return 
 	 */
-	static saveEntities(Study study, entityList, authenticationService, log) {
+	static saveEntities(parentEntity, entityList, authenticationService, log) {
 
-		// Study passed? Sync data        
-		if (study != null) study.refresh()
+		// parentEntiy (Study) passed? Sync data
+		if (parentEntity != null) parentEntity.refresh()
 
 			entityList.each { entity ->
 				switch (entity.getClass()) {
 					case Study: log.info ".importer wizard, persisting Study `" + entity + "`: "
-						
-                        // Set the owner of this study
-                        entity.owner = authenticationService.getLoggedInUser()
-
+					
 						// Validate the study and try to save it
-                        if (study.validate()) {
+                        if (entity.validate()) {
 							if (!entity.save(flush:true)) {
 								log.error ".importer wizard, study could not be saved: " + entity
 								throw new Exception('.importer wizard, study could not be saved: ' + entity)
@@ -245,19 +251,19 @@ class GDTImporterService {
 						break
 					case Subject: 
                         log.info ".importer wizard, persisting Subject `" + entity + "`: "
-						study.addToSubjects(entity)
+						parentEntity.addToSubjects(entity)
 						break
 					case Event:
                         log.info ".importer wizard, persisting Event `" + entity + "`: "
-						study.addToEvents(entity)
+						parentEntity.addToEvents(entity)
 						break
 					case Sample:
                         log.info ".importer wizard, persisting Sample `" + entity + "`: "
-						study.addToSamples(entity)
+						parentEntity.addToSamples(entity)
 						break
 					case SamplingEvent:
                         log.info ".importer wizard, persisting SamplingEvent `" + entity + "`: "
-						study.addToSamplingEvents(entity)
+						parentEntity.addToSamplingEvents(entity)
 						break
 					default: log.info ".importer wizard, skipping persisting of `" + entity.getclass() + "`"
 						break
@@ -265,13 +271,13 @@ class GDTImporterService {
             }
 
 		// All entities have been added to the study, now validate and store the study
-		if (study.validate()) {
-			if (!study.save(flush: true)) {
+		if (parentEntity.validate()) {
+			if (!parentEntity.save(flush: true)) {
 				//this.appendErrors(flow.study, flash.wizardErrors)
-				throw new Exception('.importer wizard [saveDatamatrix] error while saving study')
+				throw new Exception('.importer wizard [saveDatamatrix] error while saving parentEntity')
 			}
 		} else {
-			throw new Exception('.importer wizard [saveDatamatrix] study does not validate')
+			throw new Exception('.importer wizard [saveDatamatrix] parentEntity does not validate')
 		}
         
         // If there was no validation or save exception, this function returns true

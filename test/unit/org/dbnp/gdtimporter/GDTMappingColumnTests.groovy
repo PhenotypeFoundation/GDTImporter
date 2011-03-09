@@ -2,7 +2,7 @@ package org.dbnp.gdtimporter
 
 import grails.test.*
 
-class ImportMappingTests extends GrailsUnitTestCase {
+class GDTMappingColumnTests extends GrailsUnitTestCase {
     protected void setUp() {
         super.setUp()
     }

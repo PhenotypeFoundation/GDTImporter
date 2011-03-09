@@ -21,6 +21,8 @@
 
 package org.dbnp.gdtimporter
 
+import org.dbnp.gdt.*
+
 /**
  * The MappingColumn contains a mappings made between a column(header)
  * (in the dataset to import) and a template from GDT.
@@ -34,7 +36,7 @@ package org.dbnp.gdtimporter
  * <b>dontimport</b> - boolean true if this column should not be imported, otherwise false
  */
 
-class MappingColumn implements Serializable {
+class GDTMappingColumn implements Serializable {
 	String name
 	TemplateFieldType templatefieldtype
 	Class entityclass
@@ -44,7 +46,7 @@ class MappingColumn implements Serializable {
 	Boolean identifier
 	Boolean dontimport
 
-    static belongsTo = [importmapping:ImportMapping]
+    static belongsTo = [gdtimportmapping:GDTImportMapping]
 
     static constraints = {
         templatefieldtype(nullable:true)

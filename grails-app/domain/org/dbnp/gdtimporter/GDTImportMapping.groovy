@@ -37,9 +37,9 @@ import org.dbnp.gdt.*
  * @see MappingColumn
  */
 
-class ImportMapping implements Serializable {
+class GDTImportMapping implements Serializable {
 
-	static hasMany = [mappingcolumns: MappingColumn]
+	static hasMany = [gdtmappingcolumns: GDTMappingColumn]
     Template template
     Class entity
 	String name
