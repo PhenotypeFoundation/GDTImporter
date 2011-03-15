@@ -18,7 +18,7 @@
 		<g:each var="cell" in="${row}">
 		    <td class="datamatrix">
 			<g:if test="${cell.toString()==''}">.</g:if>
-			<g:else><importer:displayCell cell="${cell}"/></g:else>
+			<g:else><gdtimporter:displayCell cell="${cell}"/></g:else>
 		    </td>
 		</g:each>
 	    </tr>

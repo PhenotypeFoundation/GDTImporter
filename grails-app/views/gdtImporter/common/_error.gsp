@@ -5,8 +5,8 @@
  * @author Jeroen Wesbeek
  * @since 20100114
  * @package wizard
- * @see dbnp.studycapturing.ImporterTagLib
- * @see dbnp.studycapturing.ImporterController
+ * @see org.dbnp.gdtimporter.GDTImporterTagLib
+ * @see org.dbnp.gdtimporter.gdtImporterController
  *
  * Revision information:
  * $Rev: 1430 $

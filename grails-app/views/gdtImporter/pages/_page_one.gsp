@@ -38,7 +38,7 @@
 		Columnheader starts at row:
 	    </td>
 	    <td width="100px">
-		<g:select name="headerrow" from="${1..10}" value="${importer_params?.headerrow}"/>
+		<g:select name="headerrow" from="${1..10}" value="${importer_params?.headerrow} optionKey="${{it-1}}"/>
 	    </td>
 	</tr>
 	<tr>
