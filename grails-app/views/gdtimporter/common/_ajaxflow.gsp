@@ -3,16 +3,16 @@
  * main ajax flow template
  *
  * @author Jeroen Wesbeek
- * @since  20101206
+ * @since  20110310
  *
- * Revision information: 
- * $Rev: 1430 $
- * $Author: work@osx.eu $
- * $Date: 2011-01-21 21:05:36 +0100 (Fri, 21 Jan 2011) $
+ * Revision information:
+ * $Rev:  67320 $
+ * $Author:  duh $
+ * $Date:  2010-12-22 17:49:27 +0100 (Wed, 22 Dec 2010) $
  */
 %>
 <div id="ajaxflow">
-<af:flow name="importer" class="ajaxFlow" commons="common" partials="pages" controller="[controller: 'importer', action: 'pages']" spinner="ajaxFlowWait">
+<af:flow name="gdtimporter" class="ajaxFlow" commons="common" partials="pages" spinner="ajaxFlowWait" controller="[controller: 'gdtimporter', action: 'pages']">
 	<%	/**
 	 	 * The initial rendering of this template will result
 	 	 * in automatically triggering the 'next' event in

@@ -28,7 +28,7 @@ import org.codehaus.groovy.grails.plugins.web.taglib.ValidationTagLib
 import grails.plugins.springsecurity.Secured
 
 @Secured(['IS_AUTHENTICATED_REMEMBERED'])
-class GDTImporterController {
+class gdtimporterController {
     def authenticationService
 	def fileService
 	def importerService
@@ -38,7 +38,7 @@ class GDTImporterController {
 	 * index method, redirect to the webflow
 	 * @void
 	 */
-	def index = {
+	def index = {        
 		redirect(action: 'pages')
 	}
 
@@ -91,7 +91,11 @@ class GDTImporterController {
 				log.info ".entering import wizard"
 
 				flow.page = 1
-				flow.studies = Study.findAllWhere(owner: authenticationService.getLoggedInUser())
+
+                // Get a list of Studies the current logged in user owns
+                // TODO: make more generic using some sort of parentEntity class, now GDTImporter depends on GSCF
+                flow.studies = Study.findAllWhere(owner: authenticationService.getLoggedInUser())
+			
 				flow.importer_fuzzymatching = "false"
 
 				success()
