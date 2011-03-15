@@ -24,7 +24,7 @@ package org.dbnp.gdtimporter
 import org.dbnp.gdt.*
 import org.apache.poi.ss.usermodel.*
 
-class GDTImporterService {
+class GdtImporterService {
     def authenticationService
     def GdtService
     static transactional = true
@@ -48,7 +48,7 @@ class GDTImporterService {
 	 * @return header representation as a GDTMappingColumn hashmap
 	 */
     def getHeader(Workbook workbook, int sheetIndex, int headerRow, int datamatrixStart, theEntity = null) {
-        def sheet = workbookb.getSheetAt(sheetIndex)
+        def sheet = workbook.getSheetAt(sheetIndex)
 		def datamatrixRow = sheet.getRow(datamatrixStart)		
 		def header = []
 		def df = new DataFormatter()
@@ -70,11 +70,11 @@ class GDTImporterService {
             def columnHeaderCell = sheet.getRow(headerRow + sheet.getFirstRowNum()).getCell(columnIndex)
 			
             // Default TemplateFieldType is a String
-            def defaultTemplateFieldType = TemplateFieldType.STRING
+            def fieldType = TemplateFieldType.STRING
             
             // Create the GDTMappingColumn object for the current column and store it in the header HashMap
             header[columnIndex] = new GDTMappingColumn(name: df.formatCellValue(columnHeaderCell),
-							templatefieldtype: defaultTemplateFieldType,
+							templatefieldtype: fieldType,
 							index: columnIndex,
 							entityclass: theEntity,
 							property: property);
@@ -84,7 +84,7 @@ class GDTImporterService {
 				case Cell.CELL_TYPE_STRING:
                     // Parse cell value as Double
 					def doubleBoolean = true
-					def fieldType = TemplateFieldType.STRING
+					fieldType = TemplateFieldType.STRING
 
                     // Is this string perhaps a Double?
 					try {
@@ -98,16 +98,16 @@ class GDTImporterService {
                     header[columnIndex].templatefieldtype = fieldType							
 					break
 				case Cell.CELL_TYPE_NUMERIC:
-					def fieldtype = TemplateFieldType.LONG
+					fieldType = TemplateFieldType.LONG
 					def doubleBoolean = true
 					def longBoolean = true
 
                     // Is this cell really an Integer?
 					try {
-						Long.valueOf(datamatrix_celldata)
+						Long.valueOf(cellData)
 					} catch (NumberFormatException nfe) { longBoolean = false }
 					finally {
-						if (longBoolean) fieldtype = TemplateFieldType.LONG
+						if (longBoolean) fieldType = TemplateFieldType.LONG
 					}
 
                     // It's not a Long, perhaps a Double?
@@ -116,11 +116,11 @@ class GDTImporterService {
 							formatValue(cellData, TemplateFieldType.DOUBLE)
 						} catch (NumberFormatException nfe) { doubleBoolean = false }
 						finally {
-							if (doubleBoolean) fieldtype = TemplateFieldType.DOUBLE
+							if (doubleBoolean) fieldType = TemplateFieldType.DOUBLE
 						}
 
 					// Is the cell object perhaps a Date object?
-                    if (DateUtil.isCellDateFormatted(cellObject)) fieldtype = TemplateFieldType.DATE
+                    if (DateUtil.isCellDateFormatted(cellObject)) fieldType = TemplateFieldType.DATE
 
 					// Set the TemplateFieldType for the current column
                     header[columnIndex].templatefieldtype = fieldType
@@ -274,10 +274,10 @@ class GDTImporterService {
 		if (parentEntity.validate()) {
 			if (!parentEntity.save(flush: true)) {
 				//this.appendErrors(flow.study, flash.wizardErrors)
-				throw new Exception('.importer wizard [saveDatamatrix] error while saving parentEntity')
+				throw new Exception('.importer wizard [saveEntities] error while saving Study')
 			}
 		} else {
-			throw new Exception('.importer wizard [saveDatamatrix] parentEntity does not validate')
+			throw new Exception('.importer wizard [saveEntities] Study does not validate')
 		}
         
         // If there was no validation or save exception, this function returns true

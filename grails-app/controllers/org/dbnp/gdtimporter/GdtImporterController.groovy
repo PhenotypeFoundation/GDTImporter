@@ -28,11 +28,12 @@ import org.codehaus.groovy.grails.plugins.web.taglib.ValidationTagLib
 import grails.plugins.springsecurity.Secured
 
 @Secured(['IS_AUTHENTICATED_REMEMBERED'])
-class gdtimporterController {
+class GdtImporterController {
     def authenticationService
 	def fileService
-	def importerService
+	def GdtImporterService
     def gdtService
+    def validationTagLib = new ValidationTagLib()
 
     /**
 	 * index method, redirect to the webflow
@@ -74,7 +75,7 @@ class gdtimporterController {
 		// page dynamically renders the study template
 		// and makes the flow jump to the study logic)
 		mainPage {
-			render(view: "/gdtimporter/index")
+			render(view: "/gdtImporter/index")
 			onRender {
 
 				// let the view know we're in page 1
@@ -94,7 +95,7 @@ class gdtimporterController {
 
                 // Get a list of Studies the current logged in user owns
                 // TODO: make more generic using some sort of parentEntity class, now GDTImporter depends on GSCF
-                flow.studies = Study.findAllWhere(owner: authenticationService.getLoggedInUser())
+                flow.studies = dbnp.studycapturing.Study.findAllWhere(owner: authenticationService.getLoggedInUser())
 			
 				flow.importer_fuzzymatching = "false"
 
@@ -287,10 +288,6 @@ class gdtimporterController {
 		}
 	}
 
-	def propertiesManager = {
-		render(view: "common/_propertiesManager")
-	}
-
 	/**
 	 * Return templates which belong to a certain entity type
 	 *
@@ -318,7 +315,7 @@ class gdtimporterController {
 
 		if (importedfile.exists()) {
 			try {
-				session.importer_workbook = importerService.getWorkbook(new FileInputStream(importedfile))
+				session.importer_workbook = GdtImporterService.getWorkbook(new FileInputStream(importedfile))
 			} catch (Exception e) {
 				log.error ".importer wizard could not load file: " + e
 				this.appendErrorMap(['error': "Wrong file (format), the importer requires an Excel file as input"], flash.wizardErrors)
@@ -329,7 +326,7 @@ class gdtimporterController {
 		if (params.entity && params.template_id) {
 
 			try {
-				session.importer_workbook = importerService.getWorkbook(new FileInputStream(importedfile))
+				session.importer_workbook = GdtImporterService.getWorkbook(new FileInputStream(importedfile))
 			} catch (Exception e) {
 				log.error ".importer wizard could not load file: " + e
 				this.appendErrorMap(['error': "Excel file required as input"], flash.wizardErrors)
@@ -352,13 +349,14 @@ class gdtimporterController {
 			flow.importer_entity = gdtService.cachedEntities.find { it.entity == entityName }
 
 			// Get the header from the Excel file using the arguments given in the first step of the wizard
-			flow.importer_header = importerService.getHeader(session.importer_workbook,
+			flow.importer_header = GdtImporterService.getHeader(session.importer_workbook,
 				flow.importer_sheetindex,
 				flow.importer_headerrow,
 				flow.importer_datamatrix_start,
 				entityClass)
 
-			session.importer_datamatrix = importerService.getDatamatrix(
+			// Load a preview of the data
+            flow.importer_datamatrix = GdtImporterService.getDatamatrix(
 				session.importer_workbook, flow.importer_header,
 				flow.importer_sheetindex,
 				flow.importer_datamatrix_start,
@@ -482,7 +480,7 @@ class gdtimporterController {
 			def entityClass = Class.forName(flow.importer_header[columnindex.toInteger()].entityclass.getName(), true, this.getClass().getClassLoader())
 			def entityObj = entityClass.newInstance(template: template)
 
-			// Store the selected property for this column into the column map for the ImporterService
+			// Store the selected property for this column into the column map for the GdtImporterService
 			flow.importer_header[columnindex.toInteger()].property = property
 
 			// Look up the template field type of the target TemplateField and store it also in the map
@@ -498,7 +496,7 @@ class gdtimporterController {
 		}
 
 		// Import the workbook and store the table with entity records and store the failed cells
-		def (table, failedcells) = importerService.importData(flow.importer_template_id,
+		def (table, failedcells) = GdtImporterService.importData(flow.importer_template_id,
 			session.importer_workbook,
 			flow.importer_sheetindex,
 			flow.importer_datamatrix_start,
@@ -640,7 +638,7 @@ class gdtimporterController {
 	boolean saveEntities(flow, params) {
 		//def (validatedSuccesfully, updatedEntities, failedToPersist) =
 		try {
-			importerService.saveDatamatrix(flow.importer_study, flow.importer_entity_type, flow.importer_importeddata, authenticationService, log)
+			GdtImporterService.saveEntities(flow.importer_study, flow.importer_entity_type, flow.importer_importeddata, authenticationService, log)
 		} catch (Exception e) {
 			log.error ".import wizard saveEntities error\n" + e.dump()
 			return false

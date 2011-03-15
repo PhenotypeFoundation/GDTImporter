@@ -26,13 +26,13 @@ import org.apache.poi.ss.usermodel.Cell
 import org.apache.poi.ss.usermodel.DataFormatter
 
 /**
- * The GDTImporter tag library contains easy tags for displaying and
+ * The GdtImporter tag library contains easy tags for displaying and
  * working with imported data
  */
 
-class GDTImporterTagLib {
-    static namespace = 'gdtimporter'
-	def ImporterService
+class GdtImporterTagLib {
+    static namespace = 'GdtImporter'
+	def GdtImporterService
 	def GdtService
 
     /**
@@ -46,16 +46,6 @@ class GDTImporterTagLib {
 		def datamatrix = attrs['datamatrix']
 
 		out << render(template: "common/preview", model: [header: header, datamatrix: datamatrix])
-	}
-
-	/**
-	 * @param datamatrix two dimensional array containing entities with read values
-	 * @return postview of the imported data
-	 */
-	def postview = { attrs ->
-		def datamatrix = attrs['datamatrix']
-
-		out << render(template: "common/postview", model: [datamatrix: datamatrix])
 	}
 
 	def entity = { attrs ->
@@ -76,24 +66,13 @@ class GDTImporterTagLib {
 		out << render(template: "common/missingproperties", model: [datamatrix: datamatrix, failedcells: failedcells])
 	}
 
-	/**
-	 * Show failed cells
-	 */
-	def failedCells = { attrs ->
-		def failedcells = attrs['failedcells']
-		out << render(template: "common/failedcells", model: [failedcells: failedcells])
-	}
-
-	/**
-	 * @param entities array containing selected entities
-	 * @param header array containing mappingcolumn objects
-	 * @param allfieldtypes if set, show all fields
+	/**	 
+	 * @param header array containing mappingcolumn objects	 
 	 */
 	def properties = { attrs ->
-		def header = attrs['header']
-		def entities = attrs['entities']
+		def header = attrs['header']		
 
-		out << render(template: "common/properties_horizontal", model: [header:header])
+		out << render(template: "common/properties", model: [header:header])
 	}
 
 	/**
@@ -137,7 +116,7 @@ class GDTImporterTagLib {
 
         //  Just return the matched value only
         if (returnmatchonly)
-            out << importerService.mostSimilar(matchvalue, templatefields, fuzzyTreshold)
+            out << GdtImporterService.mostSimilar(matchvalue, templatefields, fuzzyTreshold)
         else // Return a selectbox
             out << createPropertySelect(attrs['name'], templatefields, matchvalue, selected, mc.index, fuzzyTreshold)
 
@@ -154,7 +133,7 @@ class GDTImporterTagLib {
 	 */
 	def createPropertySelect(String name, options, matchvalue, selected, Integer columnIndex, float fuzzyTreshold = 0.1f) {
 		// Determine which field in the options list matches the best with the matchvalue
-		def mostsimilar = (matchvalue) ? importerService.mostSimilar(matchvalue, options, fuzzyTreshold) : ""
+		def mostsimilar = (matchvalue) ? GdtImporterService.mostSimilar(matchvalue, options, fuzzyTreshold) : ""
 
 		def res = "<select style=\"font-size:10px\" id=\"${name}.index.${columnIndex}\" name=\"${name}.index.${columnIndex}\">"
 
@@ -176,74 +155,4 @@ class GDTImporterTagLib {
 		res += "</select>"
 		return res
 	}
-
-	/**
-	 * @param selected selected TemplateFieldType
-	 * @param custval custom value to be combined in the option(s) of the selector
-	 * @param name name of the HTML select object
-	 * @return HTML select object
-	 *
-	 * @see org.dbnp.gdt.TemplateFieldType
-	 */
-
-	def entitySelect = { attrs ->
-		def sel = (attrs['selected'] == null) ? -1 : attrs['selected']
-		def custval = (attrs['customvalue'] == null) ? "" : attrs['customvalue']
-		def name = (attrs['name'] == null) ? -1 : attrs['name']
-
-		def res = "<select style=\"font-size:10px\" name=\"${name}.index.${custval}\">"
-
-		gdtService.getTemplateEntities().each { e ->
-			res += "<option value\"${e.name}\""
-			res += ">${e.name} bla</option>"
-		}
-
-		res += "</select>"
-		out << res
-	}
-
-	/**
-	 * Create a templatefieldtype selector
-	 *
-	 * @param selected selected TemplateFieldType
-	 * @param customvalue custom value to be combined in the option(s) of the selector
-	 * @param name name of the HTML select object
-	 * @return HTML select object
-	 *
-	 * @see org.dbnp.gdt.TemplateFieldType
-	 */
-	def templatefieldtypeSelect = { attrs ->
-		def selected = (attrs['selected'] == null) ? -1 : attrs['selected']
-		def custval = (attrs['customvalue'] == null) ? "" : attrs['customvalue']
-		def name = (attrs['name'] == null) ? "" : attrs['name']
-
-		def res = "<select style=\"font-size:10px\" name=\"${name}.index.${custval}\">"
-
-		TemplateFieldType.list().each { e ->
-			res += "<option value=\"${e}\""
-			res += (e == selected) ? " selected" : ""
-			res += ">${e}</option>"
-		}
-
-		res += "</select>"
-
-		out << res
-	}
-
-	/**
-	 * @param cell Cell variable
-	 * @return good representation of variable (instead of toString())
-	 */
-	def displayCell = { attrs ->
-		def cell = attrs['cell']
-		def df = new DataFormatter()
-
-		switch (cell.getCellType()) {
-			case Cell.CELL_TYPE_STRING: out << cell.getStringCellValue()
-				break
-			case Cell.CELL_TYPE_NUMERIC: out << df.formatCellValue(cell)
-				break
-		}
-	}
-
 }
