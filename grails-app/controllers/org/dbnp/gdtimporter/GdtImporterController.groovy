@@ -95,7 +95,7 @@ class GdtImporterController {
 
                 // Get a list of Studies the current logged in user owns
                 // TODO: make more generic using some sort of parentEntity class, now GDTImporter depends on GSCF
-                flow.studies = dbnp.studycapturing.Study.findAllWhere(owner: authenticationService.getLoggedInUser())
+                flow.studies = Study.findAllWhere(owner: authenticationService.getLoggedInUser())
 			
 				flow.importer_fuzzymatching = "false"
 
