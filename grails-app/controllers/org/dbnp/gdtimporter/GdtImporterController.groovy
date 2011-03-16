@@ -638,7 +638,7 @@ class GdtImporterController {
 	boolean saveEntities(flow, params) {
 		//def (validatedSuccesfully, updatedEntities, failedToPersist) =
 		try {
-			GdtImporterService.saveEntities(flow.importer_study, flow.importer_entity_type, flow.importer_importeddata, authenticationService, log)
+			GdtImporterService.saveEntities(flow.importer_study, flow.importer_importeddata, authenticationService, log)
 		} catch (Exception e) {
 			log.error ".import wizard saveEntities error\n" + e.dump()
 			return false
