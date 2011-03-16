@@ -186,7 +186,8 @@ class GdtImporterService {
 	 * Method to read data from a Workbook class object and import entities
      * into a list
 	 *
-	 * @param template Template to use
+     * @param theEntity entity we are trying to read (Subject, Study et cetera)
+	 * @param theTemplate Template to use
 	 * @param workbook POI horrible spreadsheet formatted Workbook class object
 	 * @param mcmap linked hashmap (preserved order) of GDTMappingColumns
 	 * @param sheetIndex sheet to use when using multiple sheets
@@ -196,7 +197,7 @@ class GdtImporterService {
 	 * @see org.dbnp.gdtimporter.GDTMappingColumn
 	 */
 	def getDatamatrixAsEntityList(theEntity, theTemplate, Workbook workbook, int sheetIndex, int datamatrixRowIndex, mcmap) {
-		def sheet = wb.getSheetAt(sheetIndex)		
+		def sheet = workbook.getSheetAt(sheetIndex)
 		def entityList = []
 		def errorList = []
 
@@ -295,11 +296,12 @@ class GdtImporterService {
 	 */
     def createEntity(theEntity, theTemplate, Row theRow, mcmap) {
         def df = new DataFormatter()
-		def tft = TemplateFieldType		
+		def tft = TemplateFieldType
+        def error
 
 		// Initialize the entity with the chosen template
-		def entity = GdtService.getInstanceByEntity(theEntity)
-        entity.template = theTemplate
+		def entity = GdtService.getInstanceByEntityName(theEntity.entity).
+            newInstance(template:theTemplate)
 
 		// Read every cell in the Excel row
 		for (Cell cell: theRow) {
@@ -328,7 +330,7 @@ class GdtImporterService {
                     
 					// Store the error value (might improve this with name of entity instead of "entity_")
                     // as a map containing the entity+identifier+property and the original value which failed
-                    def error = [ entity: "entity_" + entity.getIdentifier() + "_" + mc.property, originalValue: value]
+                    error = [ entity: "entity_" + entity.getIdentifier() + "_" + mc.property, originalValue: value]
 				}
 			}
 		}		
