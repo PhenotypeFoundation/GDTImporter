@@ -21,7 +21,11 @@
 
 package org.dbnp.gdtimporter
 
-import dbnp.studycapturing.*
+import dbnp.studycapturing.Study
+import dbnp.studycapturing.Subject
+import dbnp.studycapturing.Sample
+import dbnp.studycapturing.Event
+
 import org.dbnp.gdt.*
 import grails.converters.JSON
 import org.codehaus.groovy.grails.plugins.web.taglib.ValidationTagLib
@@ -496,13 +500,13 @@ class GdtImporterController {
 		}
 
 		// Import the workbook and store the table with entity records and store the failed cells
-		def (table, failedFields) = GdtImporterService.getDatamatrixAsEntityList(flow.importer_entity, template,
+		def (entityList, failedFields) = GdtImporterService.getDatamatrixAsEntityList(flow.importer_entity, template,
 			session.importer_workbook,
 			flow.importer_sheetindex,
 			flow.importer_datamatrix_start,
 			flow.importer_header)
 
-		flow.importer_importeddata = table
+		flow.importer_importeddata = entityList
 
 		// loop through all entities to validate them and add them to wizardErrors flash when invalid
 		/*table.each { record ->
@@ -529,49 +533,51 @@ class GdtImporterController {
 		flash.wizardErrors = [:]
 		flow.importer_invalidentities = 0
 
-		flow.importer_importeddata.each { table ->
-			table.each { entity ->
+		flow.importer_importeddata.each { entity ->
 				def invalidfields = 0
 
 				// Set the fields for this entity by retrieving values from the params
 				entity.giveFields().each { field ->
-
+                    def entityField = "entity_" + entity.getIdentifier() + "_" + field.escapedName()
+                    println "entityfield=" + entityField
+       
 					// field is a date field, try to set it with the value, if someone enters a non-date value it throws
 					// an error, this should be caught to prevent a complete breakdown
 					if (field.type == org.dbnp.gdt.TemplateFieldType.DATE) {
 						try {
-							entity.setFieldValue(field.toString(), params["entity_" + entity.getIdentifier() + "_" + field.escapedName()])
+							entity.setFieldValue(field.toString(), params[entityField])
 						} catch (Exception e) {
 							log.error ".importer wizard could not set date field with value: " +
-								params["entity_" + entity.getIdentifier() + "_" + field.escapedName()]
+								params[entityField]
 						}
 					} else
 
 					// field of type ontology and value "#invalidterm"?
 					if (field.type == org.dbnp.gdt.TemplateFieldType.ONTOLOGYTERM &&
-						params["entity_" + entity.getIdentifier() + "_" + field.escapedName()] == "#invalidterm"
-					) {
-						invalidfields++
+						params[entityField] == "#invalidterm")
+                        {
+                            invalidfields++
 					} else
 					if (field.type == org.dbnp.gdt.TemplateFieldType.ONTOLOGYTERM &&
-						params["entity_" + entity.getIdentifier() + "_" + field.escapedName()] != "#invalidterm") {
-						if (entity) removeFailedCell(flow.importer_failedcells, entity, field)
-						entity.setFieldValue(field.toString(), params["entity_" + entity.getIdentifier() + "_" + field.escapedName()])
+						params[entityField] != "#invalidterm") {
+                        if (entity) removeFailedField(flow.importer_failedFields, entityField)
+						entity.setFieldValue(field.toString(), params[entityField])
 					}
 					else
 
 					if (field.type == org.dbnp.gdt.TemplateFieldType.STRINGLIST &&
-						params["entity_" + entity.getIdentifier() + "_" + field.escapedName()] != "#invalidterm") {
-						if (entity) removeFailedCell(flow.importer_failedcells, entity, field)
-						entity.setFieldValue(field.toString(), params["entity_" + entity.getIdentifier() + "_" + field.escapedName()])
+						params[entityField] != "#invalidterm") {
+						println "TEST1" + params[entityField]
+                        if (entity) removeFailedField(flow.importer_failedFields, entityField)
+						entity.setFieldValue(field.toString(), params[entityField])
 					} else
 					if (field.type == org.dbnp.gdt.TemplateFieldType.STRINGLIST &&
-						params["entity_" + entity.getIdentifier() + "_" + field.escapedName()] == "#invalidterm"
+						params[entityField] == "#invalidterm"
 					) {
 						invalidfields++
 					} else
 
-						entity.setFieldValue(field.toString(), params["entity_" + entity.getIdentifier() + "_" + field.escapedName()])
+						entity.setFieldValue(field.toString(), params[entityField])
 				}
 
 				// Determine entity class and add a parent (defined as Study in first step of wizard)
@@ -593,35 +599,19 @@ class GdtImporterController {
 					//removeFailedCell(flow.importer_failedcells, entity)
 				} // end else if
 
-			} // end of record
-		} // end of table
+		} // end of list
 
 		return (flow.importer_invalidentities == 0) ? true : false
 	} // end of method
 
 	/**
-	 * @param failedcell failed ontology cells
-	 * @param entity entity to remove from the failedcells list
+     * Method to remove a failed field from the failed fields list
+     *
+     * @param failedFieldsList list of failed fields
+	 * @param failedField field to remove from the failed fields list
 	 */
-	def removeFailedCell(failedcells, entity, field) {
-		// Valid entity, remove it from failedcells
-		def entityidfield = "entity_" + entity.getIdentifier() + "_" + field.name.toLowerCase()
-
-		failedcells.each { record ->
-			def tempimportcells = []
-
-
-			record.importcells.each { cell ->
-				// remove the cell from the failed cells session
-				if (cell.entityidentifier != entityidfield) {
-					//record.removeFromImportcells(cell)
-					tempimportcells.add(cell)
-				}
-			}
-
-			record.importcells = tempimportcells
-			// } // end of importcells
-		} // end of failedcells
+	def removeFailedField(failedFieldsList, failedField) {
+        failedFieldsList = failedFieldsList.findAll{ it.entity!=failedField }
 	}
 
 	/**
