@@ -15,14 +15,12 @@
 <script type="text/javascript">
  $(document).ready(function() {
         // mark error fields
-        <g:each in="${importer_failedcells}" var="record">
-          <g:each in="${record.importcells}" var="cell">
-          var element = $("select[name=${cell.entityidentifier}]");
+        <g:each in="${importer_failedFields}" var="field">
+          var element = $("select[name=${field.entity}]");
 
           element.addClass('error')
-          element.append( new Option("Invalid: ${cell.value}","#invalidterm", true, true) );
+          element.append( new Option("Invalid: ${field.originalValue}","#invalidterm", true, true) );
   
-          </g:each>
         </g:each>
   });
 </script>

@@ -212,7 +212,7 @@ class GdtImporterService {
 
 			// If failed cells have been found, add them to the error list
             // Error contains the entity+identifier+property and the original (failed) value
-			if (errorList) errorList.add(error)
+			if (error) errorList.add(error)
 		}
 
 		[entityList, errorList]

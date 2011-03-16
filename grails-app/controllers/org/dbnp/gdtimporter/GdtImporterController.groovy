@@ -496,7 +496,7 @@ class GdtImporterController {
 		}
 
 		// Import the workbook and store the table with entity records and store the failed cells
-		def (table, failedcells) = GdtImporterService.getDatamatrixAsEntityList(flow.importer_entity, template,
+		def (table, failedFields) = GdtImporterService.getDatamatrixAsEntityList(flow.importer_entity, template,
 			session.importer_workbook,
 			flow.importer_sheetindex,
 			flow.importer_datamatrix_start,
@@ -513,7 +513,7 @@ class GdtImporterController {
 					}
 				}*/
 
-		flow.importer_failedcells = failedcells
+		flow.importer_failedFields = failedFields
 
 		return true
 	}
