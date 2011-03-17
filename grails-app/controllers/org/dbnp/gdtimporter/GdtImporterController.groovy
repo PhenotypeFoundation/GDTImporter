@@ -534,8 +534,7 @@ class GdtImporterController {
 
 				// Set the fields for this entity by retrieving values from the params
 				entity.giveFields().each { field ->
-                    def entityField = "entity_" + entity.getIdentifier() + "_" + field.escapedName()
-                    println "entityfield=" + entityField
+                    def entityField = "entity_" + entity.getIdentifier() + "_" + field.escapedName()                
        
 					// field is a date field, try to set it with the value, if someone enters a non-date value it throws
 					// an error, this should be caught to prevent a complete breakdown
@@ -556,16 +555,17 @@ class GdtImporterController {
 					} else
 					if (field.type == org.dbnp.gdt.TemplateFieldType.ONTOLOGYTERM &&
 						params[entityField] != "#invalidterm") {
-                        if (entity) removeFailedField(flow.importer_failedFields, entityField)
-						entity.setFieldValue(field.toString(), params[entityField])
+                        
+                    if (entity) removeFailedField(flow.importer_failedFields, entityField)
+                            entity.setFieldValue(field.toString(), params[entityField])
 					}
 					else
 
 					if (field.type == org.dbnp.gdt.TemplateFieldType.STRINGLIST &&
-						params[entityField] != "#invalidterm") {
-						println "TEST1" + params[entityField]
+						params[entityField] != "#invalidterm") {						
+                        
                         if (entity) removeFailedField(flow.importer_failedFields, entityField)
-						entity.setFieldValue(field.toString(), params[entityField])
+                            entity.setFieldValue(field.toString(), params[entityField])
 					} else
 					if (field.type == org.dbnp.gdt.TemplateFieldType.STRINGLIST &&
 						params[entityField] == "#invalidterm"
@@ -606,13 +606,7 @@ class GdtImporterController {
      * @param failedFieldsList list of failed fields
 	 * @param failedField field to remove from the failed fields list
 	 */
-	def removeFailedField(failedFieldsList, failedField) {
-        println "failedfields="
-        
-        failedFieldsList.each {
-            println it.dump()
-        }
-        
+	def removeFailedField(failedFieldsList, failedField) {        
         failedFieldsList = failedFieldsList.findAll{ it.entity!=failedField }
 	}
 
