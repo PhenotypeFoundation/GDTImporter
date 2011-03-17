@@ -207,15 +207,16 @@ class GdtImporterService {
 			
             // Create an entity record based on a row read from Excel and store the cells which failed to be mapped
 			def (entity, error) = createEntity(theEntity, theTemplate, sheet.getRow(i), mcmap)
-
-			// Add entity to the table
-			entityList.add(entity)
+            
+            // Add entity to the table if it is not empty
+            if (!isEntityEmpty(entity))			
+                entityList.add(entity)
 
 			// If failed cells have been found, add them to the error list
             // Error contains the entity+identifier+property and the original (failed) value
 			if (error) errorList.add(error)
 		}
-
+      
 		[entityList, errorList]
 	}
 
@@ -286,6 +287,23 @@ class GdtImporterService {
 
         parentEntity.save(failOnError: true)
 	}
+    
+    /**
+    * Method to check if all fields of an entity are empty
+    * 
+    * @param theEntity entity object
+    */    
+    def isEntityEmpty(theEntity) {
+        def isEmpty = true
+        
+        // Go through all fields and when a non-null field has been found return false
+        theEntity.giveFields().each {            
+            if ( (theEntity.getFieldValue(it.name) != null) && (theEntity.getFieldValue(it.name) != 0) ) 
+                isEmpty = false
+        }  
+        
+        return isEmpty
+    }
 
     /**
 	 * This method reads an Excel row and returns it as filled entity
@@ -335,7 +353,7 @@ class GdtImporterService {
                     error = [ entity: "entity_" + entity.getIdentifier() + "_" + mc.property, originalValue: value]
 				}
 			}
-		}		
+		}
 		
         [entity, error]
     }

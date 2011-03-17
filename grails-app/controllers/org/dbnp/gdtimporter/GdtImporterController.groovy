@@ -607,6 +607,12 @@ class GdtImporterController {
 	 * @param failedField field to remove from the failed fields list
 	 */
 	def removeFailedField(failedFieldsList, failedField) {
+        println "failedfields="
+        
+        failedFieldsList.each {
+            println it.dump()
+        }
+        
         failedFieldsList = failedFieldsList.findAll{ it.entity!=failedField }
 	}
 
