@@ -22,6 +22,7 @@
 package org.dbnp.gdtimporter
 
 import org.dbnp.gdt.*
+import dbnp.studycapturing.*
 import org.apache.poi.ss.usermodel.*
 
 class GdtImporterService {
@@ -222,67 +223,68 @@ class GdtImporterService {
 	 * Method to store a list containing entities.
      * TODO: change to a generic way, something like addToEntity?
 	 *
-	 * @param parentEntity parent entity (Study) to add entities to
-     * @param entities list of entities
+     * @flow should contain importer_study and importer_importeddata
      * @param authenticationService authentication service
      * @param log log
      *
      * @return 
 	 */
-	static saveEntities(parentEntity, entityList, authenticationService, log) {
+	static saveEntities(flow, authenticationService, log) {
 
-		// parentEntiy (Study) passed? Sync data
-		if (parentEntity != null) parentEntity.refresh()
+        def parentEntity    = flow.importer_study
+        def entityList      = flow.importer_importeddata
 
-			entityList.each { entity ->
-				switch (entity.getClass()) {
-					case Study: log.info ".importer wizard, persisting Study `" + entity + "`: "
-					
-						// Validate the study and try to save it
-                        if (entity.validate()) {
-							if (!entity.save(flush:true)) {
-								log.error ".importer wizard, study could not be saved: " + entity
-								throw new Exception('.importer wizard, study could not be saved: ' + entity)
-							}
-						} else {
-							log.error ".importer wizard, study could not be validated: " + entity
-							throw new Exception('.importer wizard, study could not be validated: ' + entity)
-						}
+        entityList.each { entity ->
+            switch (entity.class) {
+                case Study: log.info ".importer wizard, persisting Study `" + entity + "`: "
 
-						break
-					case Subject: 
-                        log.info ".importer wizard, persisting Subject `" + entity + "`: "
-						parentEntity.addToSubjects(entity)
-						break
-					case Event:
-                        log.info ".importer wizard, persisting Event `" + entity + "`: "
-						parentEntity.addToEvents(entity)
-						break
-					case Sample:
-                        log.info ".importer wizard, persisting Sample `" + entity + "`: "
-						parentEntity.addToSamples(entity)
-						break
-					case SamplingEvent:
-                        log.info ".importer wizard, persisting SamplingEvent `" + entity + "`: "
-						parentEntity.addToSamplingEvents(entity)
-						break
-					default: log.info ".importer wizard, skipping persisting of `" + entity.getclass() + "`"
-						break
-				}
+                    // try to save the study
+                    entity.save(flush:true, failOnError: true)
+
+                    break
+                case Subject:
+                    log.info ".importer wizard, persisting Subject `" + entity + "`: "
+                    parentEntity.addToSubjects(entity)
+                    break
+                case Event:
+                    log.info ".importer wizard, persisting Event `" + entity + "`: "
+                    parentEntity.addToEvents(entity)
+                    break
+                case Sample:
+                    log.info ".importer wizard, persisting Sample `" + entity + "`: "
+                    parentEntity.addToSamples(entity)
+                    break
+                case SamplingEvent:
+                    log.info ".importer wizard, persisting SamplingEvent `" + entity + "`: "
+                    parentEntity.addToSamplingEvents(entity)
+                    break
+                default: log.info ".importer wizard, skipping persisting of `" + entity.getclass() + "`"
+                    break
+            }
+        }
+
+        // check for duplicate subject names because the uniqueness constraint
+        // does not work at this point (would cause exception later)
+        // see: http://grails.org/doc/latest/ref/Constraints/unique.html
+        def subjectNames = parentEntity.subjects*.name
+
+        def uniqueSubjectNames = [] as Set
+        def duplicateSubjectNames = [] as Set
+
+        // this approach seperates the unique from the duplicate entries
+        subjectNames.each {uniqueSubjectNames.add(it) || duplicateSubjectNames.add(it)}
+
+        if (duplicateSubjectNames) {
+
+            flow.importer_failedFields = parentEntity.subjects.findAll {it.name in duplicateSubjectNames}.collect { duplicateSubject ->
+
+                [ entity: "entity_" + duplicateSubject.getIdentifier() + "_name", originalValue: duplicateSubject.name]
             }
 
-		// All entities have been added to the study, now validate and store the study
-		if (parentEntity.validate()) {
-			if (!parentEntity.save(flush: true)) {
-				//this.appendErrors(flow.study, flash.wizardErrors)
-				throw new Exception('.importer wizard [saveEntities] error while saving Study')
-			}
-		} else {
-			throw new Exception('.importer wizard [saveEntities] Study does not validate')
-		}
-        
-        // If there was no validation or save exception, this function returns true
-        true
+            throw new Exception('.importer wizard [saveEntities] duplicate subject names')
+        }
+
+        parentEntity.save(failOnError: true)
 	}
 
     /**

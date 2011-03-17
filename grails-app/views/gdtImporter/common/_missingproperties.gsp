@@ -17,10 +17,14 @@
         // mark error fields
         <g:each in="${importer_failedFields}" var="field">
           var element = $("select[name=${field.entity}]");
+          if (element.size()) {
+            element.addClass('error');
+            element.append( new Option("Invalid: ${field.originalValue}","#invalidterm", true, true) );
+          } else {
+            element = $("input[name=${field.entity}]");
+            element.addClass('error');
+          }
 
-          element.addClass('error')
-          element.append( new Option("Invalid: ${field.originalValue}","#invalidterm", true, true) );
-  
         </g:each>
   });
 </script>

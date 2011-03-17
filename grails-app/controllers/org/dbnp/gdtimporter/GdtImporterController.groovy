@@ -21,11 +21,7 @@
 
 package org.dbnp.gdtimporter
 
-import dbnp.studycapturing.Study
-import dbnp.studycapturing.Subject
-import dbnp.studycapturing.Sample
-import dbnp.studycapturing.Event
-
+import dbnp.studycapturing.*
 import org.dbnp.gdt.*
 import grails.converters.JSON
 import org.codehaus.groovy.grails.plugins.web.taglib.ValidationTagLib
@@ -35,7 +31,7 @@ import grails.plugins.springsecurity.Secured
 class GdtImporterController {
     def authenticationService
 	def fileService
-	def GdtImporterService
+	def gdtImporterService
     def gdtService
     def validationTagLib = new ValidationTagLib()
 
@@ -243,8 +239,8 @@ class GdtImporterController {
 		}
 
 		// Save the imported data
-		save {
-			action {
+        save {
+            action {
 				// here you can validate and save the
 				// instances you have created in the
 				// ajax flow.
@@ -253,15 +249,15 @@ class GdtImporterController {
 				fileService.delete(flow.importer_importedfile)
 
 				// Save all entities
-				if (saveEntities(flow, params)) {
-					success()
-				} else {
-					log.error ".import wizard, could not save entities:\n"
-					flow.page = 4
-					error()
-				}
+                try {
+                    gdtImporterService.saveEntities(flow, authenticationService, log)
+                } catch (Exception e) {
+
+                    this.appendErrorMap(['error': e.message], flash.wizardErrors)
+                    pageThree()
+                }
 			}
-			on("error").to "error"
+			on("pageThree").to "pageThree"
 			on(Exception).to "error"
 			on("success").to "finalPage"
 		}
@@ -319,7 +315,7 @@ class GdtImporterController {
 
 		if (importedfile.exists()) {
 			try {
-				session.importer_workbook = GdtImporterService.getWorkbook(new FileInputStream(importedfile))
+				session.importer_workbook = gdtImporterService.getWorkbook(new FileInputStream(importedfile))
 			} catch (Exception e) {
 				log.error ".importer wizard could not load file: " + e
 				this.appendErrorMap(['error': "Wrong file (format), the importer requires an Excel file as input"], flash.wizardErrors)
@@ -330,7 +326,7 @@ class GdtImporterController {
 		if (params.entity && params.template_id) {
 
 			try {
-				session.importer_workbook = GdtImporterService.getWorkbook(new FileInputStream(importedfile))
+				session.importer_workbook = gdtImporterService.getWorkbook(new FileInputStream(importedfile))
 			} catch (Exception e) {
 				log.error ".importer wizard could not load file: " + e
 				this.appendErrorMap(['error': "Excel file required as input"], flash.wizardErrors)
@@ -353,14 +349,14 @@ class GdtImporterController {
 			flow.importer_entity = gdtService.cachedEntities.find { it.entity == entityName }
 
 			// Get the header from the Excel file using the arguments given in the first step of the wizard
-			flow.importer_header = GdtImporterService.getHeader(session.importer_workbook,
+			flow.importer_header = gdtImporterService.getHeader(session.importer_workbook,
 				flow.importer_sheetindex,
 				flow.importer_headerrow,
 				flow.importer_datamatrix_start,
 				entityClass)
 
 			// Load a preview of the data
-            flow.importer_datamatrix = GdtImporterService.getDatamatrix(
+            flow.importer_datamatrix = gdtImporterService.getDatamatrix(
 				session.importer_workbook, flow.importer_header,
 				flow.importer_sheetindex,
 				flow.importer_datamatrix_start,
@@ -484,7 +480,7 @@ class GdtImporterController {
 			def entityClass = Class.forName(flow.importer_header[columnindex.toInteger()].entityclass.getName(), true, this.getClass().getClassLoader())
 			def entityObj = entityClass.newInstance(template: template)
 
-			// Store the selected property for this column into the column map for the GdtImporterService
+			// Store the selected property for this column into the column map for the gdtImporterService
 			flow.importer_header[columnindex.toInteger()].property = property
 
 			// Look up the template field type of the target TemplateField and store it also in the map
@@ -500,7 +496,7 @@ class GdtImporterController {
 		}
 
 		// Import the workbook and store the table with entity records and store the failed cells
-		def (entityList, failedFields) = GdtImporterService.getDatamatrixAsEntityList(flow.importer_entity, template,
+		def (table, failedFields) = gdtImporterService.getDatamatrixAsEntityList(flow.importer_entity, template,
 			session.importer_workbook,
 			flow.importer_sheetindex,
 			flow.importer_datamatrix_start,
@@ -625,23 +621,30 @@ class GdtImporterController {
 		return true
 	}
 
-	boolean saveEntities(flow, params) {
-		//def (validatedSuccesfully, updatedEntities, failedToPersist) =
-		try {
-			GdtImporterService.saveEntities(flow.importer_study, flow.importer_importeddata, authenticationService, log)
-		} catch (Exception e) {
-			log.error ".import wizard saveEntities error\n" + e.dump()
-			return false
-		}
-
-		//flow.importer_validatedsuccesfully = validatedSuccesfully
-		//flow.importer_failedtopersist = failedToPersist
-		//flow.imported_updatedentities = updatedEntities
-		//flow.importer_totalrows = flow.importer_importeddata.size
-		//flow.importer_referer = ""
-
-		return true
-	}
+//    /**
+//     *
+//     * @param flow should contain importer_study and importer_importeddata
+//     * @param params
+//     * @return
+//     */
+//	boolean saveEntities(flow, params) {
+//		//def (validatedSuccesfully, updatedEntities, failedToPersist) =
+//		try {
+////			gdtImporterService.saveEntities(flow.importer_study, flow.importer_importeddata, authenticationService, log)
+//			gdtImporterService.saveEntities(flow, authenticationService, log)
+//		} catch (Exception e) {
+//			log.error ".import wizard saveEntities error\n" + e.dump()
+//			return false
+//		}
+//
+//		//flow.importer_validatedsuccesfully = validatedSuccesfully
+//		//flow.importer_failedtopersist = failedToPersist
+//		//flow.imported_updatedentities = updatedEntities
+//		//flow.importer_totalrows = flow.importer_importeddata.size
+//		//flow.importer_referer = ""
+//
+//		return true
+//	}
 
 	/**
 	 * append errors of a particular object to a map
