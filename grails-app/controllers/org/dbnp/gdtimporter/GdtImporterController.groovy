@@ -21,7 +21,11 @@
 
 package org.dbnp.gdtimporter
 
-import dbnp.studycapturing.*
+//import dbnp.studycapturing.*
+import dbnp.studycapturing.Study
+import dbnp.studycapturing.Subject
+import dbnp.studycapturing.Sample
+import dbnp.studycapturing.Event
 import org.dbnp.gdt.*
 import grails.converters.JSON
 import org.codehaus.groovy.grails.plugins.web.taglib.ValidationTagLib
@@ -555,8 +559,8 @@ class GdtImporterController {
 					} else
 					if (field.type == org.dbnp.gdt.TemplateFieldType.ONTOLOGYTERM &&
 						params[entityField] != "#invalidterm") {
-                        
-                    if (entity) removeFailedField(flow.importer_failedFields, entityField)
+
+                    if (entity) flow.importer_failedFields = removeFailedField(flow.importer_failedFields, entityField)
                             entity.setFieldValue(field.toString(), params[entityField])
 					}
 					else
@@ -564,7 +568,7 @@ class GdtImporterController {
 					if (field.type == org.dbnp.gdt.TemplateFieldType.STRINGLIST &&
 						params[entityField] != "#invalidterm") {						
                         
-                        if (entity) removeFailedField(flow.importer_failedFields, entityField)
+                        if (entity) flow.importer_failedFields = removeFailedField(flow.importer_failedFields, entityField)
                             entity.setFieldValue(field.toString(), params[entityField])
 					} else
 					if (field.type == org.dbnp.gdt.TemplateFieldType.STRINGLIST &&
@@ -607,7 +611,7 @@ class GdtImporterController {
 	 * @param failedField field to remove from the failed fields list
 	 */
 	def removeFailedField(failedFieldsList, failedField) {        
-        failedFieldsList = failedFieldsList.findAll{ it.entity!=failedField }
+        failedFieldsList.findAll{ it.entity!=failedField }        
 	}
 
 	/**
