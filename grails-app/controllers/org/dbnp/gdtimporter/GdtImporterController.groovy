@@ -21,11 +21,7 @@
 
 package org.dbnp.gdtimporter
 
-//import dbnp.studycapturing.*
-import dbnp.studycapturing.Study
-import dbnp.studycapturing.Subject
-import dbnp.studycapturing.Sample
-import dbnp.studycapturing.Event
+import dbnp.studycapturing.*
 import org.dbnp.gdt.*
 import grails.converters.JSON
 import org.codehaus.groovy.grails.plugins.web.taglib.ValidationTagLib
@@ -126,6 +122,8 @@ class GdtImporterController {
 				flash.wizardErrors = [:]
 				flash.importer_params = params
 				flash.importer_params.importfile = params.importfile.replace('existing*', '')
+                // TODO: remove this hack
+                flash.importer_params.importfile = new XmlSlurper().parseText(flash.importer_params.importfile[flash.importer_params.importfile.indexOf('<pre')..-1]).toString()
 
 				if (params.entity) {
 					flash.importer_datatemplates = Template.findAllByEntity(gdtService.getInstanceByEntity(params.entity.decodeURL()))
