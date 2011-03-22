@@ -22,12 +22,16 @@
 package org.dbnp.gdtimporter
 
 import org.dbnp.gdt.*
-import dbnp.studycapturing.*
+//import dbnp.studycapturing.*
 import org.apache.poi.ss.usermodel.*
+import org.codehaus.groovy.grails.commons.GrailsClassUtils
+import org.codehaus.groovy.grails.commons.ApplicationHolder
+import org.codehaus.groovy.grails.orm.hibernate.validation.UniqueConstraint
+import org.codehaus.groovy.grails.orm.hibernate.metaclass.FindAllPersistentMethod
 
 class GdtImporterService {
     def authenticationService
-    def GdtService
+    def gdtService
     static transactional = true
 
     /**
@@ -222,70 +226,81 @@ class GdtImporterService {
 
     /**
 	 * Method to store a list containing entities.
-     * TODO: change to a generic way, something like addToEntity?
 	 *
-     * @flow should contain importer_study and importer_importeddata
+     * @flow should contain importer_parentEntity and importer_importedData
      * @param authenticationService authentication service
-     * @param log log
      *
-     * @return 
+     * @return empty list on success, list of errors on failure
 	 */
-	static saveEntities(flow, authenticationService, log) {
+	static saveEntities(parentEntity, entityList) {
 
-        def parentEntity    = flow.importer_study
-        def entityList      = flow.importer_importeddata
+//        def parentEntity        = flow.importer_parentEntity
+//        def entityList          = flow.importer_importedData
+        def firstEntity         = entityList[0]
 
-        entityList.each { entity ->
-            switch (entity.class) {
-                case Study: log.info ".importer wizard, persisting Study `" + entity + "`: "
+        def failedFields        = []
 
-                    // try to save the study
-                    entity.save(flush:true, failOnError: true)
+        def application         = ApplicationHolder.application
+        def domainClass         = application.getDomainClass(firstEntity.class.name)
+        def sessionFactory      = domainClass.validator.sessionFactory
+        def findAllMethod       = new FindAllPersistentMethod(sessionFactory, application.classLoader)
 
-                    break
-                case Subject:
-                    log.info ".importer wizard, persisting Subject `" + entity + "`: "
-                    parentEntity.addToSubjects(entity)
-                    break
-                case Event:
-                    log.info ".importer wizard, persisting Event `" + entity + "`: "
-                    parentEntity.addToEvents(entity)
-                    break
-                case Sample:
-                    log.info ".importer wizard, persisting Sample `" + entity + "`: "
-                    parentEntity.addToSamples(entity)
-                    break
-                case SamplingEvent:
-                    log.info ".importer wizard, persisting SamplingEvent `" + entity + "`: "
-                    parentEntity.addToSamplingEvents(entity)
-                    break
-                default: log.info ".importer wizard, skipping persisting of `" + entity.getclass() + "`"
-                    break
-            }
-        }
+        // we need all children of parentEntity of same type as the added
+        // entities (including ones to be added)
+        def childEntities       = findAllMethod.invoke(
+                domainClass.clazz, "findAll",
+                ["from ${firstEntity.class.name} as x where x.parent='$parentEntity.id'"] as Object[]) + entityList
 
-        // check for duplicate subject names because the uniqueness constraint
+        // figure out the collection name via the hasMany property
+        def hasMany = GrailsClassUtils.getStaticPropertyValue(parentEntity.class, 'hasMany')
+        def collectionName = hasMany.find{it.value == domainClass.clazz}.key.capitalize()
+
+        // add the entities one by one to the parent entity
+        entityList.each { parentEntity."addTo$collectionName" it }
+
+        // checks for duplicate subject names because the uniqueness constraint
         // does not work at this point (would cause exception later)
         // see: http://grails.org/doc/latest/ref/Constraints/unique.html
-        def subjectNames = parentEntity.subjects*.name
+        def checkForDuplicates = { propertyName ->
 
-        def uniqueSubjectNames = [] as Set
-        def duplicateSubjectNames = [] as Set
+            def entityProperties = childEntities*."$propertyName"
 
-        // this approach seperates the unique from the duplicate entries
-        subjectNames.each {uniqueSubjectNames.add(it) || duplicateSubjectNames.add(it)}
+            def uniques     = [] as Set
+            def duplicates  = [] as Set
 
-        if (duplicateSubjectNames) {
+            // this approach separates the unique from the duplicate entries
+            entityProperties.each { uniques.add(it) || duplicates.add(it) }
 
-            flow.importer_failedFields = parentEntity.subjects.findAll {it.name in duplicateSubjectNames}.collect { duplicateSubject ->
+            if (duplicates) {
 
-                [ entity: "entity_" + duplicateSubject.getIdentifier() + "_name", originalValue: duplicateSubject.name]
+                // Collect all entities with a duplicate value of the unique
+                // property. Add corresponding entries to 'failedFields'.
+                failedFields += entityList.findAll { it."$propertyName" in duplicates }.collect { duplicate ->
+
+                    [   entity :        "entity_${duplicate.getIdentifier()}_$propertyName",
+                        originalValue : duplicate[propertyName] ]
+
+                }
             }
-
-            throw new Exception('.importer wizard [saveEntities] duplicate subject names')
         }
 
-        parentEntity.save(failOnError: true)
+        // search through the constrained properties for a 'Unique' constraint
+        domainClass.constrainedProperties.each { constrainedProperty ->
+
+            def hasUniqueConstraint = constrainedProperty.value.appliedConstraints.find { appliedConstraint ->
+
+                appliedConstraint instanceof UniqueConstraint
+
+            }
+            // did we find a 'Unique' constraint? check for duplicate entries
+            if (hasUniqueConstraint) checkForDuplicates constrainedProperty.key
+
+        }
+
+        if (!failedFields) parentEntity.save(failOnError: true)
+
+        failedFields
+
 	}
     
     /**
@@ -320,7 +335,7 @@ class GdtImporterService {
         def error
 
 		// Initialize the entity with the chosen template
-		def entity = GdtService.getInstanceByEntityName(theEntity.entity).
+		def entity = gdtService.getInstanceByEntityName(theEntity.entity).
             newInstance(template:theTemplate)
 
 		// Read every cell in the Excel row

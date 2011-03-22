@@ -62,8 +62,8 @@ class GdtImporterTagLib {
 	 */
 	def missingProperties = { attrs ->
 		def datamatrix = attrs['datamatrix']
-		def failedcells = attrs['failedcells']
-		out << render(template: "common/missingproperties", model: [datamatrix: datamatrix, failedcells: failedcells])
+		def failedFields = attrs['failedFields']
+		out << render(template: "common/missingproperties", model: [datamatrix: datamatrix, failedFields: failedFields])
 	}
 
 	/**	 

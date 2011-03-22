@@ -132,11 +132,11 @@ class GdtImporterController {
 				}
 
 				// Study selected?
-				flow.importer_study = (params.study) ? Study.get(params.study.id.toInteger()) : null
+				flow.importer_parentEntity = (params.study) ? Study.get(params.study.id.toInteger()) : null
 
 				// Trying to import data into an existing study?
-				if (flow.importer_study)
-					if (flow.importer_study.canWrite(authenticationService.getLoggedInUser()))
+				if (flow.importer_parentEntity)
+					if (flow.importer_parentEntity.canWrite(authenticationService.getLoggedInUser()))
 						fileImportPage(flow, flash, params) ? success() : error()
 					else {
 						log.error ".importer wizard wrong permissions"
@@ -251,12 +251,14 @@ class GdtImporterController {
 				fileService.delete(flow.importer_importedfile)
 
 				// Save all entities
-                try {
-                    gdtImporterService.saveEntities(flow, authenticationService, log)
-                } catch (Exception e) {
+                def duplicateFields = gdtImporterService.saveEntities(flow.importer_parentEntity, flow.importer_importedData)
+                if (duplicateFields) {
 
-                    this.appendErrorMap(['error': e.message], flash.wizardErrors)
+                    flow.importer_failedFields += duplicateFields
+
+                    this.appendErrorMap(['error': '.gdtImporter [save page] there are duplicate property values, please make sure they are unique.'], flash.wizardErrors)
                     pageThree()
+
                 }
 			}
 			on("pageThree").to "pageThree"
@@ -273,8 +275,7 @@ class GdtImporterController {
 				// works (it is disabled on the final page)
 				flow.page = 4
 			}
-			on("next").to "save"
-			on("previous").to "pageFour"
+			on("tryAgain").to "pageOne"
 		}
 
 		// last wizard page
@@ -418,11 +419,11 @@ class GdtImporterController {
 			//def entityClass = gdtService.getInstanceByEntityName(flow.importer_header[columnindex.toInteger()].entity.getName())
 			def entityObj = flow.importer_entityclass.newInstance(template: template)
 
-			def dontimport = (property == "dontimport") ? true : false
+			def dontimport = (property == "dontimport")
 
 			// Loop through all fields and find the preferred identifier
 			entityObj.giveFields().each {
-				isPreferredIdentifier = (it.preferredIdentifier && (it.name == property)) ? true : false
+				isPreferredIdentifier = it.preferredIdentifier && (it.name == property)
 			}
 
 			// Create new GDTMappingColumn instance
@@ -489,7 +490,7 @@ class GdtImporterController {
 			flow.importer_header[columnindex.toInteger()].templatefieldtype = entityObj.giveFieldType(property)
 
 			// Is a "Don't import" property assigned to the column?
-			flow.importer_header[columnindex.toInteger()].dontimport = (property == "dontimport") ? true : false
+			flow.importer_header[columnindex.toInteger()].dontimport = (property == "dontimport")
 
 			//if it's an identifier set the mapping column true or false
 			entityObj.giveFields().each {
@@ -504,7 +505,7 @@ class GdtImporterController {
 			flow.importer_datamatrix_start,
 			flow.importer_header)
 
-		flow.importer_importeddata = entityList
+		flow.importer_importedData = entityList
 
 		// loop through all entities to validate them and add them to wizardErrors flash when invalid
 		/*table.each { record ->
@@ -531,7 +532,7 @@ class GdtImporterController {
 		flash.wizardErrors = [:]
 		flow.importer_invalidentities = 0
 
-		flow.importer_importeddata.each { entity ->
+		flow.importer_importedData.each { entity ->
 				def invalidfields = 0
 
 				// Set the fields for this entity by retrieving values from the params
@@ -580,7 +581,7 @@ class GdtImporterController {
 
 				// Determine entity class and add a parent (defined as Study in first step of wizard)
 				switch (entity.getClass()) {
-					case [Subject, Sample, Event]: entity.parent = flow.importer_study
+					case [Subject, Sample, Event]: entity.parent = flow.importer_parentEntity
 				}
 
 				// Try to validate the entity now all fields have been set
@@ -593,13 +594,11 @@ class GdtImporterController {
 					entity.errors.getAllErrors().each() {
 						log.error ".import wizard imported validation error:" + it
 					}
-				} else {
-					//removeFailedCell(flow.importer_failedcells, entity)
-				} // end else if
+				}
 
 		} // end of list
 
-		return (flow.importer_invalidentities == 0) ? true : false
+		return (flow.importer_invalidentities == 0)
 	} // end of method
 
 	/**
@@ -622,31 +621,6 @@ class GdtImporterController {
 	boolean importedPage(flow, params) {
 		return true
 	}
-
-//    /**
-//     *
-//     * @param flow should contain importer_study and importer_importeddata
-//     * @param params
-//     * @return
-//     */
-//	boolean saveEntities(flow, params) {
-//		//def (validatedSuccesfully, updatedEntities, failedToPersist) =
-//		try {
-////			gdtImporterService.saveEntities(flow.importer_study, flow.importer_importeddata, authenticationService, log)
-//			gdtImporterService.saveEntities(flow, authenticationService, log)
-//		} catch (Exception e) {
-//			log.error ".import wizard saveEntities error\n" + e.dump()
-//			return false
-//		}
-//
-//		//flow.importer_validatedsuccesfully = validatedSuccesfully
-//		//flow.importer_failedtopersist = failedToPersist
-//		//flow.imported_updatedentities = updatedEntities
-//		//flow.importer_totalrows = flow.importer_importeddata.size
-//		//flow.importer_referer = ""
-//
-//		return true
-//	}
 
 	/**
 	 * append errors of a particular object to a map
