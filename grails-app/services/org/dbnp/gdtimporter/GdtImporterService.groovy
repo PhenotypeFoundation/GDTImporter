@@ -365,8 +365,7 @@ class GdtImporterService {
                     
 					// Store the error value (might improve this with name of entity instead of "entity_")
                     // as a map containing the entity+identifier+property and the original value which failed
-                    error = [ entity: "entity_" + entity.getIdentifier() + "_" + mc.property.toLowerCase(), originalValue: value]
-                    println error.dump()
+                    error = [ entity: "entity_" + entity.getIdentifier() + "_" + mc.property.toLowerCase(), originalValue: value]    
 				}
 			}
 		}
