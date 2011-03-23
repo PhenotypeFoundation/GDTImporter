@@ -357,7 +357,7 @@ class GdtImporterService {
 
 				// Try to set the value for this entity
                 try {				
-                        entity.setFieldValue(mc.property, value)					
+                        entity.setFieldValue(mc.property, value, true)
 				} catch (Exception iae) {
 					
                     // The entity field value could not be set
@@ -365,7 +365,8 @@ class GdtImporterService {
                     
 					// Store the error value (might improve this with name of entity instead of "entity_")
                     // as a map containing the entity+identifier+property and the original value which failed
-                    error = [ entity: "entity_" + entity.getIdentifier() + "_" + mc.property, originalValue: value]
+                    error = [ entity: "entity_" + entity.getIdentifier() + "_" + mc.property.toLowerCase(), originalValue: value]
+                    println error.dump()
 				}
 			}
 		}
