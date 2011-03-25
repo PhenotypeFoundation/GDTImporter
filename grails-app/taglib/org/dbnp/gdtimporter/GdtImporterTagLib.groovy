@@ -43,9 +43,9 @@ class GdtImporterTagLib {
 	def preview = { attrs ->
 
 		def header = attrs['header']
-		def datamatrix = attrs['datamatrix']
+		def dataMatrix = attrs['dataMatrix']
 
-		out << render(template: "common/preview", model: [header: header, datamatrix: datamatrix])
+		out << render(template: "common/preview", model: [header: header, datamatrix: dataMatrix])
 	}
 
 	def entity = { attrs ->
@@ -53,17 +53,17 @@ class GdtImporterTagLib {
 	}
 
 	def datapreview = { attrs ->
-		def datamatrix = attrs['datamatrix']
-		out << render(template: "common/datapreview", model: [datamatrix: datamatrix])
+		def dataMatrix = attrs['dataMatrix']
+		out << render(template: "common/datapreview", model: [dataMatrix: dataMatrix])
 	}
 
 	/**
 	 * Show missing properties
 	 */
-	def missingProperties = { attrs ->
-		def datamatrix = attrs['datamatrix']
+	def validation = { attrs ->
+		def entityList = attrs['entityList']
 		def failedFields = attrs['failedFields']
-		out << render(template: "common/missingproperties", model: [datamatrix: datamatrix, failedFields: failedFields])
+		out << render(template: "common/validation", model: [entityList: entityList, failedFields: failedFields])
 	}
 
 	/**	 
@@ -140,7 +140,7 @@ class GdtImporterTagLib {
 		res += "<option value=\"dontimport\">Don't import</option>"
 
 		options.each { f ->
-			res += "<option value=\"${f.name}\""
+			res += "<option value=\"${f}\""
 
 			// mostsimilar string passed as argument or selected value passed?
             res += (mostsimilar.toString().toLowerCase() == f.name.toLowerCase() || selected.toLowerCase() == f.name.toLowerCase() ) ?

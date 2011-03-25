@@ -22,12 +22,10 @@
 package org.dbnp.gdtimporter
 
 import org.dbnp.gdt.*
-//import dbnp.studycapturing.*
 import org.apache.poi.ss.usermodel.*
 import org.codehaus.groovy.grails.commons.GrailsClassUtils
-import org.codehaus.groovy.grails.commons.ApplicationHolder
+import org.codehaus.groovy.grails.commons.ApplicationHolder as AH
 import org.codehaus.groovy.grails.orm.hibernate.validation.UniqueConstraint
-import org.codehaus.groovy.grails.orm.hibernate.metaclass.FindAllPersistentMethod
 
 class GdtImporterService {
     def authenticationService
@@ -52,9 +50,9 @@ class GdtImporterService {
      * @param theEntity type of entity we are reading
 	 * @return header representation as a GDTMappingColumn hashmap
 	 */
-    def getHeader(Workbook workbook, int sheetIndex, int headerRow, int datamatrixStart, theEntity = null) {
+    def getHeader(Workbook workbook, int sheetIndex, int headerRow, int dataMatrixStart, theEntity = null) {
         def sheet = workbook.getSheetAt(sheetIndex)
-		def datamatrixRow = sheet.getRow(datamatrixStart)		
+		def dataMatrixRow = sheet.getRow(dataMatrixStart)
 		def header = []
 		def df = new DataFormatter()
 		
@@ -64,12 +62,12 @@ class GdtImporterService {
 
 		// Loop through all columns from the first row in the datamatrix and try to
         // determine the type of values stored (integer, string, float)
-        (0..datamatrixRow.getLastCellNum() - 1).each { columnIndex ->
+        (0..dataMatrixRow.getLastCellNum() - 1).each { columnIndex ->
           
 			// Get the current cell type, formatted cell value and the Cell object
-            def cellType = datamatrixRow.getCell(columnIndex, Row.CREATE_NULL_AS_BLANK).getCellType()
-			def cellData = df.formatCellValue(datamatrixRow.getCell(columnIndex))
-			def cellObject = datamatrixRow.getCell(columnIndex)
+            def cellType = dataMatrixRow.getCell(columnIndex, Row.CREATE_NULL_AS_BLANK).getCellType()
+			def cellData = df.formatCellValue(dataMatrixRow.getCell(columnIndex))
+			def cellObject = dataMatrixRow.getCell(columnIndex)
 			
             // Get the header for the current column
             def columnHeaderCell = sheet.getRow(headerRow + sheet.getFirstRowNum()).getCell(columnIndex)
@@ -153,20 +151,20 @@ class GdtImporterService {
 	 *
 	 * @param workbook Workbook class object
 	 * @param sheetIndex sheet index used
-     * @param datamatrixStartRow
-	 * @param count amount of rows of data to read, starting at datamatrixStartRow
-	 * @return two dimensional array (datamatrix) of cell values
+     * @param dataMatrixStartRow
+	 * @param count amount of rows of data to read, starting at dataMatrixStartRow
+	 * @return two dimensional array (dataMatrix) of cell values
 	 */
-    String[][] getDatamatrix(Workbook workbook, header, int sheetIndex, int datamatrixStartRow, int count) {
+    String[][] getDataMatrix(Workbook workbook, header, int sheetIndex, int dataMatrixStartRow, int count = 0) {
         def sheet = workbook.getSheetAt(sheetIndex)
         def df = new DataFormatter()
-		def datamatrix = []
+		def dataMatrix = []
 
-		count = (count < sheet.getLastRowNum()) ? count : sheet.getLastRowNum()
+        count = count ? Math.min(sheet.lastRowNum, count) : sheet.lastRowNum
 
 		// Walk through all rows
-		((datamatrixStartRow + sheet.getFirstRowNum())..count).each { rowIndex ->
-			def datamatrixRow = []
+		((dataMatrixStartRow + sheet.getFirstRowNum())..count).each { rowIndex ->
+			def dataMatrixRow = []
             def excelRow = sheet.getRow(rowIndex)
 
             if (excelRow)
@@ -174,17 +172,17 @@ class GdtImporterService {
 
                     def cell = excelRow.getCell(columnIndex, Row.CREATE_NULL_AS_BLANK)
 
-                    switch (cell.getCellType()) {
-                        case Cell.CELL_TYPE_STRING :    datamatrixRow.add( cell.getStringCellValue() )
+                    switch (cell.cellType) {
+                        case Cell.CELL_TYPE_STRING :    dataMatrixRow.add( cell.stringCellValue )
                                                         break
-                        case Cell.CELL_TYPE_NUMERIC:    datamatrixRow.add( df.formatCellValue(cell) )
+                        case Cell.CELL_TYPE_NUMERIC:    dataMatrixRow.add( df.formatCellValue(cell) )
                                                         break
                     }
                 }
-			datamatrix.add(datamatrixRow)
+			dataMatrix.add(dataMatrixRow)
 		}
-
-		datamatrix
+        
+		dataMatrix
     }
 
     /**
@@ -193,24 +191,23 @@ class GdtImporterService {
 	 *
      * @param theEntity entity we are trying to read (Subject, Study et cetera)
 	 * @param theTemplate Template to use
-	 * @param workbook POI horrible spreadsheet formatted Workbook class object
+	 * @param dataMatrix Two-dimensional string array containing excel data
 	 * @param mcmap linked hashmap (preserved order) of GDTMappingColumns
 	 * @param sheetIndex sheet to use when using multiple sheets
-	 * @param datamatrixRowIndex first row to start with reading the actual data (NOT the header)
+	 * @param dataMatrixRowIndex first row to start with reading the actual data (NOT the header)
 	 * @return list containing entities
 	 *
 	 * @see org.dbnp.gdtimporter.GDTMappingColumn
 	 */
-	def getDatamatrixAsEntityList(theEntity, theTemplate, Workbook workbook, int sheetIndex, int datamatrixRowIndex, mcmap) {
-		def sheet = workbook.getSheetAt(sheetIndex)
+	def getDataMatrixAsEntityList(theEntity, theTemplate, String[][] dataMatrix, mcmap) {
 		def entityList = []
 		def errorList = []
 
 		// Walk through all rows and fill the table with entities
-		(datamatrixRowIndex..sheet.getLastRowNum()).each { i ->
-			
+		dataMatrix.each { row ->
+
             // Create an entity record based on a row read from Excel and store the cells which failed to be mapped
-			def (entity, error) = createEntity(theEntity, theTemplate, sheet.getRow(i), mcmap)
+			def (entity, error) = createEntity(theEntity, theTemplate, row, mcmap)
             
             // Add entity to the table if it is not empty
             if (!isEntityEmpty(entity))			
@@ -225,42 +222,62 @@ class GdtImporterService {
 	}
 
     /**
-	 * Method to store a list containing entities.
-	 *
-     * @flow should contain importer_parentEntity and importer_importedData
-     * @param authenticationService authentication service
+     *
+     * @param dataMatrix
+     * @param params
+     * @param entityList
+     * @return
+     */
+    def updateDataMatrixFromParams(dataMatrix, params, entityList, header) {
+
+        entityList.eachWithIndex { entity, entityIndex ->
+
+            header.eachWithIndex { mappingColumn, columnIndex ->
+
+                def escapedLowerCaseName = mappingColumn.property.toLowerCase().replaceAll("([^a-z0-9])", "_")
+
+                def entityField = "entity_${entity.identifier}_${escapedLowerCaseName}"
+
+                dataMatrix[entityIndex][columnIndex] = params[entityField]
+
+            }
+
+        }
+
+    }
+
+    /**
+	 * Checks whether unique constraints are violated within the entityList.
+     * This type of violation can occur in two ways.
+     *
+     * 1. Entities with same property values already exist
+     * 2. Within the entity list there are duplicate values
+     *
+     * Violations of type 1 will throw an exception but those of type 2 don't
+     * (always?). This simply collects all values of the old and new entities
+     * within a parent entity and finds duplicates where they are not allowed.
+     *
+     * see: http://grails.org/doc/latest/ref/Constraints/unique.html
+     *
+	 * @parentEntity the parent entity
+     * @entityList the list of entities to add to parentEntity
      *
      * @return empty list on success, list of errors on failure
 	 */
-	static saveEntities(parentEntity, entityList) {
+	def detectUniqueConstraintViolations(entityList, parentEntity) {
 
-//        def parentEntity        = flow.importer_parentEntity
-//        def entityList          = flow.importer_importedData
-        def firstEntity         = entityList[0]
+        def firstEntity     = entityList[0]
 
-        def failedFields        = []
+        def failedFields    = []
 
-        def application         = ApplicationHolder.application
-        def domainClass         = application.getDomainClass(firstEntity.class.name)
-        def sessionFactory      = domainClass.validator.sessionFactory
-        def findAllMethod       = new FindAllPersistentMethod(sessionFactory, application.classLoader)
+        def domainClassReference = AH.application.getDomainClass(firstEntity.class.name).referenceInstance
 
         // we need all children of parentEntity of same type as the added
         // entities (including ones to be added)
-        def childEntities       = findAllMethod.invoke(
-                domainClass.clazz, "findAll",
-                ["from ${firstEntity.class.name} as x where x.parent='$parentEntity.id'"] as Object[]) + entityList
+        def childEntities = domainClassReference.findAllWhere(parent: parentEntity) + entityList
 
-        // figure out the collection name via the hasMany property
-        def hasMany = GrailsClassUtils.getStaticPropertyValue(parentEntity.class, 'hasMany')
-        def collectionName = hasMany.find{it.value == domainClass.clazz}.key.capitalize()
-
-        // add the entities one by one to the parent entity
-        entityList.each { parentEntity."addTo$collectionName" it }
-
-        // checks for duplicate subject names because the uniqueness constraint
-        // does not work at this point (would cause exception later)
-        // see: http://grails.org/doc/latest/ref/Constraints/unique.html
+        // this closure seeks duplicate values of the property with the given
+        // name within the childEntities (old and new ones).
         def checkForDuplicates = { propertyName ->
 
             def entityProperties = childEntities*."$propertyName"
@@ -277,7 +294,7 @@ class GdtImporterService {
                 // property. Add corresponding entries to 'failedFields'.
                 failedFields += entityList.findAll { it."$propertyName" in duplicates }.collect { duplicate ->
 
-                    [   entity :        "entity_${duplicate.getIdentifier()}_$propertyName",
+                    [   entity :        "entity_${duplicate.identifier}_$propertyName",
                         originalValue : duplicate[propertyName] ]
 
                 }
@@ -297,11 +314,31 @@ class GdtImporterService {
 
         }
 
-        if (!failedFields) parentEntity.save(failOnError: true)
-
         failedFields
 
 	}
+
+    /**
+     * Adds entities from the list to parent entity. Remains agnostic about the
+     * specific type of TemplateEntity.
+     *
+     * @param entityList
+     * @param parentEntity
+     * @return -
+     */
+    def addEntitiesToParentEntity(entityList, parentEntity) {
+
+        def firstEntity     = entityList[0]
+        def domainClass     = AH.application.getDomainClass(firstEntity.class.name)
+
+        // figure out the collection name via the hasMany property
+        def hasMany         = GrailsClassUtils.getStaticPropertyValue(parentEntity.class, 'hasMany')
+        def collectionName  = hasMany.find{it.value == domainClass.clazz}.key.capitalize()
+
+        // add the entities one by one to the parent entity
+        entityList.each { parentEntity."addTo$collectionName" it }
+
+    }
     
     /**
     * Method to check if all fields of an entity are empty
@@ -321,43 +358,39 @@ class GdtImporterService {
     }
 
     /**
-	 * This method reads an Excel row and returns it as filled entity
+	 * This method reads a data row and returns it as filled entity
 	 *
      * @param theEntity entity to use
 	 * @param theTemplate Template object
-	 * @param row POI based Excel row containing Cell objects
+	 * @param row list of string values
 	 * @param mcmap map containing MappingColumn objects
 	 * @return list of entities and list of failed cells
 	 */
-    def createEntity(theEntity, theTemplate, Row theRow, mcmap) {
-        def df = new DataFormatter()
-		def tft = TemplateFieldType
+    def createEntity(theEntity, theTemplate, String[] row, mcmap) {
         def error
 
 		// Initialize the entity with the chosen template
 		def entity = gdtService.getInstanceByEntityName(theEntity.entity).
             newInstance(template:theTemplate)
 
-		// Read every cell in the Excel row
-		for (Cell cell: theRow) {
-			
-            // Get the MappingColumn information of the current cell
-			def mc = mcmap[cell.getColumnIndex()]
-			def value
+		// Read every cell in the row
+		row.eachWithIndex { value, columnIndex ->
 
+            // Get the MappingColumn information of the current cell
+			def mc = mcmap[columnIndex]
 			// Check if column must be imported
 			if (mc != null) if (!mc.dontimport) {
 				try {					
                     // Format the cell conform the TemplateFieldType
-                    value = formatValue(df.formatCellValue(cell), mc.templatefieldtype)                
+                    value = formatValue(value, mc.templatefieldtype)
                 } catch (NumberFormatException nfe) {                    
                     // Formatting went wrong, so set the value to an empty string
-					value = ""                    
+					value = ""
 				}
 
 				// Try to set the value for this entity
                 try {				
-                        entity.setFieldValue(mc.property, value, true)
+                    entity.setFieldValue(mc.property, value, true)
 				} catch (Exception iae) {
 					
                     // The entity field value could not be set
@@ -382,15 +415,10 @@ class GdtImporterService {
 	 */
 	def formatValue(String value, TemplateFieldType templateFieldType) throws NumberFormatException {
 		switch (templateFieldType) {
-			case TemplateFieldType.STRING: return value.trim()
-			case TemplateFieldType.TEXT: return value.trim()
-			case TemplateFieldType.LONG: return (long) Double.valueOf(value)			
-			case TemplateFieldType.DOUBLE: return Double.valueOf(value.replace(",", "."));
-			case TemplateFieldType.STRINGLIST: return value.trim()
-			case TemplateFieldType.ONTOLOGYTERM: return value.trim()
-			case TemplateFieldType.DATE: return value
-			default: return value
+            case TemplateFieldType.LONG:    return Double.valueOf(value.replace(",", ".")).longValue()
+            case TemplateFieldType.DOUBLE:  return Double.valueOf(value.replace(",", "."))
 		}
+        return value.trim()
 	}
 
 	static def similarity(l_seq, r_seq, degree = 2) {

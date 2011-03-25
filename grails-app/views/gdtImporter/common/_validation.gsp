@@ -15,11 +15,11 @@
 <script type="text/javascript">
  $(document).ready(function() {
         // mark error fields
-        <g:each in="${importer_failedFields}" var="field">
+        <g:each in="${gdtImporter_failedFields}" var="field">
           var element = $("select[name=${field.entity}]");
           if (element.size()) {
             element.addClass('error');
-            element.append( new Option("Invalid: ${field.originalValue}","#invalidterm", true, true) );
+            element.append( new Option("Invalid: ${field.originalValue}","${field.originalValue}", true, true) );
           } else {
             element = $("input[name=${field.entity}]");
             element.addClass('error');
@@ -29,15 +29,14 @@
   });
 </script>
 
-<g:if test="${importer_invalidentities}"><br/><br/>
-  <b>There are ${importer_invalidentities} entities which could not be validated, they are indicated by a red color, please correct them before continuing.</b>
+<g:if test="${gdtImporter_invalidentities}"><br/><br/>
+  <b>There are ${gdtImporter_invalidentities} entities which could not be validated, they are indicated by a red color, please correct them before continuing.</b>
 </g:if>
 
 <div class="wizard" id="wizard">
     <div class="tableEditor">
 	<g:set var="showHeader" value="${true}"/>
-	    <g:each status="index" var="table" in="${datamatrix}">
-		<g:each status="i" var="entity" in="${table}">
+	    <g:each status="index" var="entity" in="${entityList}">
 		    <g:if test="${showHeader}">
 			<g:set var="showHeader" value="${false}"/>
 			<div class="header">
@@ -51,7 +50,6 @@
 			<af:templateColumns id="${entity.hashCode()}" entity="${entity}" template="${entity.template}" name="entity_${entity.getIdentifier()}" class="column" subject="${entity.hashCode()}" addDummy="true" />
 		    </div>
 		</g:each>
-	    </g:each>
     </div>
     <div class="sliderContainer">
       <div class="slider"></div>

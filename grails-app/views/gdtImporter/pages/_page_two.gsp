@@ -14,5 +14,5 @@
 <af:page>
 <h1>Assign properties to columns</h1>
   <p>Below you see a preview of your imported file, please correct the automatically detected types.</p>  
-  <GdtImporter:properties header="${importer_header}" datamatrix="${importer_datamatrix}"/>
+  <GdtImporter:properties header="${gdtImporter_header}" dataMatrix="${gdtImporter_dataMatrix}"/>
 </af:page>

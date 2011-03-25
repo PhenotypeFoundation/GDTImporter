@@ -14,7 +14,7 @@
 <af:page>
  <h1>Fill in missing mappings</h1>
     You must fill in the missing mappings.
-    <GdtImporter:missingProperties datamatrix="${importer_importedData}" failedFields="${importer_failedFields}"/>
+    <GdtImporter:validation entityList="${gdtImporter_entityList}" failedFields="${gdtImporter_failedFields}"/>
 </af:page>
 
 <g:render template="common/error"/>

@@ -22,7 +22,7 @@
 		Choose your Excel file to import:
 	    </td>
 	    <td width="100px">
-		<af:fileFieldElement name="importfile" value="${importer_params?.importfile}"/>
+		<af:fileFieldElement name="importfile" value="${gdtImporter_params?.importfile}"/>
 	    </td>
 	</tr>
 	<tr>
@@ -30,7 +30,7 @@
 		Use data from sheet:
 	    </td>
 	    <td width="100px">
-		<g:select name="sheetindex" from="${1..25}" value="${importer_params?.sheetindex}"/>
+		<g:select name="sheetindex" from="${1..25}" value="${gdtImporter_params?.sheetindex}"/>
 	    </td>
 	</tr>
 	<tr>
@@ -38,7 +38,7 @@
 		Columnheader starts at row:
 	    </td>
 	    <td width="100px">
-		<g:select name="headerrow" from="${1..10}" value="${importer_params?.headerrow} optionKey="${{it-1}}"/>
+		<g:select name="headerrow" from="${1..10}" value="${gdtImporter_params?.headerrow} optionKey="${{it-1}}"/>
 	    </td>
 	</tr>
 	<tr>
@@ -46,7 +46,7 @@
 		Data starts at row:
 	    </td>
 	    <td width="100px">
-		<g:select name="datamatrix_start" from="${2..10}" value="${importer_params?.datamatrix_start}"/>
+		<g:select name="dataMatrix_start" from="${2..10}" value="${gdtImporter_params?.dataMatrix_start}"/>
 	    </td>
 	</tr>	
 	<tr>
@@ -58,7 +58,7 @@
 		name="entity"
 		id="entity"
 		from="${GdtService.cachedEntities}"
-        value="${importer_params?.entity}"
+        value="${gdtImporter_params?.entity}"
 		optionValue="${{it.name}}"
 		optionKey="${{it.encoded}}"
 		noSelection="['':'-Choose type of data-']"
@@ -68,12 +68,13 @@
 					    onSuccess:'updateSelect(\'template_id\',data,false,false,\'default\')')}" />
 	    </td>
 	</tr>
-    <tr id="studyfield">
+    <tr id="parentEntityField">
 	    <td>
-		Choose your study:
+		Choose your ${gdtImporter_parentEntityClassName.toLowerCase()}:
 	    </td>
 	    <td>
-		<g:select name="study.id" from="${studies}" optionKey="id" optionValue="${{ it.code + ' - ' + it.title }}" value="${importer_params?.study?.id}"/>
+		<g:select name="parentEntity.id" from="${gdtImporter_userParentEntities}" optionKey="id" />
+		%{--<g:select name="parentEntity.id" from="${gdtImporter_userParentEntities}" optionKey="id" optionValue="${ it.code + ' - ' + it.title }"/>--}%
 	    </td>
 	</tr>
 	<tr>
@@ -81,7 +82,7 @@
 		<div id="datatemplate">Choose type of data template:</div>
 	    </td>
 	    <td>
-		<g:select rel="template" entity="none" name="template_id" optionKey="id" optionValue="name" from="${importer_datatemplates}" value="${importer_params?.template_id}"/>
+		<g:select rel="template" entity="none" name="template_id" optionKey="id" optionValue="name" from="${gdtImporter_datatemplates}" value="${gdtImporter_params?.template_id}"/>
 	    </td>
 	</tr>
 	</table>

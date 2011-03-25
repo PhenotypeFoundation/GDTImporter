@@ -153,8 +153,8 @@
 
 		// If a study has been selected, don't show the "Choose study" field, otherwise do
 		if ($('#' + 'entity :selected').text() == 'Study')
-			$('#studyfield').hide();
-		else $('#studyfield').show();
+			$('#parentEntityField').hide();
+		else $('#parentEntityField').show();
 
 		$('select[name=template_id]').attr('entity', $('#' + 'entity').val());
 
