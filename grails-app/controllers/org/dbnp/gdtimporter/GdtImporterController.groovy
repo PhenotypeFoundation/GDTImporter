@@ -176,14 +176,14 @@ class GdtImporterController {
 
 				def template = Template.get(flow.gdtImporter_template_id)
 
-				flow.gdtImporter_importmappings = GDTImportMapping.findAllByTemplate(template)
+				flow.gdtImporter_importmappings = GdtImportMapping.findAllByTemplate(template)
 
 				flow.page = 2
 				success()
 			}
 			on("refresh") {
 				def template = Template.get(flow.gdtImporter_template_id)
-				flow.gdtImporter_importmappings = GDTImportMapping.findAllByTemplate(template)
+				flow.gdtImporter_importmappings = GdtImportMapping.findAllByTemplate(template)
 
 				// a name was given to the current property mapping, try to store it
 				if (params.mappingname) {
@@ -379,10 +379,10 @@ class GdtImporterController {
 	 * @returns return value not used
 	 */
 	def propertiesLoadImportMappingPage(flow, flash, params) {
-		def im = ImportMapping.get(params.importmapping_id.toInteger())
+		def im = GdtImportMapping.get(params.importmapping_id.toInteger())
 		im.refresh()
 
-		im.mappingcolumns.each { gdtmappingcolumn ->
+		im.gdtmappingcolumns.each { gdtmappingcolumn ->
 
 			flow.gdtImporter_header[gdtmappingcolumn.index.toInteger()] = gdtmappingcolumn
 
@@ -404,7 +404,7 @@ class GdtImporterController {
 		def template = Template.get(flow.gdtImporter_template_id)
 
 		// Create new GDTImportMapping instance and persist it
-		def im = new GDTImportMapping(name: params.mappingname, entity: flow.gdtImporter_entityclass, template: template).save()
+		def im = new GdtImportMapping(name: params.mappingname, entity: flow.gdtImporter_entityclass, template: template).save()
 
 		params.columnproperty.index.each { columnindex, property ->
 			// Create an actual class instance of the selected entity with the selected template
@@ -420,7 +420,7 @@ class GdtImporterController {
 			}
 
 			// Create new GDTMappingColumn instance
-			def mc = new GDTMappingColumn(gdtimportmapping: im,
+			def mc = new GdtMappingColumn(gdtimportmapping: im,
 				name: flow.gdtImporter_header[columnindex.toInteger()].name,
 				property: property,
 				index: columnindex,
