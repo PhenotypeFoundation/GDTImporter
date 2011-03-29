@@ -19,9 +19,12 @@
 <script type="text/javascript">
 $(document).ready(function(){
 	$('#datamatrix').dataTable(
-        { "aoColumnDefs": [
-            { "bSortable": false, "aTargets": [ 0 ] }
-        ] });
+        {   "iDisplayLength": 5,
+            "bFilter": false,
+            "aLengthMenu": [[5, 10, 25, 50], [5, 10, 25, "All"]],
+            "aoColumnDefs": [
+                { "bSortable": false, "aTargets": [ 0 ] }
+            ] });
 });
 
 </script>
