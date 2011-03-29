@@ -176,7 +176,7 @@ class GdtImporterController {
 
 				def template = Template.get(flow.gdtImporter_template_id)
 
-				flow.gdtImporter_importmappings = GdtImportMapping.findAllByTemplate(template)
+                flow.gdtImporter_importmappings = GdtImportMapping.findAllByTemplate(template)
 
 				flow.page = 2
 				success()
