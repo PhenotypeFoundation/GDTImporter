@@ -226,6 +226,8 @@ class GdtImporterController {
 			}.to "pageThree"
 			on("next") {
 
+                flash.wizardErrors  = [:]
+
                 def entityList = [], failedFields = []
 
                 (entityList, failedFields)  = gdtImporterService.setEntityListFieldValuesFromParams(flow.gdtImporter_entityList, params)
@@ -248,7 +250,6 @@ class GdtImporterController {
 
                 if (failedFields) {
                     flow.gdtImporter_failedFields = failedFields
-                    flash.wizardErrors  = [:]
                     appendErrorMap(['error': "One or more properties could not be set. Please correct the cells marked red."], flash.wizardErrors)
                     log.error ".import wizard mapping error, could not validate all entities"
                     error()
