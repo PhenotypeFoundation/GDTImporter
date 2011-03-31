@@ -23,7 +23,10 @@
 	 */
 %>
 <script type="text/javascript">
-	// Initially called when starting the import wizard
+    var oldImportfile = '';
+    var checkEverySeconds =  2;
+
+    // Initially called when starting the import wizard
 	function onPage() {
 		// GENERAL
 		onStudyWizardPage();
@@ -42,6 +45,17 @@
 
 			return false;
 		});
+
+        // Create listened which is checking whether a (new) file has been uploaded
+        oldImportfile = $("#importfile").val();
+
+        setInterval(function() {
+            if($("#importfile").val() != oldImportfile)
+            {
+                // FireChangeEvent();
+                alert("geupload")
+            }
+        }, checkEverySeconds*1000);
 
          // attach event to apply fuzzy matching
          $('#fuzzymatchselect').click(function() {
