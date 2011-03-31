@@ -19,17 +19,18 @@
 <script type="text/javascript">
 $(document).ready(function(){
 	$('#datamatrix').dataTable(
-        {   //"sScrollX": "100%",
-		    //"sScrollXInner": "110%",
-		    //"bScrollCollapse": true,
+        {   "sScrollX": "100%",
+//		    "sScrollXInner": "110%",
+		    "bScrollCollapse": true,
 
             "iDisplayLength": 5,
             "bFilter": false,
             "aLengthMenu": [[5, 10, 25, 50], [5, 10, 25, "All"]],
-
-            "aoColumnDefs": [
-                { "bSortable": false, "aTargets": [ 0 ] }
-            ] });
+            "bSort": false
+//            "aoColumnDefs": [
+//                { "bSortable": false, "aTargets": [ "_all" ] }
+//            ]
+        });
 });
 
 </script>
@@ -57,45 +58,48 @@ $(document).ready(function(){
 </table>
 
 <div style="width:auto">
+
     <table id="datamatrix">
-        <thead>
+     <thead>
         <g:set var="usedfuzzymatches" value="${'-'}"/>
-        <g:each var="mappingcolumn" in="${gdtImporter_header}">
-            <!-- set selected values based on submitted columnproperties, actually refresh -->
-            <g:if test="${gdtImporter_columnproperty}">
-                <g:set var="selected" value="${gdtImporter_columnproperty.index['' + mappingcolumn.index + '']}"/>
-            </g:if>
-            <g:else>
-                <g:set var="selected" value="${mappingcolumn.property}"/>
-            </g:else>
+        <g:each var="mappingcolumn" in="${gdtImporter_header}" status="index">
+          <!-- set selected values based on submitted columnproperties, actually refresh -->
+          <g:if test="${gdtImporter_columnproperty}">
+              <g:set var="selected" value="${gdtImporter_columnproperty.index['' + mappingcolumn.index + '']}"/>
+          </g:if>
+              <g:else>
+              <g:set var="selected" value="${mappingcolumn.property}"/>
+          </g:else>
 
-            <g:set var="matchvalue" value="${mappingcolumn.name}"/>
-            <!-- store the found match -->
-            <g:set var="fuzzymatch" value="${importer.propertyChooser(name:columnproperty, mappingcolumn:mappingcolumn, matchvalue:mappingcolumn.name, selected:selected, fuzzymatching:gdtImporter_fuzzymatching, template_id:gdtImporter_template_id, returnmatchonly:'true')}"/>
+          <g:set var="matchvalue" value="${mappingcolumn.name}"/>
+          <th>${mappingcolumn.name}
+                <!-- store the found match -->
+          <g:set var="fuzzymatch" value="${importer.propertyChooser(name:columnproperty, mappingcolumn:mappingcolumn, matchvalue:mappingcolumn.name, selected:selected, fuzzymatching:gdtImporter_fuzzymatching, template_id:gdtImporter_template_id, returnmatchonly:'true')}"/>
 
-            <g:if test="${usedfuzzymatches.contains( fuzzymatch.toString() ) }">
-                <g:set var="matchvalue" value=""/>
-            </g:if>
+          <g:if test="${usedfuzzymatches.contains( fuzzymatch.toString() ) }">
+              <g:set var="matchvalue" value=""/>
+          </g:if>
 
-            <th>${mappingcolumn.name}
-                <GdtImporter:propertyChooser name="columnproperty" mappingcolumn="${mappingcolumn}" matchvalue="${matchvalue}" selected="${selected}" fuzzymatching="${gdtImporter_fuzzymatching}" template_id="${gdtImporter_template_id}" allfieldtypes="true"/>
-            </th>
+          <GdtImporter:propertyChooser name="columnproperty" mappingcolumn="${mappingcolumn}" matchvalue="${matchvalue}" selected="${selected}" fuzzymatching="${gdtImporter_fuzzymatching}" template_id="${gdtImporter_template_id}" allfieldtypes="true"/>
+              </th>
 
-            <!-- build up a string with fuzzy matches used, to prevent duplicate fuzzy matching -->
-            <g:set var="usedfuzzymatches" value="${usedfuzzymatches + ',' + fuzzymatch.toString() }"/>
+              <!-- build up a string with fuzzy matches used, to prevent duplicate fuzzy matching -->
+              <g:set var="usedfuzzymatches" value="${usedfuzzymatches + ',' + fuzzymatch.toString() }"/>
+
         </g:each>
-        </thead>
-        <tbody>
-        <g:each var="row" in="${gdtImporter_dataMatrix}">
-            <tr>
-                <g:each var="column" in="${row}">
-                    <td class="datamatrixbgcolor">
-                        <g:if test="${column.toString()==''}">.</g:if>
-                        <g:else>${column.toString()}</g:else>
-                    </td>
-                </g:each>
-            </tr>
-        </g:each>
-        </tbody>
+    </thead>
+    <tbody>
+
+    <g:each var="row" in="${gdtImporter_dataMatrix}">
+    <tr>
+      <g:each var="column" in="${row}">
+        <td class="dataMatrix">
+          <g:if test="${column.toString()==''}">.</g:if>
+          <g:else>${column.toString()}</g:else>
+        </td>
+      </g:each>
+    </tr>
+    </g:each>
+    </tbody>
 </table>
 </div>

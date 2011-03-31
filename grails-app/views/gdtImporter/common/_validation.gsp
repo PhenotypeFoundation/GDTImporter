@@ -43,11 +43,11 @@
 				<div class="firstColumn"></div>
 				<af:templateColumnHeaders entity="${entity}" class="column" />
 			</div>
-			<input type="hidden" name="entity" value="${entity.getClass().getName()}">
+			<input type="hidden" name="entity" value="${entity.class.name}">
 		    </g:if>
 		    <div class="row">
 				<div class="firstColumn"></div>
-			<af:templateColumns id="${entity.hashCode()}" entity="${entity}" template="${entity.template}" name="entity_${entity.getIdentifier()}" class="column" subject="${entity.hashCode()}" addDummy="true" />
+			<af:templateColumns id="${entity.hashCode()}" entity="${entity}" template="${entity.template}" name="entity_${entity.identifier}" class="column" subject="${entity.hashCode()}" addDummy="true" />
 		    </div>
 		</g:each>
     </div>
