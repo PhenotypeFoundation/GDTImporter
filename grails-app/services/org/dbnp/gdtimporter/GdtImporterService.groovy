@@ -214,6 +214,47 @@ class GdtImporterService {
 		[entityList, errorList]
 	}
 
+    /**
+     * Replaces entities in the list with existing ones if the preferred
+     * identifier matches otherwise leaves the entities untouched.
+     *
+     * @param entityList the list of entities
+     * @param parentEntity the parent entity (if any) to which the entities
+     *  (will) belong
+     * @return
+     */
+    def replaceEntitiesByExistingOnesIfNeeded(entityList, parentEntity) {
+
+        entityList.collect { entity ->
+
+            def preferredIdentifierField = entity.giveDomainFields().find { it.preferredIdentifier }
+            if (preferredIdentifierField) {
+
+                def preferredIdentifierValue = entity[preferredIdentifierField.name]
+
+                def c = entity.createCriteria()
+
+                // find an entity with the same parent (in case of a non-parent
+                // entity) and preferred identifier value
+                def existingEntity = c.get {
+                    eq( preferredIdentifierField.name, preferredIdentifierValue )
+                    if (parentEntity) eq( "parent", parentEntity )
+                }
+
+                if (existingEntity) {
+
+                    // overwrite all field values of the existing entity
+                    // TODO: make this more efficient
+                    entity.giveFields().each { field ->
+                        existingEntity.setFieldValue(field.name, entity.getFieldValue(field.name))
+                    }
+
+                    existingEntity
+                } else
+                    entity
+            }
+        }
+    }
 
     /**
      * Sets field values for a list of entities based on user input via params
@@ -275,6 +316,8 @@ class GdtImporterService {
 
         def firstEntity     = entityList[0]
 
+        def preferredIdentifierName = firstEntity.giveDomainFields().find { it.preferredIdentifier }?.name
+
         def failedFields    = []
 
         def domainClass     = AH.application.getDomainClass(firstEntity.class.name)
@@ -288,7 +331,10 @@ class GdtImporterService {
         // name within the childEntities (old and new ones).
         def checkForDuplicates = { propertyName ->
 
-            def entityProperties = childEntities*."$propertyName"
+            // skip checking existing entities (only new ones) if we're
+            // dealing with a preferred identifier. This enables updating.
+            def entityProperties = propertyName == preferredIdentifierName ?
+                entityList*."$propertyName" : childEntities*."$propertyName"
 
             def uniques     = [] as Set
             def duplicates  = [] as Set
@@ -318,7 +364,10 @@ class GdtImporterService {
 
             }
             // did we find a 'Unique' constraint? check for duplicate entries
-            if (hasUniqueConstraint) checkForDuplicates constrainedProperty.key
+            if (hasUniqueConstraint) {
+
+                checkForDuplicates constrainedProperty.key
+            }
 
         }
 
@@ -364,8 +413,8 @@ class GdtImporterService {
         def hasMany         = GrailsClassUtils.getStaticPropertyValue(parentEntity.class, 'hasMany')
         def collectionName  = hasMany.find{it.value == domainClass.clazz}.key.capitalize()
 
-        // add the entities one by one to the parent entity
-        entityList.each { parentEntity."addTo$collectionName" it }
+        // add the entities one by one to the parent entity (unless it's set already)
+        entityList.each { if (!it.parent) parentEntity."addTo$collectionName" it }
 
     }
 

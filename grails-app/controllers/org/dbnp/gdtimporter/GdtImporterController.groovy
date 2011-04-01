@@ -230,13 +230,11 @@ class GdtImporterController {
 
                 def entityList = [], failedFields = []
 
-                (entityList, failedFields)  = gdtImporterService.setEntityListFieldValuesFromParams(flow.gdtImporter_entityList, params)
-
-                // overwrite the flow's entityList
-                flow.gdtImporter_entityList = entityList
+                (entityList, failedFields) = gdtImporterService.setEntityListFieldValuesFromParams(flow.gdtImporter_entityList, params)
 
                 if (flow.gdtImporter_parentEntity) {
-                    def duplicateFailedFields   = gdtImporterService.detectUniqueConstraintViolations(entityList, flow.gdtImporter_parentEntity)
+
+                    def duplicateFailedFields = gdtImporterService.detectUniqueConstraintViolations(entityList, flow.gdtImporter_parentEntity)
 
                     if (duplicateFailedFields) {
                         appendErrorMap(['duplicates': "Some of the fields that should be unique are duplicates."], flash.wizardErrors)
@@ -257,23 +255,32 @@ class GdtImporterController {
 
                     flow.page = 4
 
-                    if (flow.gdtImporter_parentEntity) // only add to parent entity when there is one
-                        gdtImporterService.addEntitiesToParentEntity(flow.gdtImporter_entityList, flow.gdtImporter_parentEntity, )
+                    // if the entities being imported have a preferred identifier
+                    // that already exists (within the parent entity, if applicable)
+                    // load and update them instead of adding new ones.
+                    entityList = gdtImporterService.replaceEntitiesByExistingOnesIfNeeded(entityList, flow.gdtImporter_parentEntity)
 
+                    // overwrite the flow's entityList
+                    flow.gdtImporter_entityList = entityList
+
+                    // save the parent entity containing the added entities
+                    if (flow.gdtImporter_parentEntity) {
+                        gdtImporterService.addEntitiesToParentEntity(flow.gdtImporter_entityList, flow.gdtImporter_parentEntity)
+                        if (!flow.gdtImporter_parentEntity.save()) {
+                            log.error ".gdtImporter [pageThree] could not save parent entity."
+                            error()
+                        } else success()
                     // if the entities we're adding are parent entities
                     // themselves, set owner fields and save them individually
-                    if (flow.gdtImporter_entity_type == flow.gdtImporter_parentEntityClassName) {
+                    } else{
                         flow.gdtImporter_entityList.each{
                             it.owner = authenticationService.getLoggedInUser()
                             it.save(failOnError:true)
                         }
-                    // otherwise, just save the parent entity containing them
-                    } else if (!flow.gdtImporter_parentEntity.save()) {
-                        log.error ".gdtImporter [pageThree] could not save parent entity."
-                        error()
-                    } else success()
+                        success()
+                    }
 
-                    success()
+
                 }
 			}.to "finalPage"
 			on("previous").to "pageTwo"
