@@ -570,4 +570,30 @@ class GdtImporterController {
 
 		return errors
 	}
+
+    def getDatamatrixAsJSON = {
+        def workbook
+        def importfile = new XmlSlurper().parseText(params.importfile[params.importfile.indexOf('<pre')..-1]).toString()
+        def importedFile = fileService.get(importfile)
+        def headerColumns = []
+        def aaData = []
+
+		if (importedFile.exists()) {
+			try {
+				workbook = gdtImporterService.getWorkbook(new FileInputStream(importedFile))
+			} catch (Exception e) {
+				log.error ".importer wizard could not load file: " + e
+				return false
+            }
+		}
+
+        // Load all data from the sheet
+        def datamatrix = gdtImporterService.getDataMatrix(workbook, null, 0, 0)
+
+        //def headerColumns = [[sTitle:"kolom1"], [sTitle:"kolom2"], [sTitle:"kolom3"]]
+        datamatrix[0].length.times { headerColumns+= [sTitle:"Column"+it]}
+
+        def dataTables = [iTotalRecords:2, iTotalDisplayRecords:2, aoColumns:headerColumns, aaData: datamatrix]
+        render dataTables as JSON
+    }
 }

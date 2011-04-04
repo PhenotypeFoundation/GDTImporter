@@ -140,8 +140,9 @@ class GdtImporterService {
 	 * used in the preview.
 	 *
 	 * @param workbook Workbook class object
+        * @param header header, used to determine width of datamatrix, null if method should detect length internally
 	 * @param sheetIndex sheet index used
-     * @param dataMatrixStartRow
+        * @param dataMatrixStartRow
 	 * @param count amount of rows of data to read, starting at dataMatrixStartRow
 	 * @return two dimensional array (dataMatrix) of cell values
 	 */
@@ -152,13 +153,16 @@ class GdtImporterService {
 
         count = count ? Math.min(sheet.lastRowNum, count) : sheet.lastRowNum
 
+        // Determine length of header
+        def headerLength = (!header) ? sheet.getRow(sheet.getFirstRowNum()).getLastCellNum(): header.size()
+
 		// Walk through all rows
 		((dataMatrixStartRow + sheet.getFirstRowNum())..count).each { rowIndex ->
 			def dataMatrixRow = []
             def excelRow = sheet.getRow(rowIndex)
 
             if (excelRow)
-                header.size().times { columnIndex ->
+                headerLength.times { columnIndex ->
 
                     def cell = excelRow.getCell(columnIndex, Row.CREATE_NULL_AS_BLANK)
 

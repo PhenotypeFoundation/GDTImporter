@@ -48,7 +48,7 @@
 	    <td width="100px">
 		<g:select name="dataMatrix_start" from="${2..10}" value="${gdtImporter_params?.dataMatrix_start}"/>
 	    </td>
-	</tr>	
+	</tr>
 	<tr>
 	    <td>
 		Choose type of data:
@@ -86,6 +86,10 @@
 	    </td>
 	</tr>
 	</table>
+
+    <div id="datamatrixpreview"></div>
+
+
 </af:page>
 
 <g:render template="common/error"/>
