@@ -92,7 +92,8 @@ class GdtImporterService {
 
 		// Walk through all rows
 		(sheet.firstRowNum..count).each { rowIndex ->
-			def dataMatrixRow = []
+
+            def dataMatrixRow = []
 
             // Get the current row
             def excelRow = sheet.getRow(rowIndex)
