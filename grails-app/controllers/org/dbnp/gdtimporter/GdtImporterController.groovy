@@ -573,9 +573,7 @@ class GdtImporterController {
         def workbook
 
         //TODO: fix annoying existing uploaded prefix issue
-        println "VOOR:" + params.importfile
         def importfile = params.importfile.replaceAll(/<pre.*?>/,'').replace('</pre>','').replace('existing*','')
-        println "NA:" + importfile
 
         def importedFile = fileService.get(importfile)
         def headerColumns = []
