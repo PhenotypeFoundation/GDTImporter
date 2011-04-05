@@ -43,93 +43,28 @@ class GdtImporterService {
     /**
      * This method reads the header from the workbook.
      *
-	 * @param wb high level representation of the workbook
-	 * @param sheetIndex sheet to use within the workbook
+	 * @param datamatrix two dimensional datamatrix containing raw read data from Excel
      * @param headerRow row where the header starts
-     * @param datamatrixStart row where the actual data starts
      * @param entityInstance type of entity we are reading
 	 * @return header representation as a GdtMappingColumn hashmap
 	 */
-    def getHeader(Workbook workbook, int sheetIndex, int headerRow, int dataMatrixStart, entityInstance = null) {
-        def sheet = workbook.getSheetAt(sheetIndex)
-		def dataMatrixRow = sheet.getRow(dataMatrixStart)
-		def header = []
+    def getHeader(String[][] datamatrix, int headerRowIndex, entityInstance = null) {
+        def header = []
 		def df = new DataFormatter()
 
 		// Loop through all columns from the first row in the datamatrix and try to
         // determine the type of values stored (integer, string, float)
-        (0..dataMatrixRow.getLastCellNum() - 1).each { columnIndex ->
-
-			// Get the current cell type, formatted cell value and the Cell object
-            def cellType = dataMatrixRow.getCell(columnIndex, Row.CREATE_NULL_AS_BLANK).getCellType()
-			def cellData = df.formatCellValue(dataMatrixRow.getCell(columnIndex))
-			def cellObject = dataMatrixRow.getCell(columnIndex)
-
-            // Get the header for the current column
-            def columnHeaderCell = sheet.getRow(headerRow + sheet.getFirstRowNum()).getCell(columnIndex)
+        datamatrix[0].length.times { columnIndex ->
 
             // Default TemplateFieldType is a String
             def fieldType = TemplateFieldType.STRING
 
             // Create the GdtMappingColumn object for the current column and store it in the header HashMap
-            header[columnIndex] = new GdtMappingColumn(name: df.formatCellValue(columnHeaderCell),
+            header[columnIndex] = new GdtMappingColumn(name: datamatrix[0][columnIndex],
 							templatefieldtype: fieldType,
 							index: columnIndex,
 							entityclass: entityInstance.class,
 							property: "")
-
-			// Check for every CellType
-			switch (cellType) {
-				case Cell.CELL_TYPE_STRING:
-                    // Parse cell value as Double
-					def doubleBoolean = true
-					fieldType = TemplateFieldType.STRING
-
-                    // Is this string perhaps a Double?
-					try {
-						formatValue(cellData, TemplateFieldType.DOUBLE)
-					} catch (NumberFormatException nfe) { doubleBoolean = false }
-					finally {
-						if (doubleBoolean) fieldType = TemplateFieldType.DOUBLE
-					}
-
-					// Set the TemplateFieldType for the current column
-                    header[columnIndex].templatefieldtype = fieldType
-					break
-				case Cell.CELL_TYPE_NUMERIC:
-					fieldType = TemplateFieldType.LONG
-					def doubleBoolean = true
-					def longBoolean = true
-
-                    // Is this cell really an Integer?
-					try {
-						Long.valueOf(cellData)
-					} catch (NumberFormatException nfe) { longBoolean = false }
-					finally {
-						if (longBoolean) fieldType = TemplateFieldType.LONG
-					}
-
-                    // It's not a Long, perhaps a Double?
-					if (!longBoolean)
-						try {
-							formatValue(cellData, TemplateFieldType.DOUBLE)
-						} catch (NumberFormatException nfe) { doubleBoolean = false }
-						finally {
-							if (doubleBoolean) fieldType = TemplateFieldType.DOUBLE
-						}
-
-					// Is the cell object perhaps a Date object?
-                    if (DateUtil.isCellDateFormatted(cellObject)) fieldType = TemplateFieldType.DATE
-
-					// Set the TemplateFieldType for the current column
-                    header[columnIndex].templatefieldtype = fieldType
-
-					break
-				case Cell.CELL_TYPE_BLANK:
-                    break
-				default:
-                    break
-			}
 		}
 
         header
@@ -140,29 +75,31 @@ class GdtImporterService {
 	 * used in the preview.
 	 *
 	 * @param workbook Workbook class object
-        * @param header header, used to determine width of datamatrix, null if method should detect length internally
 	 * @param sheetIndex sheet index used
-        * @param dataMatrixStartRow
-	 * @param count amount of rows of data to read, starting at dataMatrixStartRow
+     * @param dataMatrixStartRow row to start reading from
+	 * @param count amount of rows of data to read
 	 * @return two dimensional array (dataMatrix) of cell values
 	 */
-    String[][] getDataMatrix(Workbook workbook, header, int sheetIndex, int dataMatrixStartRow, int count = 0) {
+    String[][] getDataMatrix(Workbook workbook, int sheetIndex, int count = 0) {
         def sheet = workbook.getSheetAt(sheetIndex)
         def df = new DataFormatter()
 		def dataMatrix = []
 
         count = count ? Math.min(sheet.lastRowNum, count) : sheet.lastRowNum
 
-        // Determine length of header
-        def headerLength = (!header) ? sheet.getRow(sheet.getFirstRowNum()).getLastCellNum(): header.size()
+        // Determine amount of columns
+        def columnCount = sheet.getRow(sheet.getFirstRowNum()).getLastCellNum()
 
 		// Walk through all rows
-		((dataMatrixStartRow + sheet.getFirstRowNum())..count).each { rowIndex ->
+		(sheet.firstRowNum..count).each { rowIndex ->
 			def dataMatrixRow = []
+
+            // Get the current row
             def excelRow = sheet.getRow(rowIndex)
 
+            // Excel contains some data?
             if (excelRow)
-                headerLength.times { columnIndex ->
+                columnCount.times { columnIndex ->
 
                     def cell = excelRow.getCell(columnIndex, Row.CREATE_NULL_AS_BLANK)
 
@@ -175,11 +112,12 @@ class GdtImporterService {
 
                     }
                 }
+
             if ( dataMatrixRow.any{it} ) // is at least 1 of the cells non empty?
 			    dataMatrix.add(dataMatrixRow)
 		}
 
-		dataMatrix
+        dataMatrix
     }
 
     /**

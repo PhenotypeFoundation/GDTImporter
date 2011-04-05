@@ -351,9 +351,8 @@ class GdtImporterController {
 			def entityName = gdtService.decryptEntity(params.entity.decodeURL())
 
 			flow.gdtImporter_template_id = params.template_id
-			flow.gdtImporter_sheetindex = params.sheetindex.toInteger() - 1 // 0 == first sheet
-			flow.gdtImporter_dataMatrix_start = params.dataMatrix_start.toInteger() - 1 // 0 == first row
-			flow.gdtImporter_headerrow = params.headerrow.toInteger()
+			flow.gdtImporter_sheetIndex = params.sheetIndex.toInteger() - 1 // 0 == first sheet
+			flow.gdtImporter_headerRowIndex = params.headerRowIndex.toInteger()
 			flow.gdtImporter_entityclass = gdtService.getInstanceByEntityName(entityName)
 			flow.gdtImporter_entity = gdtService.cachedEntities.find { it.entity == entityName }
 
@@ -362,18 +361,17 @@ class GdtImporterController {
 
             def entityInstance = flow.gdtImporter_entityclass.newInstance(template: flow.gdtImporter_templates)
 
-			// Get the header from the Excel file using the arguments given in the first step of the wizard
-			flow.gdtImporter_header = gdtImporterService.getHeader(workbook,
-				flow.gdtImporter_sheetindex,
-				flow.gdtImporter_headerrow,
-				flow.gdtImporter_dataMatrix_start,
-				entityInstance)
+            // Load raw data
+            flow.gdtImporter_dataMatrix = gdtImporterService.getDataMatrix(workbook, flow.gdtImporter_sheetIndex, 0)
 
-			// Load a preview of the data
-            flow.gdtImporter_dataMatrix = gdtImporterService.getDataMatrix(
-				workbook, flow.gdtImporter_header,
-				flow.gdtImporter_sheetindex,
-				flow.gdtImporter_dataMatrix_start)
+			// Get the header from the Excel file using the arguments given in the first step of the wizard
+			flow.gdtImporter_header = gdtImporterService.getHeader(
+                    flow.gdtImporter_dataMatrix,
+                    flow.gdtImporter_headerRowIndex,
+                    entityInstance)
+
+			// Remove first row (header)
+            flow.gdtImporter_dataMatrix -= flow.gdtImporter_dataMatrix[0]
 
 			flow.gdtImporter_allfieldtypes = "true"
 
@@ -576,7 +574,6 @@ class GdtImporterController {
         def importfile = new XmlSlurper().parseText(params.importfile[params.importfile.indexOf('<pre')..-1]).toString()
         def importedFile = fileService.get(importfile)
         def headerColumns = []
-        def aaData = []
 
 		if (importedFile.exists()) {
 			try {
@@ -588,12 +585,13 @@ class GdtImporterController {
 		}
 
         // Load all data from the sheet
-        def datamatrix = gdtImporterService.getDataMatrix(workbook, null, 0, 0)
+        def datamatrix = gdtImporterService.getDataMatrix(workbook, 0, 0)
 
         //def headerColumns = [[sTitle:"kolom1"], [sTitle:"kolom2"], [sTitle:"kolom3"]]
         datamatrix[0].length.times { headerColumns+= [sTitle:"Column"+it]}
 
-        def dataTables = [iTotalRecords:2, iTotalDisplayRecords:2, aoColumns:headerColumns, aaData: datamatrix]
+        def dataTables = [iTotalRecords:datamatrix.length, iTotalDisplayRecords:datamatrix.length, aoColumns:headerColumns, aaData: datamatrix]
+
         render dataTables as JSON
     }
 }

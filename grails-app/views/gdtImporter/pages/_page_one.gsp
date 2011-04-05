@@ -30,7 +30,7 @@
 		Use data from sheet:
 	    </td>
 	    <td width="100px">
-		<g:select name="sheetindex" from="${1..25}" value="${gdtImporter_params?.sheetindex}"/>
+		<g:select name="sheetIndex" from="${1..25}" value="${gdtImporter_params?.sheetIndex}"/>
 	    </td>
 	</tr>
 	<tr>
@@ -38,15 +38,7 @@
 		Columnheader starts at row:
 	    </td>
 	    <td width="100px">
-		<g:select name="headerrow" from="${1..10}" value="${gdtImporter_params?.headerrow} optionKey="${{it-1}}"/>
-	    </td>
-	</tr>
-	<tr>
-	    <td width="100px">
-		Data starts at row:
-	    </td>
-	    <td width="100px">
-		<g:select name="dataMatrix_start" from="${2..10}" value="${gdtImporter_params?.dataMatrix_start}"/>
+		<g:select name="headerRowIndex" from="${1..10}" value="${gdtImporter_params?.headerRowIndex} optionKey="${{it-1}}"/>
 	    </td>
 	</tr>
 	<tr>

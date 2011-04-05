@@ -66,7 +66,9 @@
                         var jsonDatamatrix= eval(msg);
 
                         $('#datamatrix').dataTable( {
-
+                                                    "sScrollX": "100%",
+                                                    "bScrollCollapse": true,
+                                                    "bSort" : false,
                                                     "aaData": jsonDatamatrix.aaData,
                                                     "aoColumns": jsonDatamatrix.aoColumns
                         } );
