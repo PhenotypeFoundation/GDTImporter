@@ -16,6 +16,7 @@
     <title>Importer wizard (simple)</title>
     <h1>Importer wizard</h1>
     <p>You can import your Excel data to the server by choosing a file from your local harddisk in the form below.</p>
+    <input type="hidden" id="pageOneRefresh" name="pageOneRefresh" value="${gdtImporter_params?.pageOneRefresh}"/>
 	<table border="0">
     	<tr>
 	    <td width="100px">
@@ -80,7 +81,6 @@
 	</table>
 
     <div id="datamatrixpreview"></div>
-
 
 </af:page>
 

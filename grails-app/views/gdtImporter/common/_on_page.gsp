@@ -51,10 +51,14 @@
         // Create listener which is checking whether a (new) file has been uploaded
         oldImportfile = $("#importfile").val();
 
+        console.log( $("#pageOneRefresh").val() )
+
         setInterval(function() {
-            if($("#importfile").val() != oldImportfile)
+            if( ($("#importfile").val() != oldImportfile) || $("#pageOneRefresh").val() == "true")
             {
-                // FireChangeEvent();
+                // Reset the refresh page value
+                $("#pageOneRefresh").val("")
+
                 $('#datamatrixpreview').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="datamatrix"></table>' );
 
                 $.ajax({

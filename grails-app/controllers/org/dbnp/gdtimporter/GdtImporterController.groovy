@@ -123,7 +123,7 @@ class GdtImporterController {
 				// If the file already exists an "existing*" string is added, but we don't
 				// want that after a refresh of the first step in the import wizard, so remove
 				// that string
-				flash.gdtImporter_params.importfile = params.importfile.replace('existing*', '')
+				flash.gdtImporter_params.importfile = params.importfile.replace('<pre>','').replace('</pre>','').replace('existing*','')
 
 				success()
 			}.to "pageOne"
@@ -131,15 +131,15 @@ class GdtImporterController {
 			on("next") {
 				flash.wizardErrors = [:]
 				flash.gdtImporter_params = params
-				flash.gdtImporter_params.importfile = params.importfile.replace('existing*', '')
-
+				flash.gdtImporter_params.importfile = params.importfile.replace('<pre>','').replace('</pre>','').replace('existing*','')
+                flash.gdtImporter_params.pageOneRefresh = 'true'
 
                 if (!flash.gdtImporter_params.importfile) {
                     log.error('.gdtImporterWizard [pageOne] no file specified.')
                     error()
                 } else {
                     // TODO: remove this hack
-                    flash.gdtImporter_params.importfile = new XmlSlurper().parseText(flash.gdtImporter_params.importfile[flash.gdtImporter_params.importfile.indexOf('<pre')..-1]).toString()
+                    flash.gdtImporter_params.importfile.replaceAll(/[(\<pre\>)(\<\/pre\>)(existing\*)]/,'')
                 }
 
 				if (params.entity) {
@@ -571,7 +571,12 @@ class GdtImporterController {
 
     def getDatamatrixAsJSON = {
         def workbook
-        def importfile = new XmlSlurper().parseText(params.importfile[params.importfile.indexOf('<pre')..-1]).toString()
+
+        //TODO: fix annoying existing uploaded prefix issue
+        println "VOOR:" + params.importfile
+        def importfile = params.importfile.replace('<pre>','').replace('</pre>','').replace('existing*','')
+        println "NA:" + importfile
+
         def importedFile = fileService.get(importfile)
         def headerColumns = []
 
