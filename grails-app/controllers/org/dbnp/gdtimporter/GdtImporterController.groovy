@@ -383,18 +383,22 @@ class GdtImporterController {
 	 */
 	boolean handleFileImportPage(flow, flash, params) {
 
+        if (!params['importfile']) {
+            log.error ".importer wizard: no file selected."
+            this.appendErrorMap(['error': "No file uploaded. Please upload an excel file."], flash.wizardErrors)
+            return false
+        }
+
 		def importedFile = fileService.get(params['importfile'])
         def workbook
 
-		if (importedFile.exists()) {
-			try {
-				workbook = gdtImporterService.getWorkbook(new FileInputStream(importedFile))
-			} catch (Exception e) {
-				log.error ".importer wizard could not load file: " + e
-				this.appendErrorMap(['error': "Wrong file (format), the importer requires an Excel file as input"], flash.wizardErrors)
-				return false
-            }
-		}
+        try {
+            workbook = gdtImporterService.getWorkbook(new FileInputStream(importedFile))
+        } catch (Exception e) {
+            log.error ".importer wizard could not load file: " + e
+            this.appendErrorMap(['error': "Wrong file (format), the importer requires an Excel file as input"], flash.wizardErrors)
+            return false
+        }
 
 		if (params.entity && params.template_id) {
 
