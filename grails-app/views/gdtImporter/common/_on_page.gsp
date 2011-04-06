@@ -26,6 +26,8 @@
     var oldImportfile = '';
     var checkEverySeconds =  2;
 
+    var dataTable;
+
     // Initially called when starting the import wizard
         function onPage() {
                 // GENERAL
@@ -76,7 +78,7 @@
                             $("select[name='sheetIndex']").append(new Option(i+1, i));
                         }
 
-                        $('#datamatrix').dataTable( {
+                        dataTable = $('#datamatrix').dataTable( {
                                                     "sScrollX": "100%",
                                                     "bScrollCollapse": true,
                                                     "bSort" : false,
@@ -270,9 +272,11 @@
                         // Set selected sheet
                         $("#sheetIndex").val( sheetIndex ).attr('selected',true);
 
-                        alert(jsonDatamatrix.aoColumns)
+                        dataTable.fnDestroy();
 
-                        $('#datamatrix').dataTable( {
+                        $('#datamatrixpreview').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="datamatrix"></table>' );
+
+                        dataTable = $('#datamatrix').dataTable( {
                                                     "sScrollX": "100%",
                                                     "bScrollCollapse": true,
                                                     "bRetrieve": false,
@@ -281,6 +285,8 @@
                                                     "aaData": jsonDatamatrix.aaData,
                                                     "aoColumns": jsonDatamatrix.aoColumns
                         } );
+
+                        dt.fnUpdate();
                     }
                 });
 
