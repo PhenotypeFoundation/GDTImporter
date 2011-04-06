@@ -26,6 +26,8 @@ import org.apache.poi.ss.usermodel.*
 import org.codehaus.groovy.grails.commons.GrailsClassUtils
 import org.codehaus.groovy.grails.commons.ApplicationHolder as AH
 import org.codehaus.groovy.grails.orm.hibernate.validation.UniqueConstraint
+import org.apache.poi.hssf.usermodel.HSSFDataFormat
+import org.apache.poi.hssf.usermodel.HSSFDataFormatter
 
 class GdtImporterService {
     def authenticationService
@@ -102,7 +104,10 @@ class GdtImporterService {
             if (excelRow)
                 columnCount.times { columnIndex ->
 
+                    // Read the cell, even is it a blank
                     def cell = excelRow.getCell(columnIndex, Row.CREATE_NULL_AS_BLANK)
+                    // Set the cell type to string, this prevents any kind of formatting
+                    cell.setCellType(Cell.CELL_TYPE_STRING)
 
                     switch (cell.cellType) {
                         case Cell.CELL_TYPE_STRING:     dataMatrixRow.add( cell.stringCellValue )
@@ -360,6 +365,8 @@ class GdtImporterService {
         entityList.each { if (!it.parent) parentEntity."addTo$collectionName" it }
 
     }
+
+    def find
 
     /**
     * Method to check if all fields of an entity are empty

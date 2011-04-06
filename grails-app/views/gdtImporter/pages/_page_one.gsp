@@ -23,7 +23,7 @@
 		Choose your Excel file to import:
 	    </td>
 	    <td width="100px">
-		<af:fileFieldElement name="importfile" value="${gdtImporter_params?.importfile}"/>
+		<af:fileFieldElement name="importfile" value="${gdtImporter_params?.importfile}" id="importfile"/>
 	    </td>
 	</tr>
 	<tr>
