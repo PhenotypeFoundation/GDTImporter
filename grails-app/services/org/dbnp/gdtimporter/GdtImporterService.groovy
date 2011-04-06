@@ -26,6 +26,8 @@ import org.apache.poi.ss.usermodel.*
 import org.codehaus.groovy.grails.commons.GrailsClassUtils
 import org.codehaus.groovy.grails.commons.ApplicationHolder as AH
 import org.codehaus.groovy.grails.orm.hibernate.validation.UniqueConstraint
+import org.apache.poi.hssf.usermodel.HSSFDataFormat
+import org.apache.poi.hssf.usermodel.HSSFDataFormatter
 
 class GdtImporterService {
     def authenticationService
@@ -339,7 +341,7 @@ class GdtImporterService {
 
         def failedFields = []
         def failedEntities = []
-        
+
         // collect fieldError not related to setting fields, e.g. non-nullable fields
         // that were null.
         entityList.each { entity ->
@@ -439,6 +441,8 @@ class GdtImporterService {
 				// Try to set the value for this entity
                 try {
                     entity.setFieldValue(mc.property, value, true)
+                    println entity.templateStringFields
+                    println "setting field $mc.property with value: $value"
 				} catch (Exception iae) {
 
                     // The entity field value could not be set

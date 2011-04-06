@@ -405,7 +405,7 @@ class GdtImporterController {
 			def entityName = gdtService.decryptEntity(params.entity.decodeURL())
 
 			flow.gdtImporter_template_id = params.template_id
-			flow.gdtImporter_sheetIndex = params.sheetIndex.toInteger() - 1 // 0 == first sheet
+			flow.gdtImporter_sheetIndex = params.sheetIndex.toInteger() // 0 == first sheet
 			flow.gdtImporter_headerRowIndex = params.headerRowIndex.toInteger()
 			flow.gdtImporter_entityclass = gdtService.getInstanceByEntityName(entityName)
 			flow.gdtImporter_entity = gdtService.cachedEntities.find { it.entity == entityName }
@@ -626,9 +626,14 @@ class GdtImporterController {
 
     def getDatamatrixAsJSON = {
         def workbook
+        def sheetIndex = 0
 
         //TODO: fix annoying existing uploaded prefix issue
         def importfile = params.importfile.replaceAll(/<pre.*?>/,'').replace('</pre>','').replace('existing*','')
+
+        // A sheet has been selected?
+        if (params.sheetIndex != "null")
+            sheetIndex = params.sheetIndex.toInteger()
 
         def importedFile = fileService.get(importfile)
         def headerColumns = []
@@ -643,12 +648,12 @@ class GdtImporterController {
 		}
 
         // Load all data from the sheet
-        def datamatrix = gdtImporterService.getDataMatrix(workbook, 0, 0)
+        def datamatrix = gdtImporterService.getDataMatrix(workbook, sheetIndex, 0)
 
         //def headerColumns = [[sTitle:"kolom1"], [sTitle:"kolom2"], [sTitle:"kolom3"]]
         datamatrix[0].length.times { headerColumns+= [sTitle:"Column"+it]}
 
-        def dataTables = [iTotalRecords:datamatrix.length, iTotalDisplayRecords:datamatrix.length, aoColumns:headerColumns, aaData: datamatrix]
+        def dataTables = [numberOfSheets:workbook.getNumberOfSheets(), iTotalRecords:datamatrix.length, iTotalDisplayRecords:datamatrix.length, aoColumns:headerColumns, aaData: datamatrix]
 
         render dataTables as JSON
     }
