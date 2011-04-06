@@ -12,6 +12,9 @@
  */
 %>
 <af:page>
+<script language="text/javascript">
+$('html, body').animate({scrollTop:0}, 'fast');
+</script>
 <h1>Assign properties to columns</h1>
   <p>Below you see a preview of your imported file, please correct the automatically detected types.</p>  
   <GdtImporter:properties header="${gdtImporter_header}" dataMatrix="${gdtImporter_dataMatrix}"/>
