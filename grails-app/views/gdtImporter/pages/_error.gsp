@@ -16,6 +16,6 @@
 <p>
 	We encountered an problem storing your data! You can either
 	<af:ajaxButton name="tryAgain" value="try again" afterSuccess="onPage();" class="prevnext" />
-	or file a bugreport.
+	or file a bug report.
 </p>
 </af:page>

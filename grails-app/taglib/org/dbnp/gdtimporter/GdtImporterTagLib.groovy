@@ -22,8 +22,6 @@
 package org.dbnp.gdtimporter
 
 import org.dbnp.gdt.*
-import org.apache.poi.ss.usermodel.Cell
-import org.apache.poi.ss.usermodel.DataFormatter
 
 /**
  * The GdtImporter tag library contains easy tags for displaying and
@@ -70,7 +68,7 @@ class GdtImporterTagLib {
 	 * @param header array containing mappingcolumn objects	 
 	 */
 	def properties = { attrs ->
-		def header = attrs['header']		
+		def header = attrs['header']
 
 		out << render(template: "common/properties", model: [header:header])
 	}
@@ -93,26 +91,12 @@ class GdtImporterTagLib {
 
 		def t = Template.get(attrs['template_id'])
 		def mc = attrs['mappingcolumn']
-		def allfieldtypes = attrs['allfieldtypes']
         def matchvalue = (attrs['fuzzymatching']=="true") ? attrs['matchvalue'] : ""
         def selected = (attrs['selected']) ? attrs['selected'] : ""
 		def fuzzyTreshold = attrs[ 'treshold' ] && attrs[ 'treshold' ].toString().isNumber() ? Float.valueOf( attrs[ 'treshold' ] ) : 0.1;
         def returnmatchonly = attrs['returnmatchonly']
 
-        def domainfields = mc.entityclass.giveDomainFields().findAll { it.type == mc.templatefieldtype }
-		domainfields = domainfields.findAll { it.preferredIdentifier != mc.identifier}
-
-		//def templatefields = (allfieldtypes=="true") ? t.fields : t.fields.findAll { it.type == mc.templatefieldtype }
-		/*def templatefields = (allfieldtypes == "true") ?
-			t.fields + mc.entity.giveDomainFields() :
-			t.fields.findAll { it.type == mc.templatefieldtype } + domainfields*/
         def templatefields = t.fields + mc.entityclass.giveDomainFields()
-
-		// map identifier to preferred column
-		def prefcolumn = mc.entityclass.giveDomainFields().findAll { it.preferredIdentifier == true }
-
-		/*(mc.identifier) ? out << createPropertySelect(attrs['name'], prefcolumn, matchvalue, mc.index) :
-			out << createPropertySelect(attrs['name'], templatefields, matchvalue, mc.index)*/
 
         //  Just return the matched value only
         if (returnmatchonly)

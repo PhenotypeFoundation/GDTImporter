@@ -49,7 +49,7 @@ class GdtImporterController {
 	 */
 	def pagesFlow = {
 		// start the flow
-		onStart {		
+		onStart {
 
 			// define variables in the flow scope which is availabe
 			// throughout the complete webflow also have a look at
@@ -62,6 +62,7 @@ class GdtImporterController {
 				[title: 'Import file'],
 				[title: 'Assign properties'],
 				[title: 'Check imported data'],
+                [title: 'Confirmation'],
 				[title: 'Done']
 			]
 			flow.cancel = true;
@@ -86,11 +87,11 @@ class GdtImporterController {
 				flow.page = 1
 				success()
 			}
-			on("next").to "pageOne"
+			on("next").to "fileImportPage"
 		}
 
 		// File import and entity template selection page
-		pageOne {
+		fileImportPage {
 			render(view: "_page_one")
 			onRender {
 				log.info ".entering import wizard"
@@ -110,8 +111,6 @@ class GdtImporterController {
 				success()
 			}
 
-            on('temp').to 'pageOne'
-
 			on("refresh") {
 
 				if (params.entity) {
@@ -126,16 +125,16 @@ class GdtImporterController {
 				flash.gdtImporter_params.importfile = params.importfile.replaceAll(/<pre.*?>/,'').replace('</pre>','').replace('existing*','')
 
 				success()
-			}.to "pageOne"
+			}.to "fileImportPage"
 
 			on("next") {
-				flash.wizardErrors = [:]
+                flash.wizardErrors = [:]
 				flash.gdtImporter_params = params
 				flash.gdtImporter_params.importfile = params.importfile.replaceAll(/<pre.*?>/,'').replace('</pre>','').replace('existing*','')
                 flash.gdtImporter_params.pageOneRefresh = 'true'
 
                 if (!flash.gdtImporter_params.importfile) {
-                    log.error('.gdtImporterWizard [pageOne] no file specified.')
+                    log.error('.gdtImporterWizard [fileImportPage] no file specified.')
                     error()
                 } else {
                     // TODO: remove this hack
@@ -152,25 +151,26 @@ class GdtImporterController {
                 // parent entity's domain class (if applicable).
                 if (flow.gdtImporter_entity_type != flow.gdtImporter_parentEntityClassName)
     				flow.gdtImporter_parentEntity = flow.gdtImporter_parentEntityReferenceInstance.get(params.parentEntity.id)
-
 				// Trying to import data into an existing parent entity?
-				if (flow.gdtImporter_parentEntity)
-					if (flow.gdtImporter_parentEntity.canWrite(authenticationService.getLoggedInUser()))
-						fileImportPage(flow, flash, params) ? success() : error()
+				if (flow.gdtImporter_parentEntity) {
+					if (flow.gdtImporter_parentEntity.canWrite(authenticationService.getLoggedInUser())) {
+						handleFileImportPage(flow, flash, params) ? success() : error()
+                    }
 					else {
 						log.error ".importer wizard wrong permissions"
 						this.appendErrorMap(['error': "You don't have the right permissions"], flash.wizardErrors)
 						error()
 					}
+                }
 				else {
-					fileImportPage(flow, flash, params) ? success() : error()
+					handleFileImportPage(flow, flash, params) ? success() : error()
 				}
 
-			}.to "pageTwo"
+			}.to "propertyAssignmentPage"
 		}
 
 		// Property to column assignment page
-		pageTwo {
+		propertyAssignmentPage {
 			render(view: "_page_two")
 			onRender {
 				log.info ".import wizard properties page"
@@ -198,7 +198,7 @@ class GdtImporterController {
                 flow.gdtImporter_fuzzymatching = (params.fuzzymatching == "true") ? "true" : "false"
 
 				success()
-			}.to "pageTwo"
+			}.to "propertyAssignmentPage"
 
 			on("next") {
 				flow.gdtImporter_fuzzymatching = "false"
@@ -208,12 +208,12 @@ class GdtImporterController {
 					log.error ".import wizard, properties are set wrong"
 					error()
 				}
-			}.to "pageThree"
-			on("previous").to "pageOne"
+			}.to "mappingPage"
+			on("previous").to "fileImportPage"
 		}
 
 		// Mapping page
-		pageThree {
+		mappingPage {
 			render(view: "_page_three")
 			onRender {
 				log.info ".import wizard mapping page"
@@ -223,68 +223,75 @@ class GdtImporterController {
 			}
 			on("refresh") {
 				success()
-			}.to "pageThree"
+			}.to "mappingPage"
 			on("next") {
 
-                flash.wizardErrors  = [:]
+                def entityList = [], failedFields = [], numberOfUpdatedEntities = []
 
-                def entityList = [], failedFields = []
-
+                // update the entity list using values from the params
                 (entityList, failedFields) = gdtImporterService.setEntityListFieldValuesFromParams(flow.gdtImporter_entityList, params)
 
-                if (flow.gdtImporter_parentEntity) {
+                // try to validate the entities
+                flow.gdtImporter_failedFields = doValidation(entityList, flow.gdtImporter_parentEntity) + failedFields
 
-                    def duplicateFailedFields = gdtImporterService.detectUniqueConstraintViolations(entityList, flow.gdtImporter_parentEntity)
+                if (flow.gdtImporter_failedFields) {
 
-                    if (duplicateFailedFields) {
-                        appendErrorMap(['duplicates': "Some of the fields that should be unique are duplicates."], flash.wizardErrors)
-                    }
-
-                    failedFields += duplicateFailedFields
-
-                }
-
-                failedFields += gdtImporterService.validateEntities(entityList)
-
-                if (failedFields) {
-                    flow.gdtImporter_failedFields = failedFields
-                    appendErrorMap(['error': "One or more properties could not be set. Please correct the cells marked red."], flash.wizardErrors)
-                    log.error ".import wizard mapping error, could not validate all entities"
                     error()
-                } else {
 
-                    flow.page = 4
+                } else {
 
                     // if the entities being imported have a preferred identifier
                     // that already exists (within the parent entity, if applicable)
                     // load and update them instead of adding new ones.
-                    entityList = gdtImporterService.replaceEntitiesByExistingOnesIfNeeded(entityList, flow.gdtImporter_parentEntity)
+                    (entityList, numberOfUpdatedEntities) = gdtImporterService.replaceEntitiesByExistingOnesIfNeeded(entityList, flow.gdtImporter_parentEntity)
 
-                    // overwrite the flow's entityList
+                    // overwrite the flow's entityList and store amount of
+                    // updated entities in the flow.
                     flow.gdtImporter_entityList = entityList
+                    flow.gdtImporter_numberOfUpdatedEntities = numberOfUpdatedEntities
 
-                    // save the parent entity containing the added entities
-                    if (flow.gdtImporter_parentEntity) {
-                        gdtImporterService.addEntitiesToParentEntity(flow.gdtImporter_entityList, flow.gdtImporter_parentEntity)
-                        if (!flow.gdtImporter_parentEntity.save()) {
-                            log.error ".gdtImporter [pageThree] could not save parent entity."
-                            error()
-                        } else success()
-                    // if the entities we're adding are parent entities
-                    // themselves, set owner fields and save them individually
-                    } else{
-                        flow.gdtImporter_entityList.each{
-                            it.owner = authenticationService.getLoggedInUser()
-                            it.save(failOnError:true)
-                        }
-                        success()
-                    }
-
+                    success()
 
                 }
-			}.to "finalPage"
-			on("previous").to "pageTwo"
+			}.to "confirmationPage"
+			on("previous").to "propertyAssignmentPage"
 		}
+
+        confirmationPage {
+            render(view: "_page_four")
+            onRender {
+				log.info ".import wizard confirmation page"
+
+				flow.page = 4
+				success()
+            }
+            
+            on("next") {
+
+                flow.page = 5
+
+                // save the parent entity containing the added entities
+                if (flow.gdtImporter_parentEntity) {
+
+                    gdtImporterService.addEntitiesToParentEntity(flow.gdtImporter_entityList, flow.gdtImporter_parentEntity)
+                    if (!flow.gdtImporter_parentEntity.save()) {
+                        log.error ".gdtImporter [mappingPage] could not save parent entity."
+                        error()
+                    } else success()
+                // if the entities we're adding are parent entities
+                // themselves, set owner fields and save them individually
+                } else{
+                    flow.gdtImporter_entityList.each{
+                        it.owner = authenticationService.getLoggedInUser()
+                        it.save(failOnError:true)
+                    }
+                    success()
+                }
+
+            }.to "finalPage"
+
+            on("previous").to "mappingPage"
+        }
 
 		// render errors
 		error {
@@ -295,7 +302,7 @@ class GdtImporterController {
 				// works (it is disabled on the final page)
 				flow.page = 4
 			}
-			on("tryAgain").to "pageOne"
+			on("tryAgain").to "fileImportPage"
 		}
 
 		// last wizard page
@@ -309,6 +316,48 @@ class GdtImporterController {
 				flow.clear()
 			}
 		}
+	}
+
+	/**
+     * Collects validation errors. Explicitly checks for unique constraint
+     * validation errors for entities belonging to a parent entity. Fills
+     *
+	 * @param entityList The entity list
+     * @param parentEntity The parent entity (if any
+     * @return a list of validation errors
+	 */
+	def doValidation(entityList, parentEntity) {
+
+        flash.wizardErrors = [:]
+
+        def duplicateFailedFields = [], failedValidationFields = [], failedEntities = []
+
+        // explicitly check for unique constraint violations in case of non-
+        // parent entities
+        if (parentEntity) {
+
+            duplicateFailedFields = gdtImporterService.detectUniqueConstraintViolations(entityList, parentEntity)
+
+            if (duplicateFailedFields)
+                appendErrorMap(['duplicates': "Some of the fields that should be unique are duplicates."], flash.wizardErrors)
+
+        }
+
+        (failedValidationFields, failedEntities) = gdtImporterService.validateEntities(entityList)
+
+        if (failedValidationFields) {
+
+            // TODO: somehow prevent different error messages about same
+            // field from overwriting each other (e.g. 'code' failure
+            // for multiple studies)
+            failedEntities.each { failedEntity ->
+                appendErrors(failedEntity, flash.wizardErrors)
+            }
+
+            log.error ".import wizard mapping error, could not validate all entities"
+        }
+
+        failedValidationFields + duplicateFailedFields
 	}
 
 	/**
@@ -328,11 +377,12 @@ class GdtImporterController {
 	/**
 	 * Handle the file import page.
 	 *
-	 * @param Map LocalAttributeMap (the flow scope)
-	 * @param Map GrailsParameterMap (the flow parameters = form data)
+	 * @param flow The flow scope
+	 * @param params The flow parameters = form data
 	 * @returns boolean true if correctly validated, otherwise false
 	 */
-	boolean fileImportPage(flow, flash, params) {
+	boolean handleFileImportPage(flow, flash, params) {
+
 		def importedFile = fileService.get(params['importfile'])
         def workbook
 
@@ -382,15 +432,15 @@ class GdtImporterController {
 
 
 		log.error ".importer wizard not all fields are filled in"
-		this.appendErrorMap(['error': "Not all fields are filled in, please fill in or select all fields"], flash.wizardErrors)
+		appendErrorMap(['error': "Not all fields are filled in, please fill in or select all fields"], flash.wizardErrors)
 		return false
 	}
 
 	/**
 	 * Load an existing import mapping
 	 *
-	 * @param Map LocalAttributeMap (the flow scope)
-	 * @param Map GrailsParameterMap (the flow parameters = form data)
+`	 * @param flow The flow scope
+	 * @param params The flow parameters = form data
 	 * @returns return value not used
 	 */
 	def propertiesLoadImportMappingPage(flow, flash, params) {
@@ -407,12 +457,12 @@ class GdtImporterController {
 	/**
 	 * Save the properties as an import mapping.
 	 *
-	 * @param Map LocalAttributeMap (the flow scope)
-	 * @param Map GrailsParameterMap (the flow parameters = form data)
+ 	 * @param flow The flow scope
+     * @param params The flow parameters = form data
 	 * @returns return value not used
 	 */
 	def propertiesSaveImportMappingPage(flow, flash, params) {
-		flash.wizardErrors = [:]
+
 		def isPreferredIdentifier = false
 
 		// Find actual Template object from the chosen template name
@@ -473,12 +523,13 @@ class GdtImporterController {
 	/**
 	 * Handle the property mapping page.
 	 *
-	 * @param Map LocalAttributeMap (the flow scope)
-	 * @param Map GrailsParameterMap (the flow parameters = form data)
+     * @param flow The flow scope
+     * @param params The flow parameters = form data
 	 * @returns boolean true if correctly validated, otherwise false
 	 */
 	boolean propertiesPage(flow, flash, params) {
-		flash.wizardErrors = [:]
+
+        flash.wizardErrors = [:]
 
 		// Find actual Template object from the chosen template name
 		def template = Template.get(flow.gdtImporter_template_id)
@@ -498,7 +549,6 @@ class GdtImporterController {
 
 			// Is a "Don't import" property assigned to the column?
 			column.dontimport = (property == "dontimport")
-
 		}
 
 		// Import the workbook and store the table with entity records and store the failed cells
@@ -506,68 +556,69 @@ class GdtImporterController {
 			flow.gdtImporter_dataMatrix,
 			flow.gdtImporter_header)
 
-        failedFields += gdtImporterService.validateEntities(entityList)
+        // try to validate the entities and combine possible errors with errors
+        // from the previous step
+        flow.gdtImporter_failedFields = failedFields + doValidation(entityList, flow.gdtImporter_parentEntity)
 
 		flow.gdtImporter_entityList = entityList
-        flow.gdtImporter_failedFields = failedFields
 
         return true
 	}
 
-	/**
-	 * append errors of a particular object to a map
-	 * @param object
-	 * @param map linkedHashMap
-	 * @void
-	 */
-	def appendErrors(object, map) {
-		this.appendErrorMap(getHumanReadableErrors(object), map)
-	}
+   /**
+    * append errors of a particular object to a map
+    * @param object
+    * @param map linkedHashMap
+    * @void
+    */
+   def appendErrors(object, map) {
+       this.appendErrorMap(getHumanReadableErrors(object), map)
+   }
 
-	def appendErrors(object, map, prepend) {
-		this.appendErrorMap(getHumanReadableErrors(object), map, prepend)
-	}
+   def appendErrors(object, map, prepend) {
+       this.appendErrorMap(getHumanReadableErrors(object), map, prepend)
+   }
 
-	/**
-	 * append errors of one map to another map
-	 * @param map linkedHashMap
-	 * @param map linkedHashMap
-	 * @void
-	 */
-	def appendErrorMap(map, mapToExtend) {
-		map.each() {key, value ->
-			mapToExtend[key] = ['key': key, 'value': value, 'dynamic': false]
-		}
-	}
+   /**
+    * append errors of one map to another map
+    * @param map linkedHashMap
+    * @param map linkedHashMap
+    * @void
+    */
+   def appendErrorMap(map, mapToExtend) {
+       map.each() {key, value ->
+           mapToExtend[key] = ['key': key, 'value': value, 'dynamic': false]
+       }
+   }
 
-	def appendErrorMap(map, mapToExtend, prepend) {
-		map.each() {key, value ->
-			mapToExtend[prepend + key] = ['key': key, 'value': value, 'dynamic': true]
-		}
-	}
+   def appendErrorMap(map, mapToExtend, prepend) {
+       map.each() {key, value ->
+           mapToExtend[prepend + key] = ['key': key, 'value': value, 'dynamic': true]
+       }
+   }
 
-	/**
-	 * transform domain class validation errors into a human readable
-	 * linked hash map
-	 * @param object validated domain class
-	 * @return object  linkedHashMap
-	 */
-	def getHumanReadableErrors(object) {
-		def errors = [:]
-		object.errors.getAllErrors().each() { error ->
-			// error.codes.each() { code -> println code }
+   /**
+    * transform domain class validation errors into a human readable
+    * linked hash map
+    * @param object validated domain class
+    * @return object  linkedHashMap
+    */
+   def getHumanReadableErrors(object) {
+       def errors = [:]
+       object.errors.getAllErrors().each() { error ->
+           // error.codes.each() { code -> println code }
 
-			// generally speaking g.message(...) should work,
-			// however it fails in some steps of the wizard
-			// (add event, add assay, etc) so g is not always
-			// availably. Using our own instance of the
-			// validationTagLib instead so it is always
-			// available to us
-			errors[error.getArguments()[0]] = validationTagLib.message(error: error)
-		}
+           // generally speaking g.message(...) should work,
+           // however it fails in some steps of the wizard
+           // (add event, add assay, etc) so g is not always
+           // availably. Using our own instance of the
+           // validationTagLib instead so it is always
+           // available to us
+           errors[error.getArguments()[0]] = validationTagLib.message(error: error)
+       }
 
-		return errors
-	}
+       return errors
+   }
 
     def getDatamatrixAsJSON = {
         def workbook

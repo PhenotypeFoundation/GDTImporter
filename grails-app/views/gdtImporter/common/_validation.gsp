@@ -29,10 +29,6 @@
   });
 </script>
 
-<g:if test="${gdtImporter_invalidentities}"><br/><br/>
-  <b>There are ${gdtImporter_invalidentities} entities which could not be validated, they are indicated by a red color, please correct them before continuing.</b>
-</g:if>
-
 <div class="wizard" id="wizard">
     <div class="tableEditor">
 	<g:set var="showHeader" value="${true}"/>

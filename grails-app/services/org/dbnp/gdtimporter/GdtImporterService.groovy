@@ -154,7 +154,7 @@ class GdtImporterService {
             if (!isEntityEmpty(entity))
                 entityList.add(entity)
 
-			// If failed cells have been found, add them to the error list
+			// If failed cells have been found, add them to the fieldError list
             // Error contains the entity+identifier+property and the original (failed) value
 			if (error) errorList.add(error)
 		}
@@ -169,11 +169,13 @@ class GdtImporterService {
      * @param entityList the list of entities
      * @param parentEntity the parent entity (if any) to which the entities
      *  (will) belong
-     * @return
+     * @return the updated entity list and the number of updated entities
      */
     def replaceEntitiesByExistingOnesIfNeeded(entityList, parentEntity) {
 
-        entityList.collect { entity ->
+        def numberOfUpdatedEntities = 0
+
+        [entityList.collect { entity ->
 
             def preferredIdentifierField = entity.giveDomainFields().find { it.preferredIdentifier }
             if (preferredIdentifierField) {
@@ -191,6 +193,8 @@ class GdtImporterService {
 
                 if (existingEntity) {
 
+                    numberOfUpdatedEntities++
+
                     // overwrite all field values of the existing entity
                     // TODO: make this more efficient
                     entity.giveFields().each { field ->
@@ -201,7 +205,7 @@ class GdtImporterService {
                 } else
                     entity
             }
-        }
+        }, numberOfUpdatedEntities]
     }
 
     /**
@@ -323,25 +327,42 @@ class GdtImporterService {
 
 	}
 
+    /**
+     *
+     * @param entityList
+     * @return a list of failed fields and a list of failed entities
+     */
     def validateEntities(entityList) {
 
         def failedFields = []
+        def failedEntities = []
         
-        // collect error not related to setting fields, e.g. non-nullable fields
+        // collect fieldError not related to setting fields, e.g. non-nullable fields
         // that were null.
         entityList.each { entity ->
 
-            entity.validate()
+            if (!entity.validate()) failedEntities.add(entity)
 
-            entity.errors.fieldErrors.each { error ->
+            entity.errors.fieldErrors.each { fieldError ->
 
-                if (error.field != 'parent') // ignore parent errors because we'll add the entities to their parent later
-                    failedFields += [entity: "entity_${entity.identifier}_${error.field.toLowerCase().replaceAll("([^a-z0-9])", "_")}", originalValue: error.rejectedValue ?: '']
+                def useError = true
+
+                // if we encounter a parent entity (which has no parent)
+                if (!entity.hasProperty('parent')) {
+
+                    // find the preferred identifier
+                    def preferredIdentifierField = entity.giveDomainFields().find { it.preferredIdentifier }
+
+                    // ignore this field error when it is the preferred identifier
+                    useError = (fieldError.field.toString() != preferredIdentifierField.toString())
+                }
+
+                if (useError && fieldError.field != 'parent') // ignore parent errors because we'll add the entities to their parent later
+                    failedFields += [entity: "entity_${entity.identifier}_${fieldError.field.toLowerCase().replaceAll("([^a-z0-9])", "_")}", originalValue: fieldError.rejectedValue ?: '']
 
             }
         }
-
-        failedFields
+        [failedFields, failedEntities]
     }
 
     /**
@@ -420,9 +441,9 @@ class GdtImporterService {
 				} catch (Exception iae) {
 
                     // The entity field value could not be set
-                    log.error ".import wizard error could not set property `" + mc.property + "` to value `" + value + "`"
+                    log.error ".import wizard fieldError could not set property `" + mc.property + "` to value `" + value + "`"
 
-					// Store the error value (might improve this with name of entity instead of "entity_")
+					// Store the fieldError value (might improve this with name of entity instead of "entity_")
                     // as a map containing the entity+identifier+property and the original value which failed
                     error = [ entity: "entity_" + entity.getIdentifier() + "_" + mc.property.toLowerCase(), originalValue: value]
 				}
