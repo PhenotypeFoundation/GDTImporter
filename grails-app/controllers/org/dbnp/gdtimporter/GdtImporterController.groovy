@@ -202,6 +202,9 @@ class GdtImporterController {
 
 			on("next") {
 				flow.gdtImporter_fuzzymatching = "false"
+
+                flash.wizardErrors = [:]
+
 				if (propertiesPage(flow, flash, params)) {
 					success()
 				} else {
@@ -533,8 +536,6 @@ class GdtImporterController {
 	 */
 	boolean propertiesPage(flow, flash, params) {
 
-        flash.wizardErrors = [:]
-
 		// Find actual Template object from the chosen template name
 		def template = Template.get(flow.gdtImporter_template_id)
 
@@ -559,6 +560,12 @@ class GdtImporterController {
 		def (entityList, failedFields) = gdtImporterService.getDataMatrixAsEntityList(flow.gdtImporter_entity, template,
 			flow.gdtImporter_dataMatrix,
 			flow.gdtImporter_header)
+
+        if (!entityList) {
+            log.error ".importer wizard could not create entities, no mappings made?"
+            appendErrorMap(['error': "Could not create entities since no mappings were specified. Please map at least one column."], flash.wizardErrors)
+            return false
+        }
 
         // try to validate the entities and combine possible errors with errors
         // from the previous step

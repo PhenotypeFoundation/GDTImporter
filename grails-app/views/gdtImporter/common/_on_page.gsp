@@ -285,8 +285,6 @@
                                                     "aaData": jsonDatamatrix.aaData,
                                                     "aoColumns": jsonDatamatrix.aoColumns
                         } );
-
-                        dt.fnUpdate();
                     }
                 });
 
