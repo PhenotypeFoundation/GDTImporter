@@ -107,7 +107,12 @@ class GdtImporterService {
                     // Read the cell, even is it a blank
                     def cell = excelRow.getCell(columnIndex, Row.CREATE_NULL_AS_BLANK)
                     // Set the cell type to string, this prevents any kind of formatting
-                    cell.setCellType(Cell.CELL_TYPE_STRING)
+
+                    // It is a numeric cell?
+                    if (cell.cellType == Cell.CELL_TYPE_NUMERIC)
+                        // It isn't a date cell?
+                        if (!DateUtil.isCellDateFormatted(cell))
+                            cell.setCellType(Cell.CELL_TYPE_STRING)
 
                     switch (cell.cellType) {
                         case Cell.CELL_TYPE_STRING:     dataMatrixRow.add( cell.stringCellValue )
