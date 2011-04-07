@@ -116,6 +116,11 @@ class GdtImporterController {
 					flash.gdtImporter_datatemplates = Template.findAllByEntity(gdtService.getInstanceByEntity(params.entity.decodeURL()))
 				}
 
+                def importfile = params.importfile.replaceAll(/<pre.*?>/,'').replace('</pre>','').replace('existing*','')
+                def dm = getDatamatrixAsJSON(importfile)
+                //println "DAS" + dm.numberOfSheets
+                //getDatamatrixAsJSON
+
 				flash.gdtImporter_params = params
 
 				// If the file already exists an "existing*" string is added, but we don't

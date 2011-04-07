@@ -164,11 +164,11 @@
           });
 
           // attach change event function to prevent duplicate selection of properties
-          $('select[name^=columnproperty.index.]').each ( function() {
+          $('select[name^="columnproperty.index."]').each ( function() {
           $(this).bind('change', function(e) {
               var selection = $(this)
 
-              $('select[name^=columnproperty.index.] option:selected').each ( function() {
+              $('select[name^="columnproperty.index."] option:selected').each ( function() {
                 var selector = $(this)
 
                 if (selection.attr('id') != selector.parent().attr('id') && (selection.val()!="dontimport"))
