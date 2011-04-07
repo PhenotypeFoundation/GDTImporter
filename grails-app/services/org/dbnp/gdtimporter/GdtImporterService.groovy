@@ -441,8 +441,6 @@ class GdtImporterService {
 				// Try to set the value for this entity
                 try {
                     entity.setFieldValue(mc.property, value, true)
-                    println entity.templateStringFields
-                    println "setting field $mc.property with value: $value"
 				} catch (Exception iae) {
 
                     // The entity field value could not be set

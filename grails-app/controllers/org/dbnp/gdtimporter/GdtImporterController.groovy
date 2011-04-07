@@ -82,7 +82,6 @@ class GdtImporterController {
 		mainPage {
 			render(view: "/gdtImporter/index")
 			onRender {
-
 				// let the view know we're in page 1
 				flow.page = 1
 				success()

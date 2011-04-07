@@ -53,8 +53,6 @@
         // Create listener which is checking whether a (new) file has been uploaded
         oldImportfile = $("#importfile").val();
 
-        console.log( $("#pageOneRefresh").val() )
-
         setInterval(function() {
             if( ($("#importfile").val() != oldImportfile) || $("#pageOneRefresh").val() == "true")
             {
@@ -87,10 +85,6 @@
                         } );
                     }
                 });
-
-                //console.log(aaDatamatrix)
-
-
 
             // Update the original
             oldImportfile = $("#importfile").val()
@@ -135,9 +129,8 @@
                     buttons     : {
                                     Save  : function() {
                                                           //alert($(this).parent().$('input[name="mappingname"]').val())
-                                                          alert($(this))
+                                                          //alert($(this))
                                                           var p = $(this).parent().parent().parent()
-                                                          console.log(p.('input[name="mappingname"]').val())
                                                           //alert(vars)
                                                           $(this).dialog('close'); }
                                   },
@@ -172,7 +165,6 @@
           // attach change event function to prevent duplicate selection of properties
           $('select[name^=columnproperty.index.]').each ( function() {
           $(this).bind('change', function(e) {
-              //console.log($(this).val())
               var selection = $(this)
 
               $('select[name^=columnproperty.index.] option:selected').each ( function() {
