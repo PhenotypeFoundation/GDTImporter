@@ -18,6 +18,7 @@
     <p>You can import your Excel data to the server by choosing a file from your local harddisk in the form below.</p>
     <input type="hidden" id="pageOneRefresh" name="pageOneRefresh" value="${gdtImporter_params?.pageOneRefresh}"/>
 	<table border="0">
+        <colgroup width="30%">
     	<tr>
 	    <td width="100px">
 		Choose your Excel file to import:
