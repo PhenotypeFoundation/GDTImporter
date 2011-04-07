@@ -83,5 +83,3 @@
     <div id="datamatrixpreview"></div>
 
 </af:page>
-
-<g:render template="common/error"/>

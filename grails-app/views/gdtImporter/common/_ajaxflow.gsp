@@ -27,5 +27,5 @@
 </af:error>
 </g:if>
 </div>
-<g:render template="common/on_page"/>
-<g:render template="common/please_wait"/>
+<g:render template="common/on_page" plugin="gdtimporter" />
+<g:render template="common/please_wait" plugin="gdtimporter" />

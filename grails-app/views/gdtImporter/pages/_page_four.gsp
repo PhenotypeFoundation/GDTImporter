@@ -28,8 +28,4 @@
    in the database according to their preferred identifier and will be updated.
   </g:if>
   If this is correct, please click 'next' to continue.
-
-
 </af:page>
-
-<g:render template="common/error"/>

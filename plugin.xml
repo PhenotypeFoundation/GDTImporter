@@ -1,4 +1,4 @@
-<plugin name='gdtimporter' version='0.2.2' grailsVersion='1.3.6 &gt; *'>
+<plugin name='gdtimporter' version='0.2.3' grailsVersion='1.3.6 &gt; *'>
   <author>Tjeerd Abma</author>
   <authorEmail>t[dot]w[dot]abma[at]gmail[dot]com</authorEmail>
   <title>Importer plugin for Grails Domain Templates (GDT)</title>

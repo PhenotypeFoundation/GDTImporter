@@ -18,5 +18,6 @@
 %>
 
 </div>
-<g:render template="common/navigation"/>
-<g:render template="common/refresh_flow"/>
+<g:render template="common/navigation" plugin="gdtimporter" />
+<g:render template="common/refresh_flow" plugin="gdtimporter" />
+<g:render template="common/error" plugin="gdtimporter" />

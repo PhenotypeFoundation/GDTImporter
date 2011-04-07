@@ -23,5 +23,4 @@ This concludes the importer wizard. You can click <g:link action="index">here</g
 </p>
 
 All rows were imported succesfully.
-   
 </af:page>

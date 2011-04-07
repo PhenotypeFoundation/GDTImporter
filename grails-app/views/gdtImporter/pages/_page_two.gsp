@@ -19,5 +19,3 @@ $('html, body').animate({scrollTop:0}, 'fast');
   <p>Below you see a preview of your imported file, please correct the automatically detected types.</p>  
   <GdtImporter:properties header="${gdtImporter_header}" dataMatrix="${gdtImporter_dataMatrix}"/>
 </af:page>
-
-<g:render template="common/error"/>

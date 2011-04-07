@@ -17,5 +17,5 @@
  */
 %>
 <h1>AjaxFlow '<i>importer</i>' : page ${page}</h1>
-<g:render template="common/tabs"/>
+<g:render template="common/tabs" plugin="gdtimporter" />
 <div class="content">
