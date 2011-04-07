@@ -26,8 +26,7 @@ import org.apache.poi.ss.usermodel.*
 import org.codehaus.groovy.grails.commons.GrailsClassUtils
 import org.codehaus.groovy.grails.commons.ApplicationHolder as AH
 import org.codehaus.groovy.grails.orm.hibernate.validation.UniqueConstraint
-import org.apache.poi.hssf.usermodel.HSSFDataFormat
-import org.apache.poi.hssf.usermodel.HSSFDataFormatter
+import org.codehaus.groovy.grails.validation.NullableConstraint
 
 class GdtImporterService {
     def authenticationService
@@ -286,7 +285,7 @@ class GdtImporterService {
 
         // this closure seeks duplicate values of the property with the given
         // name within the childEntities (old and new ones).
-        def checkForDuplicates = { propertyName ->
+        def checkForDuplicates = { propertyName, isNullable ->
 
             // skip checking existing entities (only new ones) if we're
             // dealing with a preferred identifier. This enables updating.
@@ -297,7 +296,14 @@ class GdtImporterService {
             def duplicates  = [] as Set
 
             // this approach separates the unique from the duplicate entries
-            entityProperties.each { uniques.add(it) || duplicates.add(it) }
+            entityProperties.each {
+                if (!uniques.add(it)) {
+
+                    // only add to duplicates if null is not allowed and value is null
+                    if (!(it == null && isNullable))
+                        duplicates.add(it)
+                }
+            }
 
             if (duplicates) {
 
@@ -315,15 +321,21 @@ class GdtImporterService {
         // search through the constrained properties for a 'Unique' constraint
         domainClass.constrainedProperties.each { constrainedProperty ->
 
-            def hasUniqueConstraint = constrainedProperty.value.appliedConstraints.find { appliedConstraint ->
+            def hasUniqueConstraint = constrainedProperty.value.appliedConstraints.any { appliedConstraint ->
 
                 appliedConstraint instanceof UniqueConstraint
+
+            }
+
+            def isNullable = constrainedProperty.value.appliedConstraints.any { appliedConstraint ->
+
+                appliedConstraint instanceof NullableConstraint && appliedConstraint.isNullable()
 
             }
             // did we find a 'Unique' constraint? check for duplicate entries
             if (hasUniqueConstraint) {
 
-                checkForDuplicates constrainedProperty.key
+                checkForDuplicates(constrainedProperty.key, isNullable)
             }
 
         }
