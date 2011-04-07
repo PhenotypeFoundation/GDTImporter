@@ -19,6 +19,11 @@
 	<link rel="stylesheet" href="${resource(dir: 'css', file: 'table-editor.css', plugin: 'gdt')}"/>
     
     <script type="text/javascript" src="${resource(dir: 'js', file: 'studywizard.js')}"></script>
+
+    <link rel="stylesheet" href="${resource(dir: 'css', file: 'demo_table.css', plugin: 'gdtimporter')}"/>
+    <link rel="stylesheet" href="${resource(dir: 'css', file: 'demo_table_jui.css', plugin: 'gdtimporter')}"/>
+    <link rel="stylesheet" href="${resource(dir: 'css', file: 'demo_page.css', plugin: 'gdtimporter')}"/>
+    <script type="text/javascript" src="${resource(dir: 'js', file: 'jquery.dataTables.min.js')}"></script>
     
     <g:if env="production">
 	<script type="text/javascript" src="${resource(dir: 'js', file: 'jquery.qtip-1.0.0-rc3.min.js', plugin: 'gdt')}"></script>

@@ -80,6 +80,7 @@
                                                     "sScrollX": "100%",
                                                     "bScrollCollapse": true,
                                                     "bSort" : false,
+                                                    "bPaginate": false,
                                                     "aaData": jsonDatamatrix.aaData,
                                                     "aoColumns": jsonDatamatrix.aoColumns
                         } );
@@ -273,6 +274,7 @@
                                                     "bScrollCollapse": true,
                                                     "bRetrieve": false,
                                                     "bDestroy": true,
+                                                    "bPaginate": false,
                                                     "bSort" : false,
                                                     "aaData": jsonDatamatrix.aaData,
                                                     "aoColumns": jsonDatamatrix.aoColumns

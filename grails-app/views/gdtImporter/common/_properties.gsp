@@ -15,7 +15,6 @@
  */
 %>
 
-<script type="text/javascript" src="${resource(dir: 'js', file: 'jquery.dataTables.min.js')}"></script>
 <script type="text/javascript">
 $(document).ready(function(){
 	$('#datamatrix').dataTable(
