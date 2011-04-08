@@ -165,6 +165,31 @@ class GdtImporterService {
 
 		[entityList, errorList]
 	}
+    /**
+     * @param entityList the list of entities
+     * @param parentEntity the parent entity (if any) to which the entities (will) belong
+     * @return true if
+     */
+    def replaceExistingEntitiesHasEqualTemplate(entityList, parentEntity) {
+        if (entityList == null) return false
+
+        def preferredIdentifierField = entityList[0].giveDomainFields().find { it.preferredIdentifier }
+            if (preferredIdentifierField) {
+
+                def preferredIdentifierValue = entity[preferredIdentifierField.name]
+
+                def c = entity.createCriteria()
+
+                // find an entity with the same parent (in case of a non-parent
+                // entity) and preferred identifier value
+                def existingEntity = c.get {
+                    eq( preferredIdentifierField.name, preferredIdentifierValue )
+                    if (parentEntity) eq( "parent", parentEntity )
+                }
+            }
+
+        existingEntity.template == entityList[0].template
+    }
 
     /**
      * Replaces entities in the list with existing ones if the preferred
@@ -202,7 +227,11 @@ class GdtImporterService {
                     // overwrite all field values of the existing entity
                     // TODO: make this more efficient
                     entity.giveFields().each { field ->
-                        existingEntity.setFieldValue(field.name, entity.getFieldValue(field.name))
+                        try {
+                            existingEntity.setFieldValue(field.name, entity.getFieldValue(field.name))
+                        } catch (Exception e) {
+                            log.error "Can not set field `" + field.name + " to `" + entity.getFieldValue(field.name) + "`"
+                        }
                     }
 
                     existingEntity
