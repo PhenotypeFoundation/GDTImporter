@@ -75,8 +75,14 @@
       <td>
         <div id="datatemplate">Choose type of data template:</div>
       </td>
-      <td>
-        <g:select rel="template" entity="${gdtImporter_params?.entity}" name="template_id" optionKey="id" optionValue="name" from="${gdtImporter_datatemplates}" value="${gdtImporter_params?.template_id}"/>
+      <td>  <g:if test="${gdtImporter_params?.entity}">
+                 <g:set var="entity" value="${gdtImporter_params?.entity}"/>
+            </g:if>
+            <g:else>
+                <g:set var="entity" value="None"/>
+            </g:else>
+
+        <g:select rel="template" entity="${entity}" name="template_id" optionKey="id" optionValue="name" from="${gdtImporter_datatemplates}" value="${gdtImporter_params?.template_id}"/>
       </td>
     </tr>
   </table>
