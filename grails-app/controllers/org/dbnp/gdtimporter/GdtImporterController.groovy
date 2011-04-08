@@ -116,12 +116,13 @@ class GdtImporterController {
 					flash.gdtImporter_datatemplates = Template.findAllByEntity(gdtService.getInstanceByEntity(params.entity.decodeURL()))
 				}
 
-                def importfile = params.importfile.replaceAll(/<pre.*?>/,'').replace('</pre>','').replace('existing*','')
-                def dm = getDatamatrixAsJSON(importfile)
-                //println "DAS" + dm.numberOfSheets
-                //getDatamatrixAsJSON
+                // Let the view know we are refreshing the page, which means
+                // that the JS will reload the Excel preview and the amount of sheets via JSON
+                flash.gdtImporter_pageOneRefresh = 'true'
 
-				flash.gdtImporter_params = params
+
+                // Clone all parameters so they are available again after a refresh
+                flash.gdtImporter_params = params
 
 				// If the file already exists an "existing*" string is added, but we don't
 				// want that after a refresh of the first step in the import wizard, so remove

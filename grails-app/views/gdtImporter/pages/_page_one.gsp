@@ -16,7 +16,7 @@
     <title>Importer wizard (simple)</title>
     <h1>Importer wizard</h1>
     <p>You can import your Excel data to the server by choosing a file from your local harddisk in the form below.</p>
-    <input type="hidden" id="pageOneRefresh" name="pageOneRefresh" value="${gdtImporter_params?.pageOneRefresh}"/>
+    <input type="hidden" id="pageOneRefresh" name="pageOneRefresh" value="${gdtImporter_pageOneRefresh}"/>
 	<table border="0">
         <colgroup width="30%">
     	<tr>
@@ -56,7 +56,7 @@
 		optionValue="${{it.name}}"
 		optionKey="${{it.encoded}}"
 		noSelection="['':'-Choose type of data-']"
-		onChange="${remoteFunction( controller: 'importer',
+		onChange="${remoteFunction( controller: 'gdtImporter',
 					    action:'ajaxGetTemplatesByEntity',
 					    params: '\'entity=\'+escape(this.value)',
 					    onSuccess:'updateSelect(\'template_id\',data,false,false,\'default\',\''+ gdtImporter_parentEntityClassName +'\')')}"/>
@@ -76,7 +76,7 @@
         <div id="datatemplate">Choose type of data template:</div>
       </td>
       <td>
-        <g:select rel="template" entity="none" name="template_id" optionKey="id" optionValue="name" from="${gdtImporter_datatemplates}" value="${gdtImporter_params?.template_id}"/>
+        <g:select rel="template" entity="${gdtImporter_params?.entity}" name="template_id" optionKey="id" optionValue="name" from="${gdtImporter_datatemplates}" value="${gdtImporter_params?.template_id}"/>
       </td>
     </tr>
   </table>

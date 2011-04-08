@@ -246,6 +246,7 @@
         * This function will update the datamatrix preview, based on the sheet index supplied
         */
         function updateDatamatrixPreview() {
+
             $.ajax({
                         type: "POST",
                         data: "importfile=" + $("#importfile").val() + "&sheetIndex=" + $("#sheetIndex").val() ,
