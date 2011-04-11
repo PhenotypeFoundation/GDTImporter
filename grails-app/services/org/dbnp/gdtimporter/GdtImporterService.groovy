@@ -198,11 +198,13 @@ class GdtImporterService {
      * @param entityList the list of entities
      * @param parentEntity the parent entity (if any) to which the entities
      *  (will) belong
-     * @return the updated entity list and the number of updated entities
+     * @return [updated entity list, the number of updated entities, the number
+     *          of template changes]
      */
     def replaceEntitiesByExistingOnesIfNeeded(entityList, parentEntity) {
 
-        def numberOfUpdatedEntities = 0
+        def numberOfUpdatedEntities     = 0
+        def numberOfChangedTemplates    = 0
 
         [entityList.collect { entity ->
 
@@ -224,8 +226,15 @@ class GdtImporterService {
 
                     numberOfUpdatedEntities++
 
+                    // Set the existing entity's template to the user selected template.
+                    // they are the same for all entities so we'll get the template for
+                    // the first entity
+                    if (existingEntity.template != entity.template) {
+                        numberOfChangedTemplates++
+                        existingEntity.setTemplate(entity.template)
+                    }
+
                     // overwrite all field values of the existing entity
-                    // TODO: make this more efficient
                     entity.giveFields().each { field ->
                         try {
                             existingEntity.setFieldValue(field.name, entity.getFieldValue(field.name))
@@ -238,7 +247,7 @@ class GdtImporterService {
                 } else
                     entity
             }
-        }, numberOfUpdatedEntities]
+        }, numberOfUpdatedEntities, numberOfChangedTemplates]
     }
 
     /**

@@ -40,7 +40,7 @@ class GdtImporterController {
 	 * @void
 	 */
 	def index = {
-		redirect(action: 'pages', params: params)
+		redirect(action: 'pages')
 	}
 
     /**
@@ -234,7 +234,7 @@ class GdtImporterController {
 			}.to "mappingPage"
 			on("next") {
 
-                def entityList = [], failedFields = [], numberOfUpdatedEntities = []
+                def entityList = [], failedFields = [], numberOfUpdatedEntities = 0, numberOfChangedTemplates = 0
 
                 // update the entity list using values from the params
                 (entityList, failedFields) = gdtImporterService.setEntityListFieldValuesFromParams(flow.gdtImporter_entityList, params)
@@ -251,8 +251,13 @@ class GdtImporterController {
                     // if the entities being imported have a preferred identifier
                     // that already exists (within the parent entity, if applicable)
                     // load and update them instead of adding new ones.
-                    (entityList, numberOfUpdatedEntities) = gdtImporterService.replaceEntitiesByExistingOnesIfNeeded(entityList, flow.gdtImporter_parentEntity)
+                    (entityList, numberOfUpdatedEntities, numberOfChangedTemplates) = gdtImporterService.replaceEntitiesByExistingOnesIfNeeded(entityList, flow.gdtImporter_parentEntity)
 
+                    if (numberOfChangedTemplates) {
+                        flash.wizardErrors = [:]
+                        appendErrorMap(['Warning': "The templates for $numberOfChangedTemplates entities have been changed. This may cause certain fields to be cleared. Please exit the wizard now if you want to prevent this."], flash.wizardErrors)
+                    }
+                    
                     // overwrite the flow's entityList and store amount of
                     // updated entities in the flow.
                     flow.gdtImporter_entityList = entityList
