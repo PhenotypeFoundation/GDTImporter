@@ -104,7 +104,7 @@ class GdtImporterController {
                 def userParentEntities              = parentEntityReferenceInstance.findAllWhere(owner: authenticationService.loggedInUser)
 
                 flow.gdtImporter_parentEntityReferenceInstance  = parentEntityReferenceInstance
-                flow.gdtImporter_userParentEntities             = userParentEntities
+                flow.gdtImporter_userParentEntities             = userParentEntities.sort{it.title}
                 flow.gdtImporter_parentEntityClassName          = domainClass.shortName
 
 				success()
