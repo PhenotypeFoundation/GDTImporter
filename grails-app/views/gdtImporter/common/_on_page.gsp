@@ -102,48 +102,24 @@
           // open load box
           $('#loadpropertiesbutton').click(function() {
             $("#loadmapping").toggle("scale")
+          });
+
+          // mapping has been chosen and OK button pressed? refresh the flow page
+          $('#loadmappingok').click(function() {
             if ($("#importmapping_id").val()) refreshFlow()
           });
 
           // open save box
           $('#savepropertiesbutton').click(function() {
-            var width = 500
-            var height = 200
-            var vars = ""
-
             $("#savemapping").toggle("scale")
 
             if ($("#mappingname").val()) refreshFlow();
-
-            // get all properties
-            //$('select[name^=columnproperty.index.]').each ( function() {
-            //}
-
-            /*$('#propertiesManager').dialog({
-                    title       : "Properties manager",
-                    autoOpen    : true,
-                    width       : width,
-                    vars        : vars,
-                    height      : height,
-                    modal       : true,
-                    position    : 'center',
-                    buttons     : {
-                                    Save  : function() {
-                                                          //alert($(this).parent().$('input[name="mappingname"]').val())
-                                                          //alert($(this))
-                                                          var p = $(this).parent().parent().parent()
-                                                          //alert(vars)
-                                                          $(this).dialog('close'); }
-                                  },
-                    close       : function() {
-                                    //onClose(this);
-                                    refreshFlow()
-                                  }
-                }).width(width - 10).height(height)
-              */
-
           });
 
+          // mapping given a name and OK button pressed? Then refresh the flow
+          $('#savemappingok').click(function() {
+            if ($("#mappingname").val()) refreshFlow();
+          });
 
           // Disable Enter key
           function stopRKey(evt) {

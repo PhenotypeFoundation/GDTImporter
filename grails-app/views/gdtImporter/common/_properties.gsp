@@ -44,12 +44,14 @@ $(document).ready(function(){
       <input class="buttonsmall" id="savepropertiesbutton" type="button" value="Save" name="savepropertiesbutton" title="Save the currently set mappings">
       <input class="buttonsmall" id="loadpropertiesbutton" type="button" value="Load" name="loadpropertiesbutton" title="Load previously saved mappings">
       <div id="savemapping" style="display:none">
-        Give current mapping a name and press Save:
+        Give current mapping a name:
         <input type="text" name="mappingname" size="20" id="mappingname">
+        <input type="button" id="savemappingok" value="OK">
       </div>
       <div id="loadmapping" style="display:none">
-        Select an existing mapping and press Load:
+        Select an existing mapping:
         <g:select name="importmapping_id" from="${gdtImporter_importmappings}" noSelection="['':'-Select mapping-']" optionValue="name" optionKey="id"/>
+        <input type="button" id="loadmappingok" value="OK">
       </div>
     </td>
 
