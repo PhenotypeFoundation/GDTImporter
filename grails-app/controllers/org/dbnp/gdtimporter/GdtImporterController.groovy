@@ -70,7 +70,14 @@ class GdtImporterController {
 
             // Get parent entity class name from params or default to 'Study'
 
-            flow.parentEntityClassName = params.parentEntityClassName ?: 'nl.nbic.animaldb.Investigation'
+            //flow.parentEntityClassName = params.parentEntityClassName ?: 'nl.nbic.animaldb.Investigation'
+
+            flow.parentEntityClassName = grailsApplication.config.parentEntityClassName
+
+            // cache the entities (skipping this doesn't cache them?)
+            gdtService.getTemplateEntities().each {
+                it
+            }
 
 			success()
 		}
@@ -101,7 +108,8 @@ class GdtImporterController {
                 // Get a list of parent entities the current logged in user owns
                 def domainClass                     = AH.application.getDomainClass(flow.parentEntityClassName)
                 def parentEntityReferenceInstance   = domainClass.referenceInstance
-                def userParentEntities              //= parentEntityReferenceInstance.findAllWhere(owner: authenticationService.loggedInUser)
+                //def userParentEntities              //= parentEntityReferenceInstance.findAllWhere(owner: authenticationService.loggedInUser)
+                def userParentEntities              = parentEntityReferenceInstance.list()
 
                 flow.gdtImporter_parentEntityReferenceInstance  = parentEntityReferenceInstance
                 flow.gdtImporter_userParentEntities             = userParentEntities //.sort{it.title}
@@ -156,9 +164,10 @@ class GdtImporterController {
                 // get selected instance of parent entity through a reference of
                 // parent entity's domain class (if applicable).
                 if (flow.gdtImporter_entity_type != flow.gdtImporter_parentEntityClassName)
+                    println "hier"
     				flow.gdtImporter_parentEntity = flow.gdtImporter_parentEntityReferenceInstance.get(params.parentEntity.id)
 				// Trying to import data into an existing parent entity?
-				if (flow.gdtImporter_parentEntity) {
+				if (flow.gdtImporter_parentEntity && grailsApplication.config.parentEntityHasOwner ) {
 					if (flow.gdtImporter_parentEntity.canWrite(authenticationService.getLoggedInUser())) {
 						handleFileImportPage(flow, flash, params) ? success() : error()
                     }
@@ -255,7 +264,8 @@ class GdtImporterController {
                     // if the entities being imported have a preferred identifier
                     // that already exists (within the parent entity, if applicable)
                     // load and update them instead of adding new ones.
-                    (entityList, numberOfUpdatedEntities, numberOfChangedTemplates) = gdtImporterService.replaceEntitiesByExistingOnesIfNeeded(entityList, flow.gdtImporter_parentEntity)
+
+                    (entityList, numberOfUpdatedEntities, numberOfChangedTemplates) = gdtImporterService.replaceEntitiesByExistingOnesIfNeeded(entityList, flow.gdtImporter_parentEntity, grailsApplication.config.childEntityParentName)
 
                     if (numberOfChangedTemplates) {
                         flash.wizardErrors = [:]
@@ -290,7 +300,7 @@ class GdtImporterController {
                 // save the parent entity containing the added entities
                 if (flow.gdtImporter_parentEntity) {
 
-                    gdtImporterService.addEntitiesToParentEntity(flow.gdtImporter_entityList, flow.gdtImporter_parentEntity)
+                    gdtImporterService.addEntitiesToParentEntity(flow.gdtImporter_entityList, flow.gdtImporter_parentEntity, grailsApplication.config.childEntityParentName)
                     if (!flow.gdtImporter_parentEntity.save()) {
                         log.error ".gdtImporter [mappingPage] could not save parent entity."
                         error()
@@ -299,7 +309,9 @@ class GdtImporterController {
                 // themselves, set owner fields and save them individually
                 } else{
                     flow.gdtImporter_entityList.each{
-                        it.owner = authenticationService.getLoggedInUser()
+
+                        if (grailsApplication.config.parentEntityHasOwner)
+                            it.owner = authenticationService.getLoggedInUser()
                         it.save(failOnError:true)
                     }
                     success()
@@ -351,16 +363,16 @@ class GdtImporterController {
 
         // explicitly check for unique constraint violations in case of non-
         // parent entities
-        if (parentEntity) {
+        if (!parentEntity) {
 
-            duplicateFailedFields = gdtImporterService.detectUniqueConstraintViolations(entityList, parentEntity)
+            duplicateFailedFields = gdtImporterService.detectUniqueConstraintViolations(entityList, parentEntity, grailsApplication.config.childEntityParentName)
 
             if (duplicateFailedFields)
                 appendErrorMap(['duplicates': "Some of the fields that should be unique are duplicates."], flash.wizardErrors)
 
         }
 
-        (failedValidationFields, failedEntities) = gdtImporterService.validateEntities(entityList)
+        (failedValidationFields, failedEntities) = gdtImporterService.validateEntities(entityList, grailsApplication.config.childEntityParentName)
 
         if (failedValidationFields) {
 

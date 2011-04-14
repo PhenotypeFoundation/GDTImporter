@@ -30,6 +30,7 @@
 
     // Initially called when starting the import wizard
         function onPage() {
+                onStudyWizardPage();
                 // GENERAL
 
                 $('#simplewizardform').submit(function() {

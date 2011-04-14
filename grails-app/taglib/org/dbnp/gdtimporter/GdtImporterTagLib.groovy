@@ -89,7 +89,7 @@ class GdtImporterTagLib {
 		// TODO: this should be changed to retrieving fields per entity instead of from one template
 		//	 and session variables should not be used inside the service, migrate to controller
 
-		def t = Template.get(attrs['template_id'])
+ 		def t = Template.get(attrs['template_id'])
 		def mc = attrs['mappingcolumn']
         def matchvalue = (attrs['fuzzymatching']=="true") ? attrs['matchvalue'] : ""
         def selected = (attrs['selected']) ? attrs['selected'] : ""

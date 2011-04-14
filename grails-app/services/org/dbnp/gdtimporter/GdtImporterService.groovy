@@ -168,9 +168,10 @@ class GdtImporterService {
     /**
      * @param entityList the list of entities
      * @param parentEntity the parent entity (if any) to which the entities (will) belong
+     * @param childEntityParentName parent name the child entity belongs to
      * @return true if
      */
-    def replaceExistingEntitiesHasEqualTemplate(entityList, parentEntity) {
+    def replaceExistingEntitiesHasEqualTemplate(entityList, parentEntity, childEntityParentName) {
         if (entityList == null) return false
 
         def preferredIdentifierField = entityList[0].giveDomainFields().find { it.preferredIdentifier }
@@ -184,7 +185,7 @@ class GdtImporterService {
                 // entity) and preferred identifier value
                 def existingEntity = c.get {
                     eq( preferredIdentifierField.name, preferredIdentifierValue )
-                    if (parentEntity) eq( "parent", parentEntity )
+                    if (parentEntity) eq( childEntityParentName, parentEntity )
                 }
             }
 
@@ -201,7 +202,7 @@ class GdtImporterService {
      * @return [updated entity list, the number of updated entities, the number
      *          of template changes]
      */
-    def replaceEntitiesByExistingOnesIfNeeded(entityList, parentEntity) {
+    def replaceEntitiesByExistingOnesIfNeeded(entityList, parentEntity, childEntityParentName) {
 
         def numberOfUpdatedEntities     = 0
         def numberOfChangedTemplates    = 0
@@ -209,6 +210,7 @@ class GdtImporterService {
         [entityList.collect { entity ->
 
             def preferredIdentifierField = entity.giveDomainFields().find { it.preferredIdentifier }
+
             if (preferredIdentifierField) {
 
                 def preferredIdentifierValue = entity[preferredIdentifierField.name]
@@ -219,7 +221,7 @@ class GdtImporterService {
                 // entity) and preferred identifier value
                 def existingEntity = c.get {
                     eq( preferredIdentifierField.name, preferredIdentifierValue )
-                    if (parentEntity) eq( "parent", parentEntity )
+                    if (parentEntity) eq( childEntityParentName, parentEntity )
                 }
 
                 if (existingEntity) {
@@ -246,7 +248,8 @@ class GdtImporterService {
                     existingEntity
                 } else
                     entity
-            }
+            } else // not an identifier field, keep the original entity too
+                entity
         }, numberOfUpdatedEntities, numberOfChangedTemplates]
     }
 
@@ -303,10 +306,11 @@ class GdtImporterService {
      *
 	 * @parentEntity the parent entity
      * @entityList the list of entities to add to parentEntity
+     * @childEntityParentName a child refers to a parent via a name (belongsTo)
      *
      * @return empty list on success, list of errors on failure
 	 */
-	def detectUniqueConstraintViolations(entityList, parentEntity) {
+	def detectUniqueConstraintViolations(entityList, parentEntity, childEntityParentName) {
 
         def firstEntity     = entityList[0]
 
@@ -319,7 +323,7 @@ class GdtImporterService {
 
         // we need all children of parentEntity of same type as the added
         // entities (including ones to be added)
-        def childEntities = domainClassReferenceInstance.findAllWhere(parent: parentEntity) + entityList
+        def childEntities = domainClassReferenceInstance.findAllWhere("$childEntityParentName": parentEntity) + entityList
 
         // this closure seeks duplicate values of the property with the given
         // name within the childEntities (old and new ones).
@@ -385,9 +389,10 @@ class GdtImporterService {
     /**
      *
      * @param entityList
+     * @param childEntityParentName parent name the child belongs to
      * @return a list of failed fields and a list of failed entities
      */
-    def validateEntities(entityList) {
+    def validateEntities(entityList, childEntityParentName) {
 
         def failedFields = []
         def failedEntities = []
@@ -403,7 +408,7 @@ class GdtImporterService {
                 def useError = true
 
                 // if we encounter a parent entity (which has no parent)
-                if (!entity.hasProperty('parent')) {
+                if (!entity.hasProperty( childEntityParentName )) {
 
                     // find the preferred identifier
                     def preferredIdentifierField = entity.giveDomainFields().find { it.preferredIdentifier }
@@ -412,7 +417,7 @@ class GdtImporterService {
                     useError = (fieldError.field.toString() != preferredIdentifierField.toString())
                 }
 
-                if (useError && fieldError.field != 'parent') // ignore parent errors because we'll add the entities to their parent later
+                if (useError && fieldError.field != childEntityParentName ) // ignore parent errors because we'll add the entities to their parent later
                     failedFields += [entity: "entity_${entity.identifier}_${fieldError.field.toLowerCase().replaceAll("([^a-z0-9])", "_")}", originalValue: fieldError.rejectedValue ?: '']
 
             }
@@ -428,7 +433,7 @@ class GdtImporterService {
      * @param parentEntity
      * @return -
      */
-    def addEntitiesToParentEntity(entityList, parentEntity) {
+    def addEntitiesToParentEntity(entityList, parentEntity, childEntityParentName) {
 
         def firstEntity     = entityList[0]
         def domainClass     = AH.application.getDomainClass(firstEntity.class.name)
@@ -438,7 +443,7 @@ class GdtImporterService {
         def collectionName  = hasMany.find{it.value == domainClass.clazz}.key.capitalize()
 
         // add the entities one by one to the parent entity (unless it's set already)
-        entityList.each { if (!it.parent) parentEntity."addTo$collectionName" it }
+        entityList.each { if (!it."$childEntityParentName") parentEntity."addTo$collectionName" it }
 
     }
 

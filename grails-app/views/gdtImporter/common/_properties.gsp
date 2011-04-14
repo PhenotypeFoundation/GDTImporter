@@ -75,7 +75,7 @@ $(document).ready(function(){
           <g:set var="matchvalue" value="${mappingcolumn.name}"/>
           <th>${mappingcolumn.name}
                 <!-- store the found match -->
-          <g:set var="fuzzymatch" value="${importer.propertyChooser(name:columnproperty, mappingcolumn:mappingcolumn, matchvalue:mappingcolumn.name, selected:selected, fuzzymatching:gdtImporter_fuzzymatching, template_id:gdtImporter_template_id, returnmatchonly:'true')}"/>
+          <g:set var="fuzzymatch" value="${GdtImporter.propertyChooser(name:columnproperty, mappingcolumn:mappingcolumn, matchvalue:mappingcolumn.name, selected:selected, fuzzymatching:gdtImporter_fuzzymatching, template_id:gdtImporter_template_id, returnmatchonly:'true')}"/>
 
           <g:if test="${usedfuzzymatches.contains( fuzzymatch.toString() ) }">
               <g:set var="matchvalue" value=""/>

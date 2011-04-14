@@ -21,6 +21,8 @@
 
     <script type="text/javascript" src="${resource(dir: 'js', file: 'fileupload.js', plugin:'gdt')}"></script>
 
+    <script type="text/javascript" src="${resource(dir: 'js', file: 'studywizard.js', plugin:'gdtimporter')}"></script>
+
     <link rel="stylesheet" href="${resource(dir: 'css', file: 'demo_table.css', plugin: 'gdtimporter')}"/>
     <link rel="stylesheet" href="${resource(dir: 'css', file: 'demo_table_jui.css', plugin: 'gdtimporter')}"/>
     <link rel="stylesheet" href="${resource(dir: 'css', file: 'demo_page.css', plugin: 'gdtimporter')}"/>
