@@ -45,7 +45,7 @@ class GdtImporterService {
      * This method reads the header from the workbook.
      *
 	 * @param datamatrix two dimensional datamatrix containing raw read data from Excel
-     * @param headerRow row where the header starts
+     * @param headerRowIndex row where the header starts
      * @param entityInstance type of entity we are reading
 	 * @return header representation as a GdtMappingColumn hashmap
 	 */
@@ -61,7 +61,7 @@ class GdtImporterService {
             def fieldType = TemplateFieldType.STRING
 
             // Create the GdtMappingColumn object for the current column and store it in the header HashMap
-            header[columnIndex] = new GdtMappingColumn(name: datamatrix[0][columnIndex],
+            header[columnIndex] = new GdtMappingColumn(name: datamatrix[headerRowIndex][columnIndex],
 							templatefieldtype: fieldType,
 							index: columnIndex,
 							entityclass: entityInstance.class,

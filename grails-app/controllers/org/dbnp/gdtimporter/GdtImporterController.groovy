@@ -24,10 +24,10 @@ package org.dbnp.gdtimporter
 import org.dbnp.gdt.*
 import grails.converters.JSON
 import org.codehaus.groovy.grails.plugins.web.taglib.ValidationTagLib
-import grails.plugins.springsecurity.Secured
+//import grails.plugins.springsecurity.Secured
 import org.codehaus.groovy.grails.commons.ApplicationHolder as AH
 
-@Secured(['IS_AUTHENTICATED_REMEMBERED'])
+//@Secured(['IS_AUTHENTICATED_REMEMBERED'])
 class GdtImporterController {
     def authenticationService
 	def fileService
@@ -70,7 +70,7 @@ class GdtImporterController {
 
             // Get parent entity class name from params or default to 'Study'
 
-            flow.parentEntityClassName = params.parentEntityClassName ?: 'dbnp.studycapturing.Study'
+            flow.parentEntityClassName = params.parentEntityClassName ?: 'nl.nbic.animaldb.Investigation'
 
 			success()
 		}
@@ -101,10 +101,10 @@ class GdtImporterController {
                 // Get a list of parent entities the current logged in user owns
                 def domainClass                     = AH.application.getDomainClass(flow.parentEntityClassName)
                 def parentEntityReferenceInstance   = domainClass.referenceInstance
-                def userParentEntities              = parentEntityReferenceInstance.findAllWhere(owner: authenticationService.loggedInUser)
+                def userParentEntities              //= parentEntityReferenceInstance.findAllWhere(owner: authenticationService.loggedInUser)
 
                 flow.gdtImporter_parentEntityReferenceInstance  = parentEntityReferenceInstance
-                flow.gdtImporter_userParentEntities             = userParentEntities.sort{it.title}
+                flow.gdtImporter_userParentEntities             = userParentEntities //.sort{it.title}
                 flow.gdtImporter_parentEntityClassName          = domainClass.shortName
 
 				success()
@@ -137,6 +137,7 @@ class GdtImporterController {
 				flash.gdtImporter_params = params
 				flash.gdtImporter_params.importfile = params.importfile.replaceAll(/<pre.*?>/,'').replace('</pre>','').replace('existing*','')
                 flash.gdtImporter_params.pageOneRefresh = 'true'
+                flow.gdtImporter_importfile = flash.gdtImporter_params.importfile
 
                 if (!flash.gdtImporter_params.importfile) {
                     log.error('.gdtImporterWizard [fileImportPage] no file specified.')
@@ -179,6 +180,9 @@ class GdtImporterController {
 			render(view: "_page_two")
 			onRender {
 				log.info ".import wizard properties page"
+
+                // Delete the uploaded file
+                fileService.delete flow.gdtImporter_importfile
 
 				def template = Template.get(flow.gdtImporter_template_id)
 
@@ -442,7 +446,7 @@ class GdtImporterController {
 
 			flow.gdtImporter_allfieldtypes = "true"
 
-            fileService.delete params['importfile']
+            //fileService.delete params['importfile']
 
 			return true
 		}

@@ -13,18 +13,19 @@
 %>
 <html>
 <head>
-	<meta name="layout" content="main"/>	
-	<link rel="stylesheet" href="${resource(dir: 'css', file: 'gdtimporter.css')}"/>    
-	<link rel="stylesheet" href="${resource(dir: 'css', file: 'studywizard.css')}"/>
+	<meta name="layout" content="main"/>
+
+	<link rel="stylesheet" href="${resource(dir: 'css', file: 'gdtimporter.css', plugin: 'gdtimporter')}"/>
+	<link rel="stylesheet" href="${resource(dir: 'css', file: 'studywizard.css', plugin: 'gdtimporter')}"/>
 	<link rel="stylesheet" href="${resource(dir: 'css', file: 'table-editor.css', plugin: 'gdt')}"/>
-    
-    <script type="text/javascript" src="${resource(dir: 'js', file: 'studywizard.js')}"></script>
+
+    <script type="text/javascript" src="${resource(dir: 'js', file: 'fileupload.js', plugin:'gdt')}"></script>
 
     <link rel="stylesheet" href="${resource(dir: 'css', file: 'demo_table.css', plugin: 'gdtimporter')}"/>
     <link rel="stylesheet" href="${resource(dir: 'css', file: 'demo_table_jui.css', plugin: 'gdtimporter')}"/>
     <link rel="stylesheet" href="${resource(dir: 'css', file: 'demo_page.css', plugin: 'gdtimporter')}"/>
     <script type="text/javascript" src="${resource(dir: 'js', file: 'jquery.dataTables.min.js')}"></script>
-    
+
     <g:if env="production">
 	<script type="text/javascript" src="${resource(dir: 'js', file: 'jquery.qtip-1.0.0-rc3.min.js', plugin: 'gdt')}"></script>
 	<script type="text/javascript" src="${resource(dir: 'js', file: 'SelectAddMore.min.js', plugin: 'gdt')}"></script>
@@ -40,7 +41,7 @@
 	<script type="text/javascript" src="${resource(dir: 'js', file: 'table-editor.js', plugin: 'gdt')}"></script>
 	<script type="text/javascript" src="${resource(dir: 'js', file: 'tooltips.js', plugin: 'gdt')}"></script>
 	</g:else>
-    
+
 </head>
 <body>
 	<g:render template="common/ajaxflow"/>

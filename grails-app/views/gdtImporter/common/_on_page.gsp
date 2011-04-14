@@ -31,7 +31,6 @@
     // Initially called when starting the import wizard
         function onPage() {
                 // GENERAL
-                onStudyWizardPage();
 
                 $('#simplewizardform').submit(function() {
                         if ($('#file').val() == "") {

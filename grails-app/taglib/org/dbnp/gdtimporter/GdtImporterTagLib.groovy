@@ -43,7 +43,7 @@ class GdtImporterTagLib {
 		def header = attrs['header']
 		def dataMatrix = attrs['dataMatrix']
 
-		out << render(template: "common/preview", model: [header: header, datamatrix: dataMatrix])
+		out << render(template: "common/preview", plugin: "gdtimporter", model: [header: header, datamatrix: dataMatrix])
 	}
 
 	def entity = { attrs ->
@@ -52,7 +52,7 @@ class GdtImporterTagLib {
 
 	def datapreview = { attrs ->
 		def dataMatrix = attrs['dataMatrix']
-		out << render(template: "common/datapreview", model: [dataMatrix: dataMatrix])
+		out << render(template: "common/datapreview", plugin: "gdtimporter", model: [dataMatrix: dataMatrix])
 	}
 
 	/**
@@ -61,7 +61,7 @@ class GdtImporterTagLib {
 	def validation = { attrs ->
 		def entityList = attrs['entityList']
 		def failedFields = attrs['failedFields']
-		out << render(template: "common/validation", model: [entityList: entityList, failedFields: failedFields])
+		out << render(template: "common/validation", plugin: "gdtimporter", model: [entityList: entityList, failedFields: failedFields])
 	}
 
 	/**	 
@@ -70,7 +70,7 @@ class GdtImporterTagLib {
 	def properties = { attrs ->
 		def header = attrs['header']
 
-		out << render(template: "common/properties", model: [header:header])
+		out << render(template: "common/properties", plugin: "gdtimporter", model: [header:header])
 	}
 
 	/**
