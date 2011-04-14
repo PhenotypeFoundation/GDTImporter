@@ -298,6 +298,11 @@ class GdtImporterController {
                 flow.page = 5
 
                 // save the parent entity containing the added entities
+
+                // TODO: currently when you select a parentEntity gdtImporter thinks you want to add children
+                //   to the parent which doesn't work, look at GSCF
+
+                t
                 if (flow.gdtImporter_parentEntity) {
 
                     gdtImporterService.addEntitiesToParentEntity(flow.gdtImporter_entityList, flow.gdtImporter_parentEntity, grailsApplication.config.childEntityParentName)
