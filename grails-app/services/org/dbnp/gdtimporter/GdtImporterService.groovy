@@ -447,8 +447,6 @@ class GdtImporterService {
 
     }
 
-    def find
-
     /**
     * Method to check if all fields of an entity are empty
     *

@@ -72,7 +72,7 @@ class GdtImporterController {
 
             //flow.parentEntityClassName = params.parentEntityClassName ?: 'nl.nbic.animaldb.Investigation'
 
-            flow.parentEntityClassName = grailsApplication.config.parentEntityClassName
+            flow.parentEntityClassName = grailsApplication.config.gdtImporter.parentEntityClassName
 
             // cache the entities (skipping this doesn't cache them?)
             gdtService.getTemplateEntities().each {
@@ -167,7 +167,7 @@ class GdtImporterController {
                     println "hier"
     				flow.gdtImporter_parentEntity = flow.gdtImporter_parentEntityReferenceInstance.get(params.parentEntity.id)
 				// Trying to import data into an existing parent entity?
-				if (flow.gdtImporter_parentEntity && grailsApplication.config.parentEntityHasOwner ) {
+				if (flow.gdtImporter_parentEntity && grailsApplication.config.gdtImporter.parentEntityHasOwner ) {
 					if (flow.gdtImporter_parentEntity.canWrite(authenticationService.getLoggedInUser())) {
 						handleFileImportPage(flow, flash, params) ? success() : error()
                     }
@@ -265,7 +265,7 @@ class GdtImporterController {
                     // that already exists (within the parent entity, if applicable)
                     // load and update them instead of adding new ones.
 
-                    (entityList, numberOfUpdatedEntities, numberOfChangedTemplates) = gdtImporterService.replaceEntitiesByExistingOnesIfNeeded(entityList, flow.gdtImporter_parentEntity, grailsApplication.config.childEntityParentName)
+                    (entityList, numberOfUpdatedEntities, numberOfChangedTemplates) = gdtImporterService.replaceEntitiesByExistingOnesIfNeeded(entityList, flow.gdtImporter_parentEntity, grailsApplication.config.gdtImporter.childEntityParentName)
 
                     if (numberOfChangedTemplates) {
                         flash.wizardErrors = [:]
@@ -302,10 +302,9 @@ class GdtImporterController {
                 // TODO: currently when you select a parentEntity gdtImporter thinks you want to add children
                 //   to the parent which doesn't work, look at GSCF
 
-                t
                 if (flow.gdtImporter_parentEntity) {
 
-                    gdtImporterService.addEntitiesToParentEntity(flow.gdtImporter_entityList, flow.gdtImporter_parentEntity, grailsApplication.config.childEntityParentName)
+                    gdtImporterService.addEntitiesToParentEntity(flow.gdtImporter_entityList, flow.gdtImporter_parentEntity, grailsApplication.config.gdtImporter.childEntityParentName)
                     if (!flow.gdtImporter_parentEntity.save()) {
                         log.error ".gdtImporter [mappingPage] could not save parent entity."
                         error()
@@ -315,7 +314,7 @@ class GdtImporterController {
                 } else{
                     flow.gdtImporter_entityList.each{
 
-                        if (grailsApplication.config.parentEntityHasOwner)
+                        if (grailsApplication.config.gdtImporter.parentEntityHasOwner)
                             it.owner = authenticationService.getLoggedInUser()
                         it.save(failOnError:true)
                     }
@@ -370,14 +369,14 @@ class GdtImporterController {
         // parent entities
         if (!parentEntity) {
 
-            duplicateFailedFields = gdtImporterService.detectUniqueConstraintViolations(entityList, parentEntity, grailsApplication.config.childEntityParentName)
+            duplicateFailedFields = gdtImporterService.detectUniqueConstraintViolations(entityList, parentEntity, grailsApplication.config.gdtImporter.childEntityParentName)
 
             if (duplicateFailedFields)
                 appendErrorMap(['duplicates': "Some of the fields that should be unique are duplicates."], flash.wizardErrors)
 
         }
 
-        (failedValidationFields, failedEntities) = gdtImporterService.validateEntities(entityList, grailsApplication.config.childEntityParentName)
+        (failedValidationFields, failedEntities) = gdtImporterService.validateEntities(entityList, grailsApplication.config.gdtImporter.childEntityParentName)
 
         if (failedValidationFields) {
 
