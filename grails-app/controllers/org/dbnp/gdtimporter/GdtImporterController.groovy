@@ -146,6 +146,7 @@ class GdtImporterController {
 				flash.gdtImporter_params.importfile = params.importfile.replaceAll(/<pre.*?>/,'').replace('</pre>','').replace('existing*','')
                 flash.gdtImporter_params.pageOneRefresh = 'true'
                 flow.gdtImporter_importfile = flash.gdtImporter_params.importfile
+                flow.gdtImporter_dateformat = params.dateformat
 
                 if (!flash.gdtImporter_params.importfile) {
                     log.error('.gdtImporterWizard [fileImportPage] no file specified.')
@@ -164,7 +165,6 @@ class GdtImporterController {
                 // get selected instance of parent entity through a reference of
                 // parent entity's domain class (if applicable).
                 if (flow.gdtImporter_entity_type != flow.gdtImporter_parentEntityClassName)
-                    println "hier"
     				flow.gdtImporter_parentEntity = flow.gdtImporter_parentEntityReferenceInstance.get(params.parentEntity.id)
 				// Trying to import data into an existing parent entity?
 				if (flow.gdtImporter_parentEntity && grailsApplication.config.gdtImporter.parentEntityHasOwner ) {
@@ -367,8 +367,9 @@ class GdtImporterController {
 
         // explicitly check for unique constraint violations in case of non-
         // parent entities
-        if (!parentEntity) {
+        // BTW: "if (!parentEntity)" seems to validate if the parentEntity is null, so check explicitly for null
 
+        if (parentEntity != null) {
             duplicateFailedFields = gdtImporterService.detectUniqueConstraintViolations(entityList, parentEntity, grailsApplication.config.gdtImporter.childEntityParentName)
 
             if (duplicateFailedFields)
@@ -589,7 +590,8 @@ class GdtImporterController {
 		// Import the workbook and store the table with entity records and store the failed cells
 		def (entityList, failedFields) = gdtImporterService.getDataMatrixAsEntityList(flow.gdtImporter_entity, template,
 			flow.gdtImporter_dataMatrix,
-			flow.gdtImporter_header)
+			flow.gdtImporter_header,
+            flow.gdtImporter_dateformat)
 
         if (!entityList) {
             log.error ".importer wizard could not create entities, no mappings made?"

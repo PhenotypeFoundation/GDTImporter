@@ -27,6 +27,9 @@ import org.codehaus.groovy.grails.commons.GrailsClassUtils
 import org.codehaus.groovy.grails.commons.ApplicationHolder as AH
 import org.codehaus.groovy.grails.orm.hibernate.validation.UniqueConstraint
 import org.codehaus.groovy.grails.validation.NullableConstraint
+import java.text.SimpleDateFormat
+import org.apache.poi.hssf.usermodel.HSSFDateUtil
+
 
 class GdtImporterService {
     def authenticationService
@@ -117,6 +120,10 @@ class GdtImporterService {
                         case Cell.CELL_TYPE_STRING:     dataMatrixRow.add( cell.stringCellValue )
                                                         break
                         case Cell.CELL_TYPE_NUMERIC:    dataMatrixRow.add( df.formatCellValue(cell) )
+                                                        /*if ( HSSFDateUtil.isCellDateFormatted(cell) ) {
+                                                            SimpleDateFormat GSCFDateFormatter = new SimpleDateFormat("dd/MM/yyyy")
+                                                            println "gscfdatuum = " + GSCFDateFormatter.format( cell.getDateCellValue() )
+                                                        } */
                                                         break
                         default:                        dataMatrixRow.add( '' )
 
@@ -138,13 +145,12 @@ class GdtImporterService {
 	 * @param theTemplate Template to use
 	 * @param dataMatrix Two-dimensional string array containing excel data
 	 * @param mcmap linked hashmap (preserved order) of GdtMappingColumns
-	 * @param sheetIndex sheet to use when using multiple sheets
-	 * @param dataMatrixRowIndex first row to start with reading the actual data (NOT the header)
+	 * @param dateformat date formatter used when parsing/reading dates (yy/MM/dddd et cetera)
 	 * @return list containing entities
 	 *
 	 * @see org.dbnp.gdtimporter.GdtMappingColumn
 	 */
-	def getDataMatrixAsEntityList(theEntity, theTemplate, dataMatrix, mcmap) {
+	def getDataMatrixAsEntityList(theEntity, theTemplate, dataMatrix, mcmap, dateformat) {
 		def entityList = []
 		def errorList = []
 
@@ -152,7 +158,7 @@ class GdtImporterService {
 		dataMatrix.each { row ->
 
             // Create an entity record based on a row read from Excel and store the cells which failed to be mapped
-			def (entity, error) = createEntity(theEntity, theTemplate, row, mcmap)
+			def (entity, error) = createEntity(theEntity, theTemplate, row, mcmap, dateformat)
 
             // Add entity to the table if it is not empty
             if (!isEntityEmpty(entity))
@@ -467,9 +473,10 @@ class GdtImporterService {
 	 * @param theTemplate Template object
 	 * @param row list of string values
 	 * @param mcmap map containing MappingColumn objects
+     * @param dateformat date formatter (yyyy/MM/dd et cetera)
 	 * @return list of entities and list of failed cells
 	 */
-    def createEntity(theEntity, theTemplate, String[] row, mcmap) {
+    def createEntity(theEntity, theTemplate, String[] row, mcmap, dateformat) {
         def error
 
 		// Initialize the entity with the chosen template
@@ -485,7 +492,7 @@ class GdtImporterService {
 			if (mc != null) if (!mc.dontimport) {
 				try {
                     // Format the cell conform the TemplateFieldType
-                    value = formatValue(value, mc.templatefieldtype)
+                    value = formatValue(value, mc.templatefieldtype, dateformat)
                 } catch (NumberFormatException nfe) {
                     // Formatting went wrong, so set the value to an empty string
 					value = ""
@@ -514,12 +521,30 @@ class GdtImporterService {
      *
 	 * @param value string containing the value to be formatted
      * @param templateFieldType TemplateFieldType to cast this value to
+     * @param dateformat date formatter (yyyy/MM/dd format)
 	 * @return object corresponding to the TemplateFieldType
 	 */
-	def formatValue(String value, TemplateFieldType templateFieldType) throws NumberFormatException {
+	def formatValue(String value, TemplateFieldType templateFieldType, String dateformat) throws NumberFormatException {
 		switch (templateFieldType) {
             case TemplateFieldType.LONG:    return Double.valueOf(value.replace(",", ".")).longValue()
             case TemplateFieldType.DOUBLE:  return Double.valueOf(value.replace(",", "."))
+            case TemplateFieldType.DATE:    try {
+                                                // Build the date formatter using date format from the parameter to
+                                                // parse the value to a date object
+                                                SimpleDateFormat parseDateFormatter = new SimpleDateFormat(dateformat);
+
+                                                // Replace dashes with slashes
+                                                def parsedDate = parseDateFormatter.parse( value.replace("-", "/") )
+
+                                                // Build the formatter to convert the date object to the format GSCF
+                                                // requires: DAY MONTH YEAR
+                                                SimpleDateFormat GSCFDateFormatter = new SimpleDateFormat("dd/MM/yyyy")
+                                                return GSCFDateFormatter.format(parsedDate)
+                                            }
+                                            catch (Exception e) {
+                                                log.error ".importer wizard: could not format value `${value}` using formatter [${dateformat}]"
+                                                return value
+                                            }
 		}
         return value.trim()
 	}

@@ -27,6 +27,14 @@
 		<af:fileFieldElement name="importfile" value="${gdtImporter_params?.importfile}" id="importfile"/>
 	    </td>
 	</tr>
+    <tr>
+	    <td width="100px">
+		Date format:
+	    </td>
+	    <td width="100px">
+		<g:select name="dateformat" value="${gdtImporter_params?.dateformat}" from="${['dd/MM/yyyy (EU/India/South America/North Africa/Asia/Australia)', 'yyyy/MM/dd (China/Korea/Iran/Japan)', 'MM/dd/yyyy (US)']}" keys="${['dd/MM/yyyy','yyyy/MM/dd','MM/dd/yyyy']}"/>
+	    </td>
+	</tr>
 	<tr>
 	    <td width="100px">
 		Use data from sheet:
