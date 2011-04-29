@@ -24,10 +24,10 @@ package org.dbnp.gdtimporter
 import org.dbnp.gdt.*
 import grails.converters.JSON
 import org.codehaus.groovy.grails.plugins.web.taglib.ValidationTagLib
-//import grails.plugins.springsecurity.Secured
+import grails.plugins.springsecurity.Secured
 import org.codehaus.groovy.grails.commons.ApplicationHolder as AH
 
-//@Secured(['IS_AUTHENTICATED_REMEMBERED'])
+@Secured(['IS_AUTHENTICATED_REMEMBERED'])
 class GdtImporterController {
     def authenticationService
 	def fileService
@@ -458,8 +458,8 @@ class GdtImporterController {
                     flow.gdtImporter_headerRowIndex,
                     entityInstance)
 
-			// Remove first row (header)
-            flow.gdtImporter_dataMatrix -= flow.gdtImporter_dataMatrix[0]
+			// Remove all rows before and including the header to keep only the "real" data
+            flow.gdtImporter_dataMatrix -= flow.gdtImporter_dataMatrix[0..flow.gdtImporter_headerRowIndex]
 
 			flow.gdtImporter_allfieldtypes = "true"
 
