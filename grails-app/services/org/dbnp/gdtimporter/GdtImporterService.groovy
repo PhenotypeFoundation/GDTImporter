@@ -28,6 +28,8 @@ import org.codehaus.groovy.grails.commons.ApplicationHolder as AH
 import org.codehaus.groovy.grails.orm.hibernate.validation.UniqueConstraint
 import org.codehaus.groovy.grails.validation.NullableConstraint
 import java.text.SimpleDateFormat
+import org.apache.poi.hssf.usermodel.HSSFFormulaEvaluator
+
 import org.apache.poi.hssf.usermodel.HSSFDateUtil
 
 
@@ -89,6 +91,9 @@ class GdtImporterService {
         def df = new DataFormatter()
 		def dataMatrix = []
 
+        HSSFFormulaEvaluator formulaEvaluator = new HSSFFormulaEvaluator(sheet, workbook);
+
+
         count = count ? Math.min(sheet.lastRowNum, count) : sheet.lastRowNum
 
         // Determine amount of columns
@@ -124,6 +129,8 @@ class GdtImporterService {
                                                             SimpleDateFormat GSCFDateFormatter = new SimpleDateFormat("dd/MM/yyyy")
                                                             println "gscfdatuum = " + GSCFDateFormatter.format( cell.getDateCellValue() )
                                                         } */
+                                                        break
+                        case Cell.CELL_TYPE_FORMULA:    dataMatrixRow.add(formulaEvaluator.evaluateInCell(cell))
                                                         break
                         default:                        dataMatrixRow.add( '' )
 
@@ -446,6 +453,9 @@ class GdtImporterService {
 
         // figure out the collection name via the hasMany property
         def hasMany         = GrailsClassUtils.getStaticPropertyValue(parentEntity.class, 'hasMany')
+        hasMany.each {
+            println "hasmany=" + hasMany.find { print "" + it.value +"/" }
+        }
         def collectionName  = hasMany.find{it.value == domainClass.clazz}.key.capitalize()
 
         // add the entities one by one to the parent entity (unless it's set already)

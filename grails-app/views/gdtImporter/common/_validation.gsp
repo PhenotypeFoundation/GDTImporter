@@ -17,6 +17,7 @@
         // mark error fields
         <g:each in="${gdtImporter_failedFields}" var="field">
           var element = $("select[name=${field.entity}]");
+
           if (element.size()) {
             element.addClass('error');
             element.append( new Option("Invalid: ${field.originalValue}","${field.originalValue}", true, true) );
@@ -24,7 +25,6 @@
             element = $("input[name=${field.entity}]");
             element.addClass('error');
           }
-
         </g:each>
   });
 </script>

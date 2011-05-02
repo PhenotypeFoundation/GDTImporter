@@ -391,7 +391,9 @@ class GdtImporterController {
             log.error ".import wizard mapping error, could not validate all entities"
         }
 
-        failedValidationFields + duplicateFailedFields
+        // Return all failed fields which have an original name (!= empty)
+        failedValidationFields.findAll { it.originalName } + duplicateFailedFields
+
 	}
 
 	/**
