@@ -47,9 +47,6 @@
 		    </div>
 		</g:each>
     </div>
-    <div class="sliderContainer">
-      <div class="slider"></div>
-    </div>
     <div>
 	<br/>	
     </div>
