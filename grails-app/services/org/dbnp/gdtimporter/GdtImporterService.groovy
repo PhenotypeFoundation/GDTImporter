@@ -29,6 +29,7 @@ import org.codehaus.groovy.grails.orm.hibernate.validation.UniqueConstraint
 import org.codehaus.groovy.grails.validation.NullableConstraint
 import java.text.SimpleDateFormat
 import org.apache.poi.hssf.usermodel.HSSFFormulaEvaluator
+import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator
 
 import org.apache.poi.hssf.usermodel.HSSFDateUtil
 
@@ -90,9 +91,25 @@ class GdtImporterService {
         def sheet = workbook.getSheetAt(sheetIndex)
         def df = new DataFormatter()
 		def dataMatrix = []
+        def formulaEvaluator
 
-        HSSFFormulaEvaluator formulaEvaluator = new HSSFFormulaEvaluator(sheet, workbook);
+        //println "workbook= " + workbook.dump()
+        //println "sheetdump=" +sheet.dump()
 
+
+             // Is this an XLS (old fashioned Excel file)?
+             try {
+                 formulaEvaluator = new HSSFFormulaEvaluator(sheet, workbook);
+             } catch (Exception e) {
+                 log.error ".import wizard could not create HSSF formula evaluator, trying XSSF formula evaluator"
+             }
+
+             // Or is this an XLSX (modern style Excel file)?
+             try {
+                 formulaEvaluator = new XSSFFormulaEvaluator(workbook);
+             } catch (Exception e) {
+                 log.error ".import wizard could not create XSSF formula evaluator either, unknown Excel formula format"
+             }
 
         count = count ? Math.min(sheet.lastRowNum, count) : sheet.lastRowNum
 
