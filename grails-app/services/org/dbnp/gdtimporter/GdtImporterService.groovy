@@ -32,6 +32,7 @@ import org.apache.poi.hssf.usermodel.HSSFFormulaEvaluator
 import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator
 
 import org.apache.poi.hssf.usermodel.HSSFDateUtil
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 
 
 class GdtImporterService {
@@ -44,7 +45,15 @@ class GdtImporterService {
 	 * @return high level representation of the workbook
 	 */
 	Workbook getWorkbook(InputStream is) {
-		WorkbookFactory.create(is)
+        def workbook = null
+
+		try {
+            workbook = WorkbookFactory.create(is)
+        } catch (Exception e) {
+            log.error ".import wizard could not instantiate workbook, exception: " + e
+        }
+
+        workbook
 	}
 
     /**
@@ -91,24 +100,20 @@ class GdtImporterService {
         def sheet = workbook.getSheetAt(sheetIndex)
         def df = new DataFormatter()
 		def dataMatrix = []
-        def formulaEvaluator
-
-        //println "workbook= " + workbook.dump()
-        //println "sheetdump=" +sheet.dump()
-
+        def formulaEvaluator = null
 
              // Is this an XLS (old fashioned Excel file)?
              try {
                  formulaEvaluator = new HSSFFormulaEvaluator(sheet, workbook);
              } catch (Exception e) {
-                 log.error ".import wizard could not create HSSF formula evaluator, trying XSSF formula evaluator"
+                 log.error ".import wizard could not create Excel (XLS) formula evaluator, skipping to Excel XML (XLSX)"
              }
 
              // Or is this an XLSX (modern style Excel file)?
-             try {
+             if (formulaEvaluator==null) try {
                  formulaEvaluator = new XSSFFormulaEvaluator(workbook);
              } catch (Exception e) {
-                 log.error ".import wizard could not create XSSF formula evaluator either, unknown Excel formula format"
+                 log.error ".import wizard could not create Excel XML (XLSX) formula evaluator either, unknown Excel formula format?"
              }
 
         count = count ? Math.min(sheet.lastRowNum, count) : sheet.lastRowNum
@@ -147,7 +152,8 @@ class GdtImporterService {
                                                             println "gscfdatuum = " + GSCFDateFormatter.format( cell.getDateCellValue() )
                                                         } */
                                                         break
-                        case Cell.CELL_TYPE_FORMULA:    dataMatrixRow.add(formulaEvaluator.evaluateInCell(cell))
+                        case Cell.CELL_TYPE_FORMULA:    (cell != null) ? dataMatrixRow.add(formulaEvaluator.evaluateInCell(cell)) :
+                                                            dataMatrixRow.add('')
                                                         break
                         default:                        dataMatrixRow.add( '' )
 

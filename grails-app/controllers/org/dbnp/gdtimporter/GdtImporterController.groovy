@@ -684,7 +684,7 @@ class GdtImporterController {
 			try {
 				workbook = gdtImporterService.getWorkbook(new FileInputStream(importedFile))
 			} catch (Exception e) {
-				log.error ".importer wizard could not load file: " + e
+				log.error ".importer wizard could not load file, exception: " + e
 				return false
             }
 		}
