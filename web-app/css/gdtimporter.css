@@ -249,3 +249,12 @@
 .validationfail {
     color: red;
 }
+
+.importerheader {
+	background: #fff url(../images/gdtimporter/shadow.jpg);
+	color: #666;
+	font-size: 11px;
+	font-weight: bold;
+	line-height: 17px;
+	padding: 2px 6px;
+}

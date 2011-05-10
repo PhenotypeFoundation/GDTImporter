@@ -31,7 +31,6 @@ $(document).ready(function(){
 //            ]
         });
 });
-
 </script>
 
 <table>
@@ -59,9 +58,8 @@ $(document).ready(function(){
 </table>
 
 <div style="width:auto">
-
     <table id="datamatrix">
-     <thead>
+     <thead><tr>
         <g:set var="usedfuzzymatches" value="${'-'}"/>
         <g:each var="mappingcolumn" in="${gdtImporter_header}" status="index">
           <!-- set selected values based on submitted columnproperties, actually refresh -->
@@ -73,7 +71,7 @@ $(document).ready(function(){
           </g:else>
 
           <g:set var="matchvalue" value="${mappingcolumn.name}"/>
-          <th>${mappingcolumn.name}
+          <td class="importerheader">${mappingcolumn.name}<br/>
                 <!-- store the found match -->
           <g:set var="fuzzymatch" value="${GdtImporter.propertyChooser(name:columnproperty, mappingcolumn:mappingcolumn, matchvalue:mappingcolumn.name, selected:selected, fuzzymatching:gdtImporter_fuzzymatching, template_id:gdtImporter_template_id, returnmatchonly:'true')}"/>
 
@@ -82,12 +80,12 @@ $(document).ready(function(){
           </g:if>
 
           <GdtImporter:propertyChooser name="columnproperty" mappingcolumn="${mappingcolumn}" matchvalue="${matchvalue}" selected="${selected}" fuzzymatching="${gdtImporter_fuzzymatching}" template_id="${gdtImporter_template_id}" allfieldtypes="true" treshold="0.3"/>
-              </th>
-
+          </td>
               <!-- build up a string with fuzzy matches used, to prevent duplicate fuzzy matching -->
               <g:set var="usedfuzzymatches" value="${usedfuzzymatches + ',' + fuzzymatch.toString() }"/>
 
         </g:each>
+     </tr>
     </thead>
     <tbody>
 
