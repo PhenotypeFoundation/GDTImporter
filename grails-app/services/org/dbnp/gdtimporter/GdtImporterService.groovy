@@ -453,9 +453,12 @@ class GdtImporterService {
                     useError = (fieldError.field.toString() != preferredIdentifierField.toString())
                 }
 
-                if (useError && fieldError.field != childEntityParentName ) // ignore parent errors because we'll add the entities to their parent later
-                    failedFields += [entity: "entity_${entity.identifier}_${fieldError.field.toLowerCase().replaceAll("([^a-z0-9])", "_")}", originalValue: fieldError.rejectedValue ?: '']
-
+                if (useError && fieldError.field != childEntityParentName ) { // ignore parent errors because we'll add the entities to their parent later
+                    def entityIdentifier = "entity_${entity.identifier}_${fieldError.field.toLowerCase().replaceAll("([^a-z0-9])", "_")}"
+                    if (!failedFields.find {
+                            it.entity == entityIdentifier
+                        }) failedFields += [entity: entityIdentifier, originalValue: fieldError.rejectedValue ?: '']
+                }
             }
         }
         [failedFields, failedEntities]
@@ -476,9 +479,9 @@ class GdtImporterService {
 
         // figure out the collection name via the hasMany property
         def hasMany         = GrailsClassUtils.getStaticPropertyValue(parentEntity.class, 'hasMany')
-        hasMany.each {
+        /*hasMany.each {
             println "hasmany=" + hasMany.find { print "" + it.value +"/" }
-        }
+        }*/
         def collectionName  = hasMany.find{it.value == domainClass.clazz}.key.capitalize()
 
         // add the entities one by one to the parent entity (unless it's set already)

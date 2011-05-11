@@ -607,6 +607,12 @@ class GdtImporterController {
         // Concatenate failed fields and validated fields from the validation method
         def failedFieldsList = failedFields + doValidation(entityList, flow.gdtImporter_parentEntity)
 
+       /* def x = failedFieldsList.unique { a,b ->
+            a.entity <=> b.entity
+        }
+
+        println "x=" + x*/
+
         // Remove redundant entities where original value is empty and same entity also contains an invalid value
         flow.gdtImporter_failedFields = failedFieldsList.groupBy{it.entity}.collect{
             [entity: it.key, originalValue: (it.value.size() > 1) ? it.value.originalValue.find{it} : it.value.originalValue[0]]
