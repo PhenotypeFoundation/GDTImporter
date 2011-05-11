@@ -392,7 +392,7 @@ class GdtImporterController {
         }
 
         // Return all failed fields which have an original name (!= empty)
-        failedValidationFields.findAll { it.originalName } + duplicateFailedFields
+        failedValidationFields + duplicateFailedFields
 
 	}
 
@@ -568,6 +568,7 @@ class GdtImporterController {
 	 * @returns boolean true if correctly validated, otherwise false
 	 */
 	boolean propertiesPage(flow, flash, params) {
+        def newFailedFieldsList = []
 
 		// Find actual Template object from the chosen template name
 		def template = Template.get(flow.gdtImporter_template_id)
@@ -603,9 +604,15 @@ class GdtImporterController {
 
         // try to validate the entities and combine possible errors with errors
         // from the previous step
-        flow.gdtImporter_failedFields = failedFields + doValidation(entityList, flow.gdtImporter_parentEntity)
+        // Concatenate failed fields and validated fields from the validation method
+        def failedFieldsList = failedFields + doValidation(entityList, flow.gdtImporter_parentEntity)
 
-		flow.gdtImporter_entityList = entityList
+        // Remove redundant entities where original value is empty and same entity also contains an invalid value
+        flow.gdtImporter_failedFields = failedFieldsList.groupBy{it.entity}.collect{
+            [entity: it.key, originalValue: (it.value.size() > 1) ? it.value.originalValue.find{it} : it.value.originalValue[0]]
+        }
+
+	    flow.gdtImporter_entityList = entityList
 
         return true
 	}
