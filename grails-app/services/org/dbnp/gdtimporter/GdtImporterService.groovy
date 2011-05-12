@@ -461,6 +461,7 @@ class GdtImporterService {
                 }
             }
         }
+
         [failedFields, failedEntities]
     }
 

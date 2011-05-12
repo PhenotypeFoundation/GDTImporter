@@ -141,7 +141,7 @@ class GdtImporterController {
 			}.to "fileImportPage"
 
 			on("next") {
-                flash.wizardErrors = [:]
+                flow.wizardErrors = [:]
 				flash.gdtImporter_params = params
 				flash.gdtImporter_params.importfile = params.importfile.replaceAll(/<pre.*?>/,'').replace('</pre>','').replace('existing*','')
                 flash.gdtImporter_params.pageOneRefresh = 'true'
@@ -173,7 +173,7 @@ class GdtImporterController {
                     }
 					else {
 						log.error ".importer wizard wrong permissions"
-						this.appendErrorMap(['error': "You don't have the right permissions"], flash.wizardErrors)
+						this.appendErrorMap(['error': "You don't have the right permissions"], flow.wizardErrors)
 						error()
 					}
                 }
@@ -221,7 +221,7 @@ class GdtImporterController {
 			on("next") {
 				flow.gdtImporter_fuzzymatching = "false"
 
-                flash.wizardErrors = [:]
+                flow.wizardErrors = [:]
 
 				if (propertiesPage(flow, flash, params)) {
 					success()
@@ -253,10 +253,12 @@ class GdtImporterController {
                 (entityList, failedFields) = gdtImporterService.setEntityListFieldValuesFromParams(flow.gdtImporter_entityList, params)
 
                 // try to validate the entities
-                flow.gdtImporter_failedFields = doValidation(entityList, flow.gdtImporter_parentEntity) + failedFields
+                flow.gdtImporter_failedFields = doValidation(flow, entityList, flow.gdtImporter_parentEntity) + failedFields
 
                 if (flow.gdtImporter_failedFields) {
-
+                    flow.wizardErrors.each {
+                        println it
+                    }
                     error()
 
                 } else {
@@ -268,8 +270,8 @@ class GdtImporterController {
                     (entityList, numberOfUpdatedEntities, numberOfChangedTemplates) = gdtImporterService.replaceEntitiesByExistingOnesIfNeeded(entityList, flow.gdtImporter_parentEntity, grailsApplication.config.gdtImporter.childEntityParentName)
 
                     if (numberOfChangedTemplates) {
-                        flash.wizardErrors = [:]
-                        appendErrorMap(['Warning': "The templates for $numberOfChangedTemplates entities have been changed. This may cause certain fields to be cleared. Please exit the wizard now if you want to prevent this."], flash.wizardErrors)
+                        flow.wizardErrors = [:]
+                        appendErrorMap(['Warning': "The templates for $numberOfChangedTemplates entities have been changed. This may cause certain fields to be cleared. Please exit the wizard now if you want to prevent this."], flow.wizardErrors)
                     }
                     
                     // overwrite the flow's entityList and store amount of
@@ -328,7 +330,7 @@ class GdtImporterController {
 
 		// render errors
 		error {
-			render(view: "_error")
+			render(view: "_error", plugin:"gdtimporter")
 			onRender {
 
 				// set page to 4 so that the navigation
@@ -340,7 +342,7 @@ class GdtImporterController {
 
 		// last wizard page
 		finalPage {
-			render(view: "_final_page")
+			render(view: "_final_page", plugin: "gdtimporter")
 			onRender {
 				success()
 			}
@@ -355,13 +357,14 @@ class GdtImporterController {
      * Collects validation errors. Explicitly checks for unique constraint
      * validation errors for entities belonging to a parent entity. Fills
      *
-	 * @param entityList The entity list
+	 * @param flow flow we are in
+     * @param entityList The entity list
      * @param parentEntity The parent entity (if any
      * @return a list of validation errors
 	 */
-	def doValidation(entityList, parentEntity) {
+	def doValidation(flow, entityList, parentEntity) {
 
-        flash.wizardErrors = [:]
+        flow.wizardErrors = [:]
 
         def duplicateFailedFields = [], failedValidationFields = [], failedEntities = []
 
@@ -373,7 +376,7 @@ class GdtImporterController {
             duplicateFailedFields = gdtImporterService.detectUniqueConstraintViolations(entityList, parentEntity, grailsApplication.config.gdtImporter.childEntityParentName)
 
             if (duplicateFailedFields)
-                appendErrorMap(['duplicates': "Some of the fields that should be unique are duplicates."], flash.wizardErrors)
+                appendErrorMap(['duplicates': "Some of the fields that should be unique are duplicates."], flow.wizardErrors)
 
         }
 
@@ -385,7 +388,7 @@ class GdtImporterController {
             // field from overwriting each other (e.g. 'code' failure
             // for multiple studies)
             failedEntities.each { failedEntity ->
-                appendErrors(failedEntity, flash.wizardErrors)
+                appendErrors(failedEntity, flow.wizardErrors)
             }
 
             log.error ".import wizard mapping error, could not validate all entities"
@@ -421,7 +424,7 @@ class GdtImporterController {
 
         if (!params['importfile']) {
             log.error ".importer wizard: no file selected."
-            this.appendErrorMap(['error': "No file uploaded. Please upload an excel file."], flash.wizardErrors)
+            this.appendErrorMap(['error': "No file uploaded. Please upload an excel file."], flow.wizardErrors)
             return false
         }
 
@@ -432,7 +435,7 @@ class GdtImporterController {
             workbook = gdtImporterService.getWorkbook(new FileInputStream(importedFile))
         } catch (Exception e) {
             log.error ".importer wizard could not load file: " + e
-            this.appendErrorMap(['error': "Wrong file (format), the importer requires an Excel file as input"], flash.wizardErrors)
+            this.appendErrorMap(['error': "Wrong file (format), the importer requires an Excel file as input"], flow.wizardErrors)
             return false
         }
 
@@ -472,7 +475,7 @@ class GdtImporterController {
 
 
 		log.error ".importer wizard not all fields are filled in"
-		appendErrorMap(['error': "Not all fields are filled in, please fill in or select all fields"], flash.wizardErrors)
+		appendErrorMap(['error': "Not all fields are filled in, please fill in or select all fields"], flow.wizardErrors)
 		return false
 	}
 
@@ -598,20 +601,14 @@ class GdtImporterController {
 
         if (!entityList) {
             log.error ".importer wizard could not create entities, no mappings made?"
-            appendErrorMap(['error': "Could not create entities since no mappings were specified. Please map at least one column."], flash.wizardErrors)
+            appendErrorMap(['error': "Could not create entities since no mappings were specified. Please map at least one column."], flow.wizardErrors)
             return false
         }
 
         // try to validate the entities and combine possible errors with errors
         // from the previous step
         // Concatenate failed fields and validated fields from the validation method
-        def failedFieldsList = failedFields + doValidation(entityList, flow.gdtImporter_parentEntity)
-
-       /* def x = failedFieldsList.unique { a,b ->
-            a.entity <=> b.entity
-        }
-
-        println "x=" + x*/
+        def failedFieldsList = failedFields + doValidation(flow, entityList, flow.gdtImporter_parentEntity)
 
         // Remove redundant entities where original value is empty and same entity also contains an invalid value
         flow.gdtImporter_failedFields = failedFieldsList.groupBy{it.entity}.collect{
