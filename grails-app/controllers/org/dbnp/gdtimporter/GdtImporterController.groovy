@@ -109,7 +109,7 @@ class GdtImporterController {
                 def domainClass                     = AH.application.getDomainClass(flow.parentEntityClassName)
                 def parentEntityReferenceInstance   = domainClass.referenceInstance
                 //def userParentEntities              //= parentEntityReferenceInstance.findAllWhere(owner: authenticationService.loggedInUser)
-                def userParentEntities              = parentEntityReferenceInstance.list()
+                def userParentEntities              = parentEntityReferenceInstance.list().sort()
 
                 flow.gdtImporter_parentEntityReferenceInstance  = parentEntityReferenceInstance
                 flow.gdtImporter_userParentEntities             = userParentEntities //.sort{it.title}
@@ -189,6 +189,8 @@ class GdtImporterController {
 			render(view: "_page_two")
 			onRender {
 				log.info ".import wizard properties page"
+
+                flow.wizardErrors = [:]
 
                 // Delete the uploaded file
                 fileService.delete flow.gdtImporter_importfile
@@ -433,6 +435,14 @@ class GdtImporterController {
 
         try {
             workbook = gdtImporterService.getWorkbook(new FileInputStream(importedFile))
+
+            // Determine the amount of sheets and put them in the flow scope
+            def sheets = []
+            workbook.getNumberOfSheets().times {
+                sheets.add (it+1)
+            }
+            flow.gdtImporter_sheets = sheets
+
         } catch (Exception e) {
             log.error ".importer wizard could not load file: " + e
             this.appendErrorMap(['error': "Wrong file (format), the importer requires an Excel file as input"], flow.wizardErrors)
@@ -472,7 +482,6 @@ class GdtImporterController {
 
 			return true
 		}
-
 
 		log.error ".importer wizard not all fields are filled in"
 		appendErrorMap(['error': "Not all fields are filled in, please fill in or select all fields"], flow.wizardErrors)
@@ -711,7 +720,7 @@ class GdtImporterController {
             if (sheet.getRow(sheet.getFirstRowNum()) != null) numberOfSheets++
         }
 
-        def dataTables = [numberOfSheets:numberOfSheets, iTotalRecords:datamatrix.length, iTotalDisplayRecords:datamatrix.length, aoColumns:headerColumns, aaData: datamatrix]
+        def dataTables = [numberOfSheets:numberOfSheets, iTotalRecords:datamatrix.length, iColumns:datamatrix.length, iTotalDisplayRecords:datamatrix.length, aoColumns:headerColumns, aaData: datamatrix]
 
         render dataTables as JSON
     }

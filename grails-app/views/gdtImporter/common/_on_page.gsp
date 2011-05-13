@@ -54,6 +54,15 @@
         oldImportfile = $("#importfile").val();
 
         setInterval(function() {
+
+
+            // A file was uploaded and a next page call was issued which failed?
+            if ( $("#importfile").val().length > "existing*".length && $("#pageOneRefresh").val() == "true" ) {
+                updateDatamatrixPreview()
+                // Reset the refresh page value
+                $("#pageOneRefresh").val("")
+            }
+
             if( ($("#importfile").val() != oldImportfile) || $("#pageOneRefresh").val() == "true")
             {
                 // Reset the refresh page value

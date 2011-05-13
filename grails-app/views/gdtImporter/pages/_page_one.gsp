@@ -16,7 +16,7 @@
     <title>Importer wizard (simple)</title>
     <h1>Importer wizard</h1>
     <p>You can import your Excel data to the server by choosing a file from your local harddisk in the form below.</p>
-    <input type="hidden" id="pageOneRefresh" name="pageOneRefresh" value="${gdtImporter_pageOneRefresh}"/>
+    <input type="hidden" id="pageOneRefresh" name="pageOneRefresh" value="${gdtImporter_params?.pageOneRefresh}"/>
 	<table border="0">
         <colgroup width="30%">
     	<tr>
@@ -40,12 +40,12 @@
 		Use data from sheet:
 	    </td>
 	    <td width="100px">
-		<g:select name="sheetIndex" value="${gdtImporter_params?.sheetIndex}" onchange="updateDatamatrixPreview()"/>
+		<g:select name="sheetIndex" value="${gdtImporter_params?.sheetIndex}" from="${gdtImporter_sheets}" onchange="updateDatamatrixPreview()"/>
 	    </td>
 	</tr>
 	<tr>
 	    <td width="100px">
-		Columnheader starts at row:
+		Column header is at:
 	    </td>
 	    <td width="100px">
 		<g:select name="headerRowIndex" from="${1..10}" value="${gdtImporter_params?.headerRowIndex} optionKey="${{it-1}}"/>
