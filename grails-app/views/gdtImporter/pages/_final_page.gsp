@@ -19,7 +19,9 @@
 <af:page>
 <h1>Final Page</h1>
 <p>
-This concludes the importer wizard. You can click <g:link action="index">here</g:link> to restart the wizard.
+This concludes the importer wizard. You can click <g:link action="index">here</g:link> to restart the wizard
+or go to <g:link controller="study" action="show" id="${gdtImporter_parentEntity.id}">${gdtImporter_parentEntity}</g:link> to
+browse your imported data.
 </p>
 
 All rows were imported succesfully.

@@ -120,23 +120,23 @@ class GdtImporterTagLib {
 		def mostsimilar = (matchvalue) ? GdtImporterService.mostSimilar(matchvalue, options, fuzzyTreshold) : ""
 
 		def res = "<select style=\"font-size:10px\" id=\"${name}.index.${columnIndex}\" name=\"${name}.index.${columnIndex}\">"
+        def prefIdentifier = options.find { it.preferredIdentifier}
 
-		res += "<option value=\"dontimport\">Don't import</option>"
+        res += "<option value=\"dontimport\">Don't import</option>"
+        res += '<option value="' + prefIdentifier + '">' + prefIdentifier.name + " (IDENTIFIER)</option>"
 
-		options.each { f ->
-			res += "<option value=\"${f}\""
+        options.findAll {!it.preferredIdentifier}.each { f ->
+			res +=  "<option value=\"${f}\""
 
 			// mostsimilar string passed as argument or selected value passed?
             res += (mostsimilar.toString().toLowerCase() == f.name.toLowerCase() || selected.toLowerCase() == f.name.toLowerCase() ) ?
 				" selected='selected'>" :
 				">"
 
-			res += (f.preferredIdentifier) ?
-				"${f.name} (IDENTIFIER)</option>" :
-				"${f.name}</option>"
+			res += """${f.name} ${(!f.unit)?'': '(' + f.unit + ')'}</option>"""
 		}
 
-		res += "</select>"
+        res += "</select>"
 		return res
 	}
 }
