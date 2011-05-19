@@ -191,8 +191,6 @@ class GdtImporterController {
 			onRender {
 				log.info ".import wizard properties page"
 
-                flow.wizardErrors = [:]
-
                 // Delete the uploaded file
                 fileService.delete flow.gdtImporter_importfile
 
@@ -233,7 +231,9 @@ class GdtImporterController {
 					error()
 				}
 			}.to "mappingPage"
-			on("previous").to "fileImportPage"
+			on("previous"){
+                flow.wizardErrors = [:]
+            }.to "fileImportPage"
 		}
 
 		// Mapping page
@@ -662,8 +662,8 @@ class GdtImporterController {
             }
 
             // search the parent entity for samples with the same name
-            def sampleNameColumnNumber  = flow.gdtImporter_header.findIndexOf{it.property == "Name"}
-            def existingSamples         = flow.gdtImporter_dataMatrix.collect{it[sampleNameColumnNumber]}.collect{ sampleName ->
+            def sampleNameColumnNumber  = flow.gdtImporter_header.findIndexOf{it.property == "name"}
+            def existingSamples         = flow.gdtImporter_dataMatrix.collect{it[sampleNameColumnNumber]}.findAll{ sampleName ->
                 flow.gdtImporter_parentEntity.samples.find{it.name == sampleName}
             }
             // Don't allow to continue when there are pre-existing samples in the sheet

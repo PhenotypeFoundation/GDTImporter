@@ -546,12 +546,11 @@ class GdtImporterService {
             def eventGroup      = eventGroups.find{it.samplingEvents.toList()[0] == samplingEvent}
 
             samplingEvent.addToSamples(sample)
-
             eventGroup.addToSubjects(subject)
-
             parentEntity.addToSamples(sample)
 
-            sample.parentSubject = subject
+            sample.parentSubject    = subject
+            sample.parentEventGroup = eventGroup
 
         }
 
