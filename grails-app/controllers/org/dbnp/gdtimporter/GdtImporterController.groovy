@@ -252,6 +252,8 @@ class GdtImporterController {
 
                 def entityList = [], failedFields = [], numberOfUpdatedEntities = 0, numberOfChangedTemplates = 0
 
+                flow.wizardErrors = [:]
+
                 // update the entity list using values from the params
                 (entityList, failedFields) = gdtImporterService.setEntityListFieldValuesFromParams(flow.gdtImporter_entityList, params)
 
@@ -260,8 +262,12 @@ class GdtImporterController {
                 // load and update them instead of adding new ones.
                 (entityList, numberOfUpdatedEntities, numberOfChangedTemplates) = gdtImporterService.replaceEntitiesByExistingOnesIfNeeded(entityList, flow.gdtImporter_parentEntity, grailsApplication.config.gdtImporter.childEntityParentName)
 
+                if (flow.gdtImporter_attachSamplesToSubjects && numberOfUpdatedEntities) {
+                    appendErrorMap(['Error': "There are $numberOfUpdatedEntities samples that exist in the database. In 'attach samples to existing subjects' mode it is not possible to update existing samples."], flow.wizardErrors)
+                    error()
+                }
+
                 if (numberOfChangedTemplates) {
-                    flow.wizardErrors = [:]
                     appendErrorMap(['Warning': "The templates for $numberOfChangedTemplates entities have been changed. This may cause certain fields to be cleared. Please exit the wizard now if you want to prevent this."], flow.wizardErrors)
                 }
 
@@ -618,43 +624,55 @@ class GdtImporterController {
             // Look up the template field type of the target TemplateField and store it also in the map
             column.templatefieldtype = entityInstance.giveFieldType(property)
 
-            if (column.templatefieldtype) {
-                // Is a "Don't import" property assigned to the column?
-                column.dontimport = (property == "dontimport")
-            } else { // assume we are in 'attach samples to existing subjects' mode (maybe check for this?)
-                column.dontimport = true
+            // Is a "Don't import" property assigned to the column?
+            column.dontimport = (property == "dontimport")
 
-                if (column.property == "Subject name"){
-
-                    def studySubjectNames = flow.gdtImporter_parentEntity.subjects*.name
-
-                    // store subject names in the flow
-                    flow.gdtImporter_subjectNamesForSamples = flow.gdtImporter_dataMatrix.collect{it[columnIndex.toInteger()]}
-
-                    // check whether all subject names in this column exist in the study
-                    if (!flow.gdtImporter_subjectNamesForSamples.every{ it in studySubjectNames}) {
-                        log.error ".importer wizard - not all subjects are present in study"
-                        appendErrorMap(['error': "Some subject names could not be found in the study. Please compare the subjects from the selected study with the subject names from the excel sheet."], flow.wizardErrors)
-                        return false
-                    }
-                }
-            }
 		}
-
 
         // check whether the user entered the required fields when in 'attach samples to subjects' mode
         if (flow.gdtImporter_attachSamplesToSubjects) {
 
+            def subjectNameColumnNumber = flow.gdtImporter_header.findIndexOf{it.property == "Subject name"}
+
+            flow.gdtImporter_header[subjectNameColumnNumber].dontimport = true
+
+            // store subject names in the flow
+            flow.gdtImporter_subjectNamesForSamples = flow.gdtImporter_dataMatrix.collect{it[subjectNameColumnNumber]}
+
+            def studySubjectNames = flow.gdtImporter_parentEntity.subjects*.name
+
+            if (!flow.gdtImporter_subjectNamesForSamples.every{ it in studySubjectNames}) {
+                log.error ".importer wizard - not all subjects are present in study"
+                appendErrorMap(['error': "Some subject names could not be found in the study. Please compare the subjects from the selected study with the subject names from the excel sheet."], flow.wizardErrors)
+                return false
+            }
+
             // store timepoints in the flow
             def timepointColumnNumber   = flow.gdtImporter_header.findIndexOf{it.property == "Timepoint"}
+            flow.gdtImporter_header[timepointColumnNumber].dontimport = true
+
             flow.gdtImporter_timePoints = flow.gdtImporter_dataMatrix.collect{it[timepointColumnNumber]}
             // TODO: check timepoints for valid values
 
+            // check whether user specified subject names and timepoints
             if (!(flow.gdtImporter_subjectNamesForSamples && flow.gdtImporter_timePoints )) {
                 log.error ".importer wizard - could not find both subject name and timepoint selected in the header columns."
                 appendErrorMap(['error': "When attaching samples to subjects you need to select both \"Subject name\" and \"Timepoint\" in the header columns."], flow.wizardErrors)
                 return false
             }
+
+            // search the parent entity for samples with the same name
+            def sampleNameColumnNumber  = flow.gdtImporter_header.findIndexOf{it.property == "Name"}
+            def existingSamples         = flow.gdtImporter_dataMatrix.collect{it[sampleNameColumnNumber]}.collect{ sampleName ->
+                flow.gdtImporter_parentEntity.samples.find{it.name == sampleName}
+            }
+            // Don't allow to continue when there are pre-existing samples in the sheet
+            if (existingSamples) {
+                log.error ".importer wizard - there are existing samples in the database which is not allowed in this mode."
+                appendErrorMap(['error': "In the excel sheet there are ${existingSamples.size()} which correspond to samples in the database. When attaching samples to existing subjects, it is not possible to update samples. Importer can not continue."], flow.wizardErrors)
+                return false
+            }
+
         }
 
 		// Import the workbook and store the table with entity records and store the failed cells

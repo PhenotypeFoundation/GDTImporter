@@ -551,6 +551,8 @@ class GdtImporterService {
 
             parentEntity.addToSamples(sample)
 
+            sample.parentSubject = subject
+
         }
 
     }
