@@ -26,6 +26,7 @@ import grails.converters.JSON
 import org.codehaus.groovy.grails.plugins.web.taglib.ValidationTagLib
 import grails.plugins.springsecurity.Secured
 import org.codehaus.groovy.grails.commons.ApplicationHolder as AH
+import org.hibernate.FlushMode
 
 @Secured(['IS_AUTHENTICATED_REMEMBERED'])
 class GdtImporterController {
@@ -202,16 +203,20 @@ class GdtImporterController {
 				success()
 			}
 			on("refresh") {
+
 				def template = Template.get(flow.gdtImporter_template_id)
 				flow.gdtImporter_importmappings = GdtImportMapping.findAllByTemplate(template)
 
 				// a name was given to the current property mapping, try to store it
 				if (params.mappingname) {
 					flash.gdtImporter_columnproperty = params.columnproperty
-					propertiesSaveImportMappingPage(flow, flash, params)
+					 flow.gdtImporter_importmapping = propertiesSaveImportMappingPage(flow, flash, params)
 				} else // trying to load an existing import mapping
-                    if (params.importmapping_id) {
-                        propertiesLoadImportMappingPage(flow, flash, params)
+                    if (params.loadimportmapping_id) {
+                        flow.gdtImporter_importmapping = propertiesLoadImportMappingPage(flow, flash, params)
+                    } else // trying to delete an existing import mapping
+                    if (params.deleteimportmapping_id) {
+                        propertiesDeleteImportMappingPage(flow, flash, params)
                     }
 
                 flow.gdtImporter_fuzzymatching = (params.fuzzymatching == "true") ? "true" : "false"
@@ -516,21 +521,40 @@ class GdtImporterController {
 	}
 
 	/**
-	 * Load an existing import mapping
+	 * Load an existing gdt import mapping
 	 *
 `	 * @param flow The flow scope
 	 * @param params The flow parameters = form data
-	 * @returns return value not used
+	 * @returns return GdtImportMapping object
 	 */
 	def propertiesLoadImportMappingPage(flow, flash, params) {
-		def im = GdtImportMapping.get(params.importmapping_id.toInteger())
+		def im = GdtImportMapping.get(params.loadimportmapping_id.toInteger())
 		im.refresh()
 
 		im.gdtmappingcolumns.each { gdtMappingColumn ->
-
 			flow.gdtImporter_header[gdtMappingColumn.index.toInteger()] = gdtMappingColumn
-
 		}
+
+        im
+	}
+
+    /**
+	 * Delete an existing import mapping
+	 *
+`	 * @param flow The flow scope
+	 * @param params The flow parameters = form data
+	 * @returns return ImportMapping object
+	 */
+	def propertiesDeleteImportMappingPage(flow, flash, params) {
+        def importmapping_id = params.deleteimportmapping_id.toLong()
+
+        // Manual deletion is necessary; the delete isn't performed by Hibernate directly and this
+        // results in deleted items being still visible in the dropdown box
+        // Delete all GdtMappingColumn objects belonging to this GdtImportMapping (cascaded delete doesn't work)
+        GdtMappingColumn.executeUpdate("DELETE GdtMappingColumn WHERE gdtimportmapping_id= ?", [importmapping_id])
+
+        // Delete the GdtImportMapping
+        GdtImportMapping.executeUpdate("DELETE GdtImportMapping WHERE id = ?",[importmapping_id])
 	}
 
 	/**
@@ -597,6 +621,8 @@ class GdtImporterController {
                 }
             }
 		}
+
+        im
 	}
 
 	/**

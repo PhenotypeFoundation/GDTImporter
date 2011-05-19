@@ -36,12 +36,22 @@ $(document).ready(function(){
 <table>
   <tr><td colspan="3"><h4>${gdtImporter_entity.name}</h4></td></tr>
   <tr>
-    <td class="header" width="55px">
+    <td class="header" width="70%">
+        <div id="currentmapping">Current import mapping:
+        <g:if test="${gdtImporter_importmapping}">
+         '${gdtImporter_importmapping.name}'
+        </g:if>
+        <g:else>
+          none
+        </g:else>
+        </div>
+      <td class="header">
       <input class="buttonsmall" id="clearselect" type="button" value="Clear" name="clearselect" title="Clear all selections">
       <input class="buttonsmall" id="fuzzymatchselect" type="button" value="Match" name="fuzzymatchselect" title="Automatically match columns to properties">
       <input type="hidden" name="fuzzymatching" id="fuzzymatching" value="false">
       <input class="buttonsmall" id="savepropertiesbutton" type="button" value="Save" name="savepropertiesbutton" title="Save the currently set mappings">
       <input class="buttonsmall" id="loadpropertiesbutton" type="button" value="Load" name="loadpropertiesbutton" title="Load previously saved mappings">
+      <input class="buttonsmall" id="deletepropertiesbutton" type="button" value="Delete" name="deletepropertiesbutton" title="Delete previously saved mappings">
       <div id="savemapping" style="display:none">
         Give current mapping a name:
         <input type="text" name="mappingname" size="20" id="mappingname">
@@ -49,9 +59,15 @@ $(document).ready(function(){
       </div>
       <div id="loadmapping" style="display:none">
         Select an existing mapping:
-        <g:select name="importmapping_id" from="${gdtImporter_importmappings}" noSelection="['':'-Select mapping-']" optionValue="name" optionKey="id"/>
+        <g:select name="loadimportmapping_id" from="${gdtImporter_importmappings}" noSelection="['':'-Select mapping-']" optionValue="name" optionKey="id"/>
         <input type="button" id="loadmappingok" value="OK">
       </div>
+      <div id="deletemapping" style="display:none">
+        Delete a mapping:
+        <g:select name="deleteimportmapping_id" from="${gdtImporter_importmappings}" noSelection="['':'-Select mapping-']" optionValue="name" optionKey="id"/>
+        <input type="button" id="deletemappingok" value="OK">
+      </div>
+      </td>
     </td>
 
 </tr>

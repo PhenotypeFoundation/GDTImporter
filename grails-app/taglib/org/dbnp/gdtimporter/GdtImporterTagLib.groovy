@@ -117,6 +117,7 @@ class GdtImporterTagLib {
 	 * @return HTML select object
 	 */
 	def createPropertySelect(String name, options, matchvalue, selected, Integer columnIndex, float fuzzyTreshold = 0.1f) {
+
 		// Determine which field in the options list matches the best with the matchvalue
 		def mostsimilar = (matchvalue) ? GdtImporterService.mostSimilar(matchvalue, options, fuzzyTreshold) : ""
 
@@ -124,9 +125,8 @@ class GdtImporterTagLib {
         def prefIdentifier = options.find { it.preferredIdentifier}
 
         res += "<option value=\"dontimport\">Don't import</option>"
-        res += '<option value="' + prefIdentifier + '">' + prefIdentifier.name + " (IDENTIFIER)</option>"
 
-        options.findAll {!it.preferredIdentifier}.each { f ->
+        options.sort { it.preferredIdentifier }.reverse().each { f ->
 			res +=  "<option value=\"${f.name}\""
 
 			// mostsimilar string passed as argument or selected value passed?
@@ -134,7 +134,9 @@ class GdtImporterTagLib {
 				" selected='selected'>" :
 				">"
 
-			res += """${f.name} ${(!f.unit)?'': '(' + f.unit + ')'}</option>"""
+			res += "${f.name} ${ (!f.unit)?'': '(' + f.unit + ')'}"
+            res += (!f.preferredIdentifier) ? '': '(IDENTIFIER)'
+            res += "</option>"
 		}
 
         res += "</select>"

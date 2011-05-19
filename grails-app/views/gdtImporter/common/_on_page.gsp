@@ -114,7 +114,17 @@
 
     // mapping has been chosen and OK button pressed? refresh the flow page
     $('#loadmappingok').click(function() {
-      if ($("#importmapping_id").val()) refreshFlow()
+      if ($("#loadimportmapping_id").val()) refreshFlow()
+    });
+
+    // open delete box
+    $('#deletepropertiesbutton').click(function() {
+      $("#deletemapping").toggle("scale")
+    });
+
+    // mapping has been chosen and OK button pressed? refresh the flow page
+    $('#deletemappingok').click(function() {
+      if ($("#deleteimportmapping_id").val()) refreshFlow()
     });
 
     // open save box
@@ -143,6 +153,8 @@
 
     // attach function to clear button to reset all selects to "don't import"
     $('#clearselect').click(function() {
+      $("#currentmapping").html("Current import mapping: none")
+
       // for each select field on the page
       $("select").each(function() {
         // set its value to its first option
