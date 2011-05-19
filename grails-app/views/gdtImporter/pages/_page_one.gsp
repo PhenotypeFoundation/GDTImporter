@@ -69,6 +69,12 @@
 					    params: '\'entity=\'+escape(this.value)',
 					    onSuccess:'updateSelect(\'template_id\',data,false,false,\'default\',\''+ gdtImporter_parentEntityClassName +'\')')}"/>
       </td>
+      <td>
+        <div id="attachSamplesDiv">
+          <g:checkBox name="attachSamples" id="attachSamples" value="${false}"/>
+          Attach Samples to Existing Subjects
+        </div>
+      </td>
     </tr>
     <tr id="parentEntityField">
       <td>
@@ -90,7 +96,7 @@
                 <g:set var="entity" value="None"/>
             </g:else>
 
-        <g:select rel="template" entity="${entity}" name="template_id" optionKey="id" optionValue="name" from="${gdtImporter_datatemplates}" value="${gdtImporter_params?.template_id}"/>
+        <g:select rel="template" entity="${entity}" name="template_id" optionKey="id" optionValue="name" from="${gdtImporter_entityTemplates}" value="${gdtImporter_params?.template_id}"/>
       </td>
     </tr>
   </table>

@@ -108,12 +108,10 @@ class GdtImporterController {
                 // Get a list of parent entities the current logged in user owns
                 def domainClass                     = AH.application.getDomainClass(flow.parentEntityClassName)
                 def parentEntityReferenceInstance   = domainClass.referenceInstance
-                //def userParentEntities              //= parentEntityReferenceInstance.findAllWhere(owner: authenticationService.loggedInUser)
-                //def userParentEntities              = parentEntityReferenceInstance.list().sort() //because no knowledge exists about the
                 def userParentEntities              = parentEntityReferenceInstance.findAllWhere(owner: authenticationService.loggedInUser)
 
                 flow.gdtImporter_parentEntityReferenceInstance  = parentEntityReferenceInstance
-                flow.gdtImporter_userParentEntities             = userParentEntities.sort{ it.toString() }
+                flow.gdtImporter_userParentEntities             = userParentEntities.sort{ it.toString() }.each { it.toString()[0..Math.min(70, it.toString().length()-1)]}
                 flow.gdtImporter_parentEntityClassName          = domainClass.shortName
 
 				success()
@@ -122,7 +120,7 @@ class GdtImporterController {
 			on("refresh") {
 
 				if (params.entity) {
-					flash.gdtImporter_datatemplates = Template.findAllByEntity(gdtService.getInstanceByEntity(params.entity.decodeURL()))
+					flow.gdtImporter_entityTemplates = Template.findAllByEntity(gdtService.getInstanceByEntity(params.entity.decodeURL()))
 				}
 
                 // Let the view know we are refreshing the page, which means
@@ -149,6 +147,8 @@ class GdtImporterController {
                 flow.gdtImporter_importfile = flash.gdtImporter_params.importfile
                 flow.gdtImporter_dateformat = params.dateformat
 
+                flow.gdtImporter_attachSamplesToSubjects = (params.attachSamples == "on")
+
                 if (!flash.gdtImporter_params.importfile) {
                     log.error('.gdtImporterWizard [fileImportPage] no file specified.')
                     error()
@@ -158,7 +158,7 @@ class GdtImporterController {
                 }
 
 				if (params.entity) {
-					flash.gdtImporter_datatemplates = Template.findAllByEntity(gdtService.getInstanceByEntity(params.entity.decodeURL()))
+					flow.gdtImporter_entityTemplates = Template.findAllByEntity(gdtService.getInstanceByEntity(params.entity.decodeURL()))
 					def gdtImporter_entity_type = gdtService.decryptEntity(params.entity.decodeURL()).toString().split(/\./)
 					flow.gdtImporter_entity_type = gdtImporter_entity_type[-1]
 				}
@@ -255,6 +255,21 @@ class GdtImporterController {
                 // update the entity list using values from the params
                 (entityList, failedFields) = gdtImporterService.setEntityListFieldValuesFromParams(flow.gdtImporter_entityList, params)
 
+                // if the entities being imported have a preferred identifier
+                // that already exists (within the parent entity, if applicable)
+                // load and update them instead of adding new ones.
+                (entityList, numberOfUpdatedEntities, numberOfChangedTemplates) = gdtImporterService.replaceEntitiesByExistingOnesIfNeeded(entityList, flow.gdtImporter_parentEntity, grailsApplication.config.gdtImporter.childEntityParentName)
+
+                if (numberOfChangedTemplates) {
+                    flow.wizardErrors = [:]
+                    appendErrorMap(['Warning': "The templates for $numberOfChangedTemplates entities have been changed. This may cause certain fields to be cleared. Please exit the wizard now if you want to prevent this."], flow.wizardErrors)
+                }
+
+                // overwrite the flow's entityList and store amount of
+                // updated entities in the flow.
+                flow.gdtImporter_entityList = entityList
+                flow.gdtImporter_numberOfUpdatedEntities = numberOfUpdatedEntities
+
                 // try to validate the entities
                 flow.gdtImporter_failedFields = doValidation(flow, entityList, flow.gdtImporter_parentEntity) + failedFields
 
@@ -265,22 +280,6 @@ class GdtImporterController {
                     error()
 
                 } else {
-
-                    // if the entities being imported have a preferred identifier
-                    // that already exists (within the parent entity, if applicable)
-                    // load and update them instead of adding new ones.
-
-                    (entityList, numberOfUpdatedEntities, numberOfChangedTemplates) = gdtImporterService.replaceEntitiesByExistingOnesIfNeeded(entityList, flow.gdtImporter_parentEntity, grailsApplication.config.gdtImporter.childEntityParentName)
-
-                    if (numberOfChangedTemplates) {
-                        flow.wizardErrors = [:]
-                        appendErrorMap(['Warning': "The templates for $numberOfChangedTemplates entities have been changed. This may cause certain fields to be cleared. Please exit the wizard now if you want to prevent this."], flow.wizardErrors)
-                    }
-                    
-                    // overwrite the flow's entityList and store amount of
-                    // updated entities in the flow.
-                    flow.gdtImporter_entityList = entityList
-                    flow.gdtImporter_numberOfUpdatedEntities = numberOfUpdatedEntities
 
                     success()
 
@@ -297,25 +296,38 @@ class GdtImporterController {
 				flow.page = 4
 				success()
             }
-            
+
             on("next") {
 
                 flow.page = 5
 
-                // save the parent entity containing the added entities
+                // If we're in 'attach samples to subjects' mode, now it's time to do so
+                if (flow.gdtImporter_attachSamplesToSubjects) {
 
-                // TODO: currently when you select a parentEntity gdtImporter thinks you want to add children
-                //   to the parent which doesn't work, look at GSCF
+                    gdtImporterService.attachSamplesToSubjects(
+                            flow.gdtImporter_entityList,                // samples
+                            flow.gdtImporter_subjectNamesForSamples,    // subject names from the sheet representing subject to attach samples to
+                            flow.gdtImporter_timePoints,                // time points from the sheet that will be stored in sampling events
+                            flow.gdtImporter_template,                  // sample template
+                            flow.gdtImporter_parentEntity)
 
-                if (flow.gdtImporter_parentEntity) {
+                // We're in 'standard' mode.
+                // If there's a parent entity, add the entities it.
+                } else if (flow.gdtImporter_parentEntity) {
 
-                    gdtImporterService.addEntitiesToParentEntity(flow.gdtImporter_entityList, flow.gdtImporter_parentEntity, grailsApplication.config.gdtImporter.childEntityParentName)
+                    gdtImporterService.addEntitiesToParentEntity(
+                            flow.gdtImporter_entityList,
+                            flow.gdtImporter_parentEntity,
+                            grailsApplication.config.gdtImporter.childEntityParentName)
+
                     if (!flow.gdtImporter_parentEntity.save()) {
-                        log.error ".gdtImporter [mappingPage] could not save parent entity."
+                        log.error ".gdtImporter [confirmation page] could not save parent entity."
                         error()
                     } else success()
-                // if the entities we're adding are parent entities
-                // themselves, set owner fields and save them individually
+
+                // When there's not a parent entity defined that means the
+                // entities themselves are parent entities. We'll set the owner
+                // fields and save them individually.
                 } else{
                     flow.gdtImporter_entityList.each{
 
@@ -460,10 +472,9 @@ class GdtImporterController {
 			flow.gdtImporter_entityclass = gdtService.getInstanceByEntityName(entityName)
 			flow.gdtImporter_entity = gdtService.cachedEntities.find { it.entity == entityName }
 
-            // TODO: change to templateInstance
-            flow.gdtImporter_templates = Template.get(flow.gdtImporter_template_id)
+            flow.gdtImporter_template = Template.get(flow.gdtImporter_template_id)
 
-            def entityInstance = flow.gdtImporter_entityclass.newInstance(template: flow.gdtImporter_templates)
+            def entityInstance = flow.gdtImporter_entityclass.newInstance(template: flow.gdtImporter_template)
 
             // Load raw data
             flow.gdtImporter_dataMatrix = gdtImporterService.getDataMatrix(workbook, flow.gdtImporter_sheetIndex, 0)
@@ -479,7 +490,16 @@ class GdtImporterController {
 
 			flow.gdtImporter_allfieldtypes = "true"
 
-            //fileService.delete params['importfile']
+            // if the user wants to add the samples to existing subjects
+            // make it possible to select
+            if (flow.gdtImporter_attachSamplesToSubjects) {
+
+                flow.gdtImporter_extraOptions = [
+                        [preferredIdentifier: false, name: 'Subject name', unit: false],
+                        [preferredIdentifier: false, name: 'Timepoint', unit: false]
+                ]
+
+            }
 
 			return true
 		}
@@ -581,7 +601,6 @@ class GdtImporterController {
 	 * @returns boolean true if correctly validated, otherwise false
 	 */
 	boolean propertiesPage(flow, flash, params) {
-        def newFailedFieldsList = []
 
 		// Find actual Template object from the chosen template name
 		def template = Template.get(flow.gdtImporter_template_id)
@@ -596,12 +615,47 @@ class GdtImporterController {
 			// Store the selected property for this column into the column map for the gdtImporterService
 			column.property = property
 
-			// Look up the template field type of the target TemplateField and store it also in the map
-			column.templatefieldtype = entityInstance.giveFieldType(property)
+            // Look up the template field type of the target TemplateField and store it also in the map
+            column.templatefieldtype = entityInstance.giveFieldType(property)
 
-			// Is a "Don't import" property assigned to the column?
-			column.dontimport = (property == "dontimport")
+            if (column.templatefieldtype) {
+                // Is a "Don't import" property assigned to the column?
+                column.dontimport = (property == "dontimport")
+            } else { // assume we are in 'attach samples to existing subjects' mode (maybe check for this?)
+                column.dontimport = true
+
+                if (column.property == "Subject name"){
+
+                    def studySubjectNames = flow.gdtImporter_parentEntity.subjects*.name
+
+                    // store subject names in the flow
+                    flow.gdtImporter_subjectNamesForSamples = flow.gdtImporter_dataMatrix.collect{it[columnIndex.toInteger()]}
+
+                    // check whether all subject names in this column exist in the study
+                    if (!flow.gdtImporter_subjectNamesForSamples.every{ it in studySubjectNames}) {
+                        log.error ".importer wizard - not all subjects are present in study"
+                        appendErrorMap(['error': "Some subject names could not be found in the study. Please compare the subjects from the selected study with the subject names from the excel sheet."], flow.wizardErrors)
+                        return false
+                    }
+                }
+            }
 		}
+
+
+        // check whether the user entered the required fields when in 'attach samples to subjects' mode
+        if (flow.gdtImporter_attachSamplesToSubjects) {
+
+            // store timepoints in the flow
+            def timepointColumnNumber   = flow.gdtImporter_header.findIndexOf{it.property == "Timepoint"}
+            flow.gdtImporter_timePoints = flow.gdtImporter_dataMatrix.collect{it[timepointColumnNumber]}
+            // TODO: check timepoints for valid values
+
+            if (!(flow.gdtImporter_subjectNamesForSamples && flow.gdtImporter_timePoints )) {
+                log.error ".importer wizard - could not find both subject name and timepoint selected in the header columns."
+                appendErrorMap(['error': "When attaching samples to subjects you need to select both \"Subject name\" and \"Timepoint\" in the header columns."], flow.wizardErrors)
+                return false
+            }
+        }
 
 		// Import the workbook and store the table with entity records and store the failed cells
 		def (entityList, failedFields) = gdtImporterService.getDataMatrixAsEntityList(flow.gdtImporter_entity, template,

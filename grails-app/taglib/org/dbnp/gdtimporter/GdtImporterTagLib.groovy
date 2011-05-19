@@ -83,6 +83,7 @@ class GdtImporterTagLib {
 	 * @param MappingColumn object containing all required information
      * @param fuzzymatching boolean true if fuzzy matching should be used, otherwise false
 	 * @param allfieldtypes boolean true if all templatefields should be listed, otherwise only show filtered templatefields
+     * @param extraOptions options to add to the select boxes (e.g. non template field items)
 	 * @return chooser object
 	 * */
 	def propertyChooser = { attrs ->
@@ -96,7 +97,7 @@ class GdtImporterTagLib {
 		def fuzzyTreshold = attrs[ 'treshold' ] && attrs[ 'treshold' ].toString().isNumber() ? Float.valueOf( attrs[ 'treshold' ] ) : 0.1;
         def returnmatchonly = attrs['returnmatchonly']
 
-        def templatefields = t.fields + mc.entityclass.giveDomainFields()
+        def templatefields = t.fields + mc.entityclass.giveDomainFields() + (attrs.extraOptions ?: [])
 
         //  Just return the matched value only
         if (returnmatchonly)
@@ -126,7 +127,7 @@ class GdtImporterTagLib {
         res += '<option value="' + prefIdentifier + '">' + prefIdentifier.name + " (IDENTIFIER)</option>"
 
         options.findAll {!it.preferredIdentifier}.each { f ->
-			res +=  "<option value=\"${f}\""
+			res +=  "<option value=\"${f.name}\""
 
 			// mostsimilar string passed as argument or selected value passed?
             res += (mostsimilar.toString().toLowerCase() == f.name.toLowerCase() || selected.toLowerCase() == f.name.toLowerCase() ) ?

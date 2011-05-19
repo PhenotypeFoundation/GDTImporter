@@ -79,7 +79,7 @@ $(document).ready(function(){
               <g:set var="matchvalue" value=""/>
           </g:if>
 
-          <GdtImporter:propertyChooser name="columnproperty" mappingcolumn="${mappingcolumn}" matchvalue="${matchvalue}" selected="${selected}" fuzzymatching="${gdtImporter_fuzzymatching}" template_id="${gdtImporter_template_id}" allfieldtypes="true" treshold="0.3"/>
+          <GdtImporter:propertyChooser name="columnproperty" mappingcolumn="${mappingcolumn}" matchvalue="${matchvalue}" selected="${selected}" fuzzymatching="${gdtImporter_fuzzymatching}" template_id="${gdtImporter_template_id}" allfieldtypes="true" treshold="0.3" extraOptions="${gdtImporter_extraOptions}"/>
           </td>
               <!-- build up a string with fuzzy matches used, to prevent duplicate fuzzy matching -->
               <g:set var="usedfuzzymatches" value="${usedfuzzymatches + ',' + fuzzymatch.toString() }"/>

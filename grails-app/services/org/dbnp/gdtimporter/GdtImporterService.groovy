@@ -31,9 +31,6 @@ import java.text.SimpleDateFormat
 import org.apache.poi.hssf.usermodel.HSSFFormulaEvaluator
 import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator
 
-import org.apache.poi.hssf.usermodel.HSSFDateUtil
-import org.apache.poi.xssf.usermodel.XSSFWorkbook
-
 
 class GdtImporterService {
     def authenticationService
@@ -66,7 +63,6 @@ class GdtImporterService {
 	 */
     def getHeader(String[][] datamatrix, int headerRowIndex, entityInstance = null) {
         def header = []
-		def df = new DataFormatter()
 
 		// Loop through all columns from the first row in the datamatrix and try to
         // determine the type of values stored (integer, string, float)
@@ -84,6 +80,17 @@ class GdtImporterService {
 		}
 
         header
+
+//        datamatrix[headerRowIndex].collectWithIndex{ headerName, columnIndex ->
+//
+//            new GdtMappingColumn(
+//                    name:               headerName,
+//					templatefieldtype:  TemplateField.STRING,
+//					index:              columnIndex,
+//					entityclass:        entityInstance.class,
+//					property:           "")
+//        }
+
     }
 
     /**
@@ -201,6 +208,7 @@ class GdtImporterService {
 
 		[entityList, errorList]
 	}
+
     /**
      * @param entityList the list of entities
      * @param parentEntity the parent entity (if any) to which the entities (will) belong
@@ -463,6 +471,88 @@ class GdtImporterService {
         }
 
         [failedFields, failedEntities]
+    }
+
+    /**
+     *
+     * @param samples
+     * @param subjects
+     * @return
+     */
+    def attachSamplesToSubjects(samples, subjectNames, timePoints, sampleTemplate, parentEntity) {
+
+        // get a list of subject names with duplicates removed
+        def uniqueSubjectNames = subjectNames.clone().unique()
+
+        // get the referenced subjects from the parent entity
+        def subjects = uniqueSubjectNames.collect{
+            subjectName -> parentEntity.subjects.find{
+                it.name == subjectName
+            }
+        }
+
+        def uniqueTimePoints = timePoints.clone().unique()
+
+        // generate sampling events based on the time points
+        def samplingEvents = uniqueTimePoints.collect { String timePoint ->
+
+            def startTime = new RelTime(timePoint).getValue()
+
+            // make sure all existing sampling events have identifiers
+            parentEntity.samplingEvents*.identifier
+
+            // we can't do 'new SamplingEvent()' because we're inside the plugin and not GSCF ...
+            parentEntity.addToSamplingEvents(startTime: startTime, sampleTemplate: sampleTemplate)
+
+            // find the last inserted sampling event, which is the one with the highest identifier
+            parentEntity.samplingEvents.sort{it.identifier}[-1]
+
+        }
+
+        // generate event groups, one for each sampling event
+        def eventGroups = samplingEvents.collect { samplingEvent ->
+
+            def eventGroupBaseName = "Sampling_${sampleTemplate.name.split(' ').collect{it.capitalize()}.join()}_${new RelTime(samplingEvent.startTime).toString()}"
+
+            def existingEventGroupNames = parentEntity.eventGroups*.name
+
+            def eventGroupName = eventGroupBaseName
+            if (eventGroupName in existingEventGroupNames) {
+
+                int i = 1;
+                while ("eventGroupBaseName (${i})" in existingEventGroupNames) { i++ }
+                eventGroupName = "eventGroupBaseName (${i})"
+
+            }
+
+            // make sure all existing event groups have identifiers
+            parentEntity.samplingEvents*.identifier
+
+            parentEntity.addToEventGroups(name: eventGroupName, samplingEvents: [samplingEvent])
+
+            // find the last inserted event group, which is the one with the highest identifier
+            parentEntity.eventGroups.sort{it.identifier}[-1]
+
+        }
+
+        // add each sample to their corresponding subject
+        subjectNames.eachWithIndex { subjectName, idx ->
+
+            def sample          = samples[idx]
+            def timePoint       = timePoints[idx]
+            def subject         = subjects.find{it.name == subjectName}
+            def startTime       = new RelTime(timePoint).getValue()
+            def samplingEvent   = samplingEvents.find{it.startTime == startTime}
+            def eventGroup      = eventGroups.find{it.samplingEvents.toList()[0] == samplingEvent}
+
+            samplingEvent.addToSamples(sample)
+
+            eventGroup.addToSubjects(subject)
+
+            parentEntity.addToSamples(sample)
+
+        }
+
     }
 
     /**
