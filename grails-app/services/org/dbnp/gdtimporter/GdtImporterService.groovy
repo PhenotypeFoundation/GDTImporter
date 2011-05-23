@@ -519,7 +519,7 @@ class GdtImporterService {
             def eventGroupName = eventGroupBaseName
             if (eventGroupName in existingEventGroupNames) {
 
-                int i = 1;
+                int i = 2;
                 while ("eventGroupBaseName (${i})" in existingEventGroupNames) { i++ }
                 eventGroupName = "eventGroupBaseName (${i})"
 

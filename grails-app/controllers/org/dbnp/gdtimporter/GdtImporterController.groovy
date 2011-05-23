@@ -667,9 +667,12 @@ class GdtImporterController {
 
             def studySubjectNames = flow.gdtImporter_parentEntity.subjects*.name
 
-            if (!flow.gdtImporter_subjectNamesForSamples.every{ it in studySubjectNames}) {
+            def missingSubjectNames = flow.gdtImporter_subjectNamesForSamples.clone().unique()
+            missingSubjectNames.removeAll( studySubjectNames )
+
+            if (missingSubjectNames) {
                 log.error ".importer wizard - not all subjects are present in study"
-                appendErrorMap(['error': "Some subject names could not be found in the study. Please compare the subjects from the selected study with the subject names from the excel sheet."], flow.wizardErrors)
+                appendErrorMap(['error': "Some subject names could not be found in the study. Please compare the subjects from the selected study with the subject names from the excel sheet. Missing subjects: ${missingSubjectNames.join(', ')}."], flow.wizardErrors)
                 return false
             }
 
