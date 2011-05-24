@@ -148,7 +148,8 @@ class GdtImporterController {
                 flow.gdtImporter_importfile = flash.gdtImporter_params.importfile
                 flow.gdtImporter_dateformat = params.dateformat
 
-                flow.gdtImporter_attachSamplesToSubjects = (params.attachSamples == "on")
+                flow.gdtImporter_attachSamplesToSubjects    = (params.attachSamples == 'on')
+                flow.gdtImporter_attachEventsToSubjects     = (params.attachEvents == 'on')
 
                 if (!flash.gdtImporter_params.importfile) {
                     log.error('.gdtImporterWizard [fileImportPage] no file specified.')
@@ -255,7 +256,7 @@ class GdtImporterController {
 			}.to "mappingPage"
 			on("next") {
 
-                def entityList = [], failedFields = [], numberOfUpdatedEntities = 0, numberOfChangedTemplates = 0
+                def entityList, failedFields, numberOfUpdatedEntities, numberOfChangedTemplates
 
                 flow.wizardErrors = [:]
 
@@ -267,9 +268,16 @@ class GdtImporterController {
                 // load and update them instead of adding new ones.
                 (entityList, numberOfUpdatedEntities, numberOfChangedTemplates) = gdtImporterService.replaceEntitiesByExistingOnesIfNeeded(entityList, flow.gdtImporter_parentEntity, grailsApplication.config.gdtImporter.childEntityParentName)
 
-                if (flow.gdtImporter_attachSamplesToSubjects && numberOfUpdatedEntities) {
-                    appendErrorMap(['Error': "There are $numberOfUpdatedEntities samples that exist in the database. In 'attach samples to existing subjects' mode it is not possible to update existing samples."], flow.wizardErrors)
-                    error()
+                if (numberOfUpdatedEntities) {
+                    if (flow.gdtImporter_attachSamplesToSubjects) {
+
+                        appendErrorMap(['Error': "There are $numberOfUpdatedEntities samples that exist in the database. In 'attach samples to existing subjects' mode it is not possible to update existing samples."], flow.wizardErrors)
+
+                    } else if (flow.gdtImporter_attachEventsToSubjects) {
+
+                        appendErrorMap(['Error': "There are $numberOfUpdatedEntities events that exist in the database. In 'attach events to existing subjects' mode it is not possible to update existing events."], flow.wizardErrors)
+
+                    }
                 }
 
                 if (numberOfChangedTemplates) {
@@ -317,9 +325,25 @@ class GdtImporterController {
 
                     gdtImporterService.attachSamplesToSubjects(
                             flow.gdtImporter_entityList,                // samples
-                            flow.gdtImporter_subjectNamesForSamples,    // subject names from the sheet representing subject to attach samples to
+                            flow.gdtImporter_subjectNamesToAttach,      // subject names from the sheet representing subject to attach samples to
                             flow.gdtImporter_timePoints,                // time points from the sheet that will be stored in sampling events
                             flow.gdtImporter_template,                  // sample template
+                            flow.gdtImporter_parentEntity)
+
+                } else if (flow.gdtImporter_attachEventsToSubjects) {
+
+                    // In this mode it is expected to have events be repeated
+                    // in order to relate the same event to different subjects.
+                    // We want a unique list but still be able to link events
+                    // and and subject ...
+                    def (consolidatedEvents, eventIndices) = gdtImporterService.consolidateEntities(flow.gdtImporter_entityList)
+                    
+                    flow.gdtImporter_entityList = consolidatedEvents
+
+                    gdtImporterService.attachEventsToSubjects(
+                            flow.gdtImporter_entityList,                // events
+                            eventIndices,                               // indices relating row number to unique event
+                            flow.gdtImporter_subjectNamesToAttach,      // subject names from the sheet representing subject to attach events to
                             flow.gdtImporter_parentEntity)
 
                 // We're in 'standard' mode.
@@ -501,13 +525,19 @@ class GdtImporterController {
 
 			flow.gdtImporter_allfieldtypes = "true"
 
-            // if the user wants to add the samples to existing subjects
-            // make it possible to select
+            // if the user wants to add the samples or events to existing
+            // subjects make it possible to select the required extra options
             if (flow.gdtImporter_attachSamplesToSubjects) {
 
                 flow.gdtImporter_extraOptions = [
                         [preferredIdentifier: false, name: 'Subject name', unit: false],
                         [preferredIdentifier: false, name: 'Timepoint', unit: false]
+                ]
+
+            } else if (flow.gdtImporter_attachEventsToSubjects) {
+
+                flow.gdtImporter_extraOptions = [
+                        [preferredIdentifier: false, name: 'Subject name', unit: false],
                 ]
 
             }
@@ -655,19 +685,19 @@ class GdtImporterController {
 
 		}
 
-        // check whether the user entered the required fields when in 'attach samples to subjects' mode
-        if (flow.gdtImporter_attachSamplesToSubjects) {
+        // check whether the user entered the required fields when in 'attach samples/events to subjects' mode
+        if (flow.gdtImporter_attachSamplesToSubjects || flow.gdtImporter_attachEventsToSubjects) {
 
             def subjectNameColumnNumber = flow.gdtImporter_header.findIndexOf{it.property == "Subject name"}
 
             flow.gdtImporter_header[subjectNameColumnNumber].dontimport = true
 
             // store subject names in the flow
-            flow.gdtImporter_subjectNamesForSamples = flow.gdtImporter_dataMatrix.collect{it[subjectNameColumnNumber]}
+            flow.gdtImporter_subjectNamesToAttach = flow.gdtImporter_dataMatrix.collect{it[subjectNameColumnNumber]}
 
             def studySubjectNames = flow.gdtImporter_parentEntity.subjects*.name
 
-            def missingSubjectNames = flow.gdtImporter_subjectNamesForSamples.clone().unique()
+            def missingSubjectNames = flow.gdtImporter_subjectNamesToAttach.clone().unique()
             missingSubjectNames.removeAll( studySubjectNames )
 
             if (missingSubjectNames) {
@@ -675,6 +705,9 @@ class GdtImporterController {
                 appendErrorMap(['error': "Some subject names could not be found in the study. Please compare the subjects from the selected study with the subject names from the excel sheet. Missing subjects: ${missingSubjectNames.join(', ')}."], flow.wizardErrors)
                 return false
             }
+        }
+
+        if (flow.gdtImporter_attachSamplesToSubjects) {
 
             // store timepoints in the flow
             def timepointColumnNumber   = flow.gdtImporter_header.findIndexOf{it.property == "Timepoint"}
@@ -684,7 +717,7 @@ class GdtImporterController {
             // TODO: check timepoints for valid values
 
             // check whether user specified subject names and timepoints
-            if (!(flow.gdtImporter_subjectNamesForSamples && flow.gdtImporter_timePoints )) {
+            if (!(flow.gdtImporter_subjectNamesToAttach && flow.gdtImporter_timePoints )) {
                 log.error ".importer wizard - could not find both subject name and timepoint selected in the header columns."
                 appendErrorMap(['error': "When attaching samples to subjects you need to select both \"Subject name\" and \"Timepoint\" in the header columns."], flow.wizardErrors)
                 return false

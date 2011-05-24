@@ -431,7 +431,9 @@ class GdtImporterService {
 	}
 
     /**
-     *
+     * Validates a list of entities. Ignores field errors for preferred ids for
+     * parent entities. Ignores field errors for parent relations so they can be
+     * set afterwards.
      * @param entityList
      * @param childEntityParentName parent name the child belongs to
      * @return a list of failed fields and a list of failed entities
@@ -474,10 +476,20 @@ class GdtImporterService {
     }
 
     /**
+     * Attaches samples to subjects. The list of samples and subject names and
+     * time points should be equally long and the order defines the relation.
+     * New sampling events will be based on the time points and event groups
+     * will be made for each sampling event.
      *
-     * @param samples
-     * @param subjects
-     * @return
+     * @param samples The samples that will be connected to the subject
+     * @param subjectNames Names of the subjects that will be connected to the
+     *  samples
+     * @param timePoints Time points on which to base sampling events
+     * @param sampleTemplate The sample template that will be referenced by the
+     *  sampling events that will be created
+     * @param parentEntity The parent entity to which the samples, sampling
+     *  events and event groups will be added to
+     * @return -
      */
     def attachSamplesToSubjects(samples, subjectNames, timePoints, sampleTemplate, parentEntity) {
 
@@ -526,7 +538,7 @@ class GdtImporterService {
             }
 
             // make sure all existing event groups have identifiers
-            parentEntity.samplingEvents*.identifier
+            parentEntity.eventGroups*.identifier
 
             parentEntity.addToEventGroups(name: eventGroupName, samplingEvents: [samplingEvent])
 
@@ -536,23 +548,123 @@ class GdtImporterService {
         }
 
         // add each sample to their corresponding subject
-        subjectNames.eachWithIndex { subjectName, idx ->
+        samples.eachWithIndex { sample, idx ->
 
-            def sample          = samples[idx]
-            def timePoint       = timePoints[idx]
-            def subject         = subjects.find{it.name == subjectName}
-            def startTime       = new RelTime(timePoint).getValue()
+            def subject         = subjects.find{it.name == subjectNames[idx]}
+            def startTime       = new RelTime(timePoint[idx]).getValue()
             def samplingEvent   = samplingEvents.find{it.startTime == startTime}
             def eventGroup      = eventGroups.find{it.samplingEvents.toList()[0] == samplingEvent}
 
             samplingEvent.addToSamples(sample)
-            eventGroup.addToSubjects(subject)
+            if (!eventGroup.subjects.find{it.name == subjectName}) eventGroup.addToSubjects(subject)
             parentEntity.addToSamples(sample)
 
             sample.parentSubject    = subject
             sample.parentEventGroup = eventGroup
 
         }
+
+    }
+
+    /**
+     * Removes duplicates from a list of entities and return the consolidated
+     * list and a list of index numbers relating the old list to the new one.
+     *
+     * Example input: entity1, entity2, entity1, entity3
+     * Corresponding output: [[entity1, entity2, entity3],[0,1,0,2]]
+     *
+     * @param events The events to remove duplicates from
+     * @return the consolidated list and a list relating the old list to the new
+     */
+    def consolidateEntities(entities) {
+
+        def getFieldValueSet = { entity ->
+
+            entity.giveFields().collect { field -> entity.getFieldValue( field.name ) } as Set
+
+        }
+
+        def entityComparator = [ compare: { a, b ->
+
+            getFieldValueSet( a ).equals(getFieldValueSet( b )) ? 0 : 1
+
+        } ] as Comparator
+
+
+        def consolidatedEntities = entities.clone().unique( entityComparator ) //entityComparator }
+
+        def indexList = entities.collect { entity ->
+
+            consolidatedEntities.findIndexOf {
+                entityComparator.compare( it, entity ) == 0
+            }
+        }
+
+        [ consolidatedEntities, indexList ]
+
+    }
+
+    /**
+     * Attach events to subjects. Events and subject names should be lists of
+     * equal size and the order defines their relations. Event group will be
+     * made based on unique combinations of events for all subjects.
+     *
+     * @param events The events to add
+     * @param subjectNames The names of the subjects to add the events to
+     * @param parentEntity The parent entity to which events and event groups
+     *  will be added to
+     * @return -
+     */
+    def attachEventsToSubjects(events, eventReferences, subjectNames, parentEntity) {
+
+        // get a list of subject names with duplicates removed
+        def uniqueSubjectNames = subjectNames.clone().unique()
+
+        // get the referenced subjects from the parent entity
+        def subjects = uniqueSubjectNames.collect {
+            subjectName -> parentEntity.subjects.find {
+                it.name == subjectName
+            }
+        }
+
+        def eventsInOriginalOrder = eventReferences.collect { events[it] }
+
+        def i = 0
+
+        // find all events belonging to each subject
+        def subjectEvents = eventsInOriginalOrder.groupBy { subjectNames[i++] }
+
+        // find all unique combinations of events
+        def uniqueEventCombos = subjectEvents*.value.unique()
+
+        // create event groups; add subjects + events
+        uniqueEventCombos.each { eventCombo ->
+
+            def eventGroupName = eventCombo.collect { event ->
+                "${event.template.name}_${new RelTime(event.startTime)}"
+            }.join('_').split(' ')*.capitalize().join()
+
+            // make sure all existing event groups have identifiers
+            parentEntity.eventGroups*.identifier
+
+            // we can't make an event group directly from the module but we can use addToEventGroups on the parent entity
+            parentEntity.addToEventGroups( name: eventGroupName )
+
+            // find the last inserted event group, which is the one with the highest identifier
+            def eventGroup = parentEntity.eventGroups.sort { it.identifier }[-1]
+
+            eventCombo.each { eventGroup.addToEvents it }
+
+            // fetch subjects that have this combination of events
+            def subjectNamesWithTheseEvents = subjectEvents.findAll { it.value == eventCombo }*.key
+            def subjectsWithTheseEvents     = subjectNamesWithTheseEvents.collect { subjectName -> subjects.find { it.name == subjectName } }
+
+            // add those subject to the group
+            subjectsWithTheseEvents.each { eventGroup.addToSubjects it }
+
+        }
+
+        events.each { parentEntity.addToEvents( it ) }
 
     }
 

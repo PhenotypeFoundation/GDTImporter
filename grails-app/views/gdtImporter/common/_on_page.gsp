@@ -49,6 +49,7 @@
     });
 
     $('#attachSamplesDiv').hide();
+    $('#attachEventsDiv').hide();
 
     // Create listener which is checking whether a (new) file has been uploaded
     oldImportfile = $("#importfile").val();
@@ -198,18 +199,24 @@
     var rselect = $('#' + name).get(0)
     var items = data
 
-    // Only show "Choose [parentEntity]" field if selected entity != [parentEntity]
-    if ($('#entity :selected').text() == 'Study')
-      $('#parentEntityField').hide();
-    else $('#parentEntityField').show();
+    var selectedEntity = $('#entity :selected').text();
 
-    // Show "Attach Samples to Existing Subjects" checkbox when selected entity is "Sample"
-    if ($('#entity :selected').text() == 'Sample')
-      $('#attachSamplesDiv').show();
-    else $('#attachSamplesDiv').hide();
+    $('#parentEntityField').show();
+    $('#attachSamplesDiv').hide();
+    $('#attachEventsDiv').hide();
+    switch (selectedEntity) {
+      case 'Study':
+              $('#parentEntityField').hide();
+              break;
+      case 'Sample':
+              $('#attachSamplesDiv').show();
+              break
+      case 'Event':
+              $('#attachEventsDiv').show();
+              break
+    }
 
-
-      $('select[name=template_id]').attr('entity', $('#' + 'entity').val());
+    $('select[name=template_id]').attr('entity', $('#' + 'entity').val());
 
     if (items) {
 
