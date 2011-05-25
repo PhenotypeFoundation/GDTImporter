@@ -12,6 +12,13 @@
  */
 %>
 <af:page>
- <h1>Please fill in the missing mappings</h1>
-    <GdtImporter:validation entityList="${gdtImporter_entityList}" failedFields="${gdtImporter_failedFields}"/>
+
+  <g:if test="${gdtImporter_failedFields}">
+    <h1>Please correct the failed property assignments and make any further adjustments if required</h1>
+  </g:if>
+  <g:else>
+    <h1>Please make any adjustments if required</h1>
+  </g:else>
+
+  <GdtImporter:validation entityList="${gdtImporter_entityList}" failedFields="${gdtImporter_failedFields}"/>
 </af:page>
