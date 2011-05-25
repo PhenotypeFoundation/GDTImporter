@@ -15,24 +15,6 @@
  */
 %>
 
-<script type="text/javascript">
-$(document).ready(function(){
-	$('#datamatrix').dataTable(
-        {   "sScrollX": "100%",
-//		    "sScrollXInner": "110%",
-		    "bScrollCollapse": true,
-
-            "iDisplayLength": 5,
-            "bFilter": false,
-            "aLengthMenu": [[5, 10, 25, 50], [5, 10, 25, "All"]],
-            "bSort": false
-//            "aoColumnDefs": [
-//                { "bSortable": false, "aTargets": [ "_all" ] }
-//            ]
-        });
-});
-</script>
-
 <table>
   <tr><td colspan="3"><h4>${gdtImporter_entity.name}</h4></td></tr>
   <tr>
@@ -117,4 +99,23 @@ $(document).ready(function(){
     </g:each>
     </tbody>
 </table>
+
+<script type="text/javascript">
+	$(document).ready(function() {
+		dataTable.fnDestroy();
+		dataTable = $('#datamatrix').dataTable(
+			{   "sScrollX": "100%",
+				"bScrollCollapse": true,
+				"iDisplayLength": 5,
+				"bFilter": false,
+				"aLengthMenu": [
+					[5, 10, 25, 50],
+					[5, 10, 25, "All"]
+				],
+				"bSort": false
+			}
+		);
+	});
+</script>
+
 </div>

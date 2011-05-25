@@ -14,8 +14,6 @@
 <af:page>
 	<script language="text/javascript">
 		$('html, body').animate({scrollTop:0}, 'fast');
-
-		// cancel page one timer
 		if (pageOneTimer) clearTimeout(pageOneTimer);
 	</script>
 

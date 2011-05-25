@@ -25,14 +25,12 @@
 <script type="text/javascript">
 	var oldImportfile = '';
 	var checkEverySeconds = 2;
-
 	var dataTable;
 
 	// Initially called when starting the import wizard
 	function onPage() {
-		onStudyWizardPage();
 		// GENERAL
-
+		onStudyWizardPage();
 		$('#simplewizardform').submit(function() {
 			if ($('#file').val() == "") {
 				alert("Please choose your Excel file to import.");
