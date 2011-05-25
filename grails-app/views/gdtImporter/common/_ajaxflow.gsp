@@ -12,8 +12,7 @@
  */
 %>
 <div id="ajaxflow">
-<af:flow name="gdtImporter" class="ajaxFlow" commons="common" partials="pages" plugin="gdtimporter" controller="[controller: 'gdtImporter', action: 'pages']">
-%{--<af:flow name="gdtImporter" class="ajaxFlow" commons="common" partials="pages" plugin="gdtimporter" spinner="ajaxFlowWait" controller="[controller: 'gdtImporter', action: 'pages']">--}%
+<af:flow name="gdtImporter" class="ajaxFlow" commons="common" partials="pages" plugin="gdtimporter" spinner="ajaxFlowWait" controller="[controller: 'gdtImporter', action: 'pages']">
 	<%	/**
 	 	 * The initial rendering of this template will result
 	 	 * in automatically triggering the 'next' event in
