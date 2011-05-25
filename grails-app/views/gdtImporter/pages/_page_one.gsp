@@ -116,10 +116,12 @@
 	<div id="datamatrixpreview"></div>
 
 	<script type="text/javascript">
+		if (pageOneTimer) clearTimeout(pageOneTimer);
 		var pageOneTimer = null;
 		$(document).ready(function() {
 			// Create listener which is checking whether a (new) file has been uploaded
 			oldImportfile = $("#importfile").val();
+
 
 			pageOneTimer = setInterval(function() {
 				// A file was uploaded and a next page call was issued which failed?
