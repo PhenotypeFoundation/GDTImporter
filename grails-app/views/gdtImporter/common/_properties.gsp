@@ -67,7 +67,7 @@
 <div style="width:auto">
 	<table id="datamatrix">
 		<thead>
-		<th>
+		<tr>
 			<g:set var="usedfuzzymatches" value="${'-'}"/>
 			<g:each var="mappingcolumn" in="${gdtImporter_header}" status="index">
 				<!-- set selected values based on submitted columnproperties, actually refresh -->
@@ -79,7 +79,7 @@
 				</g:else>
 
 				<g:set var="matchvalue" value="${mappingcolumn.name}"/>
-				<td class="importerheader">${mappingcolumn.name}<br/>
+				<th class="importerheader">${mappingcolumn.name}<br/>
 					<!-- store the found match -->
 					<g:set var="fuzzymatch"
 						   value="${GdtImporter.propertyChooser(name:columnproperty, mappingcolumn:mappingcolumn, matchvalue:mappingcolumn.name, selected:selected, fuzzymatching:gdtImporter_fuzzymatching, template_id:gdtImporter_template_id, returnmatchonly:'true')}"/>
@@ -93,12 +93,12 @@
 												 fuzzymatching="${gdtImporter_fuzzymatching}"
 												 template_id="${gdtImporter_template_id}" allfieldtypes="true"
 												 treshold="0.3" extraOptions="${gdtImporter_extraOptions}"/>
-				</td>
+				</th>
 				<!-- build up a string with fuzzy matches used, to prevent duplicate fuzzy matching -->
 				<g:set var="usedfuzzymatches" value="${usedfuzzymatches + ',' + fuzzymatch.toString() }"/>
 
 			</g:each>
-		</th>
+		</tr>
 		</thead>
 		<tbody>
 		<g:each var="row" in="${gdtImporter_dataMatrix}">
