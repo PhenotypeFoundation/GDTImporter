@@ -100,7 +100,6 @@
 
 		document.onkeypress = stopRKey;
 
-
 		// attach function to clear button to reset all selects to "don't import"
 		$('#clearselect').click(function() {
 			$("#currentmapping").html("Current import mapping: none")
@@ -207,7 +206,6 @@
 	 * This function will update the datamatrix preview, based on the sheet index supplied
 	 */
 	function updateDatamatrixPreview() {
-
 		$.ajax({
 				type: "POST",
 				data: "importfile=" + $("#importfile").val() + "&sheetIndex=" + $("#sheetIndex").val() ,

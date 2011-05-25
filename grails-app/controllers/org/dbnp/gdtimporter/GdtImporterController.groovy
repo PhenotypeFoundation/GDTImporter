@@ -820,19 +820,19 @@ class GdtImporterController {
    }
 
     def getDatamatrixAsJSON = {
-        def workbook
-        def sheetIndex = 0
-        def numberOfSheets = 0
+		def workbook
+		def sheetIndex = 0
+		def numberOfSheets = 0
 
-        //TODO: fix annoying existing uploaded prefix issue
-        def importfile = params.importfile.replaceAll(/<pre.*?>/,'').replace('</pre>','').replace('existing*','')
+		//TODO: fix annoying existing uploaded prefix issue
+		def importfile = params.importfile.replaceAll(/<pre.*?>/, '').replace('</pre>', '').replace('existing*', '')
 
-        // A sheet has been selected?
-        if (params.sheetIndex != "null")
-            sheetIndex = params.sheetIndex.toInteger()
+		// A sheet has been selected?
+		if (params.sheetIndex != "null")
+			sheetIndex = params.sheetIndex.toInteger()
 
-        def importedFile = fileService.get(importfile)
-        def headerColumns = []
+		def importedFile = fileService.get(importfile)
+		def headerColumns = []
 
 		if (importedFile.exists()) {
 			try {
@@ -840,23 +840,25 @@ class GdtImporterController {
 			} catch (Exception e) {
 				log.error ".importer wizard could not load file, exception: " + e
 				return false
-            }
+			}
 		}
 
-        // Load all data from the sheet
-        def datamatrix = gdtImporterService.getDataMatrix(workbook, sheetIndex, 0)
+		// Load all data from the sheet
+		def datamatrix = gdtImporterService.getDataMatrix(workbook, sheetIndex, 0)
 
-        //def headerColumns = [[sTitle:"kolom1"], [sTitle:"kolom2"], [sTitle:"kolom3"]]
-        datamatrix[0].length.times { headerColumns+= [sTitle:"Column"+it]}
+		//def headerColumns = [[sTitle:"kolom1"], [sTitle:"kolom2"], [sTitle:"kolom3"]]
+		def dataTables = [:]
+		if (datamatrix) {
+			datamatrix[0].length.times { headerColumns += [sTitle: "Column" + it]}
 
-        // Determine number of sheets actually used
-        workbook.getNumberOfSheets().times {
-            def sheet = workbook.getSheetAt(it)
-            if (sheet.getRow(sheet.getFirstRowNum()) != null) numberOfSheets++
-        }
+			// Determine number of sheets actually used
+			workbook.getNumberOfSheets().times {
+				def sheet = workbook.getSheetAt(it)
+				if (sheet.getRow(sheet.getFirstRowNum()) != null) numberOfSheets++
+			}
 
-        def dataTables = [numberOfSheets:numberOfSheets, iTotalRecords:datamatrix.length, iColumns:datamatrix.length, iTotalDisplayRecords:datamatrix.length, aoColumns:headerColumns, aaData: datamatrix]
-
-        render dataTables as JSON
+			dataTables = [numberOfSheets: numberOfSheets, iTotalRecords: datamatrix.length, iColumns: datamatrix.length, iTotalDisplayRecords: datamatrix.length, aoColumns: headerColumns, aaData: datamatrix]
+		}
+		render dataTables as JSON
     }
 }

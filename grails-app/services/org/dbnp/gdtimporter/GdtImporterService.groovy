@@ -126,7 +126,7 @@ class GdtImporterService {
         count = count ? Math.min(sheet.lastRowNum, count) : sheet.lastRowNum
 
         // Determine amount of columns
-        def columnCount = sheet.getRow(sheet.getFirstRowNum()).getLastCellNum()
+        def columnCount = sheet.getRow(sheet.getFirstRowNum())?.getLastCellNum()
 
 		// Walk through all rows
 		(sheet.firstRowNum..count).each { rowIndex ->
