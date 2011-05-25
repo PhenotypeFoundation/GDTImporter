@@ -532,8 +532,8 @@ class GdtImporterService {
             if (eventGroupName in existingEventGroupNames) {
 
                 int i = 2;
-                while ("eventGroupBaseName (${i})" in existingEventGroupNames) { i++ }
-                eventGroupName = "eventGroupBaseName (${i})"
+                while ("$eventGroupBaseName (${i})".toString() in existingEventGroupNames) { i++ }
+                eventGroupName = "$eventGroupBaseName (${i})"
 
             }
 
@@ -640,9 +640,26 @@ class GdtImporterService {
         // create event groups; add subjects + events
         uniqueEventCombos.each { eventCombo ->
 
-            def eventGroupName = eventCombo.collect { event ->
+            def eventGroupBaseName = eventCombo.collect { event ->
                 "${event.template.name}_${new RelTime(event.startTime)}"
             }.join('_').split(' ')*.capitalize().join()
+
+            def existingEventGroupNames = parentEntity.eventGroups*.name
+
+            def eventGroupName = eventGroupBaseName
+
+            if (eventGroupName in existingEventGroupNames) {
+
+                int j = 2;
+                
+                while ("${eventGroupBaseName} (${j})".toString() in existingEventGroupNames) { j++ }
+                eventGroupName = "${eventGroupBaseName} (${j})"
+
+            }
+
+            println eventGroupBaseName
+            println eventGroupName
+            println existingEventGroupNames
 
             // make sure all existing event groups have identifiers
             parentEntity.eventGroups*.identifier
