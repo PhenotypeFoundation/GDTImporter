@@ -300,6 +300,19 @@ class GdtImporterController {
 
                 } else {
 
+                    if (flow.gdtImporter_attachEventsToSubjects) {
+
+                        // In this mode it is expected to have events be repeated
+                        // in order to relate the same event to different subjects.
+                        // We want a unique list but still be able to link events
+                        // and subjects so we'll store a list of indices relating
+                        // the original event order to the consolidated events.
+                        def (consolidatedEvents, eventIndices) = gdtImporterService.consolidateEntities(flow.gdtImporter_entityList)
+                        flow.gdtImporter_entityList     = consolidatedEvents
+                        flow.gdtImporter_enventIndices  = eventIndices
+
+                    }
+
                     success()
 
                 }
@@ -330,19 +343,12 @@ class GdtImporterController {
                             flow.gdtImporter_template,                  // sample template
                             flow.gdtImporter_parentEntity)
 
+                // Or are we in 'attach events to subjects' mode?
                 } else if (flow.gdtImporter_attachEventsToSubjects) {
-
-                    // In this mode it is expected to have events be repeated
-                    // in order to relate the same event to different subjects.
-                    // We want a unique list but still be able to link events
-                    // and and subject ...
-                    def (consolidatedEvents, eventIndices) = gdtImporterService.consolidateEntities(flow.gdtImporter_entityList)
-                    
-                    flow.gdtImporter_entityList = consolidatedEvents
 
                     gdtImporterService.attachEventsToSubjects(
                             flow.gdtImporter_entityList,                // events
-                            eventIndices,                               // indices relating row number to unique event
+                            flow.gdtImporter_eventIndices,              // indices relating row number to unique event
                             flow.gdtImporter_subjectNamesToAttach,      // subject names from the sheet representing subject to attach events to
                             flow.gdtImporter_parentEntity)
 
