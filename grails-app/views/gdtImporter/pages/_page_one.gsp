@@ -121,8 +121,6 @@
 		$(document).ready(function() {
 			// Create listener which is checking whether a (new) file has been uploaded
 			oldImportfile = $("#importfile").val();
-
-
 			pageOneTimer = setInterval(function() {
 				// A file was uploaded and a next page call was issued which failed?
 				if ($("#importfile").val().length > "existing*".length && $("#pageOneRefresh").val() == "true") {

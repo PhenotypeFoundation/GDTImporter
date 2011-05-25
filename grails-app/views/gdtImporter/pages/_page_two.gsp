@@ -12,14 +12,28 @@
  */
 %>
 <af:page>
-	<script language="text/javascript">
-		$('html, body').animate({scrollTop:0}, 'fast');
-		if (pageOneTimer) clearTimeout(pageOneTimer);
-	</script>
-
 	<h1>Assign properties to columns</h1>
 
 	<p>Below you see a preview of your imported file, please correct the automatically detected types.</p>
 	<GdtImporter:properties header="${gdtImporter_header}" dataMatrix="${gdtImporter_dataMatrix}"/>
 
+	<script language="text/javascript">
+		$('html, body').animate({scrollTop:0}, 'fast');
+		if (pageOneTimer) clearTimeout(pageOneTimer);
+		$(document).ready(function() {
+			if (dataTable) dataTable.fnDestroy();
+			dataTable = $('#datamatrix').dataTable(
+				{   "sScrollX": "100%",
+					"bScrollCollapse": true,
+					"iDisplayLength": 5,
+					"bFilter": false,
+					"aLengthMenu": [
+						[5, 10, 25, 50],
+						[5, 10, 25, "All"]
+					],
+					"bSort": false
+				}
+			);
+		});
+	</script>
 </af:page>
