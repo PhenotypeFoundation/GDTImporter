@@ -153,7 +153,7 @@
 								dataTable = $('#datamatrix').dataTable({
 										"sScrollX": "100%",
 										"bScrollCollapse": true,
-										"iDisplayLength": 5,
+										"iDisplayLength": 10,
 										"aLengthMenu": [
 											[5, 10, 25, 50],
 											[5, 10, 25, "All"]
