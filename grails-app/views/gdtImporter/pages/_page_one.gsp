@@ -135,12 +135,15 @@
 
 					$('#datamatrixpreview').html('<table cellpadding="0" cellspacing="0" border="0" class="display" id="datamatrix"></table>');
 
+					// show the please wait spinner
+					showSpinner();
+
+					// perform the ajax call to render the excel preview
 					$.ajax({
 							type: "POST",
 							data: "importfile=" + $("#importfile").val() + "&sheetIndex=0", //+ $("#sheetIndex").val() ,
 							url: "getDatamatrixAsJSON",
 							success: function(msg) {
-
 								var jsonDatamatrix = eval(msg);
 
 								// Update sheet selector by first clearing it and appending the sheets user can choose from
@@ -153,7 +156,7 @@
 								dataTable = $('#datamatrix').dataTable({
 										"sScrollX": "100%",
 										"bScrollCollapse": true,
-										"iDisplayLength": 10,
+										"iDisplayLength": 5,
 										"aLengthMenu": [
 											[5, 10, 25, 50],
 											[5, 10, 25, "All"]
@@ -162,6 +165,10 @@
 										"aaData": jsonDatamatrix.aaData,
 										"aoColumns": jsonDatamatrix.aoColumns
 									});
+							},
+							complete: function() {
+								// hide the spinner
+								hideSpinner();
 							}
 						});
 
@@ -169,7 +176,7 @@
 					oldImportfile = $("#importfile").val()
 
 				}
-			}, checkEverySeconds * 1000);
+			}, checkEverySeconds * 200);
 		});
 	</script>
 </af:page>
