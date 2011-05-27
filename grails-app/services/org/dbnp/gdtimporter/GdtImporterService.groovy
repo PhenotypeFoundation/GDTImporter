@@ -551,12 +551,12 @@ class GdtImporterService {
         samples.eachWithIndex { sample, idx ->
 
             def subject         = subjects.find{it.name == subjectNames[idx]}
-            def startTime       = new RelTime(timePoint[idx]).getValue()
+            def startTime       = new RelTime(timePoints[idx]).getValue()
             def samplingEvent   = samplingEvents.find{it.startTime == startTime}
             def eventGroup      = eventGroups.find{it.samplingEvents.toList()[0] == samplingEvent}
 
             samplingEvent.addToSamples(sample)
-            if (!eventGroup.subjects.find{it.name == subjectName}) eventGroup.addToSubjects(subject)
+            if (!eventGroup.subjects.find{it.name == subject.name}) eventGroup.addToSubjects(subject)
             parentEntity.addToSamples(sample)
 
             sample.parentSubject    = subject

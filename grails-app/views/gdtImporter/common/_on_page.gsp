@@ -150,6 +150,10 @@
 		$('#parentEntityField').show();
 		$('#attachSamplesDiv').hide();
 		$('#attachEventsDiv').hide();
+
+        $('#attachSamples').attr('checked', false);
+        $('#attachEvents').attr('checked', false);
+
 		switch (selectedEntity) {
 			case 'Study':
 				$('#parentEntityField').hide();
