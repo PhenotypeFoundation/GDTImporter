@@ -137,7 +137,7 @@
 
 					$.ajax({
 							type: "POST",
-							data: "importfile=" + $("#importfile").val() + "&sheetIndex=" + $("#sheetIndex").val() ,
+							data: "importfile=" + $("#importfile").val() + "&sheetIndex=0", //+ $("#sheetIndex").val() ,
 							url: "getDatamatrixAsJSON",
 							success: function(msg) {
 
