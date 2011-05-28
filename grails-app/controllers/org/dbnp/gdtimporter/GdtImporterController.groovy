@@ -80,6 +80,8 @@ class GdtImporterController {
                 it
             }
 
+            flow.samplingEventEntity = gdtService.encryptEntity("dbnp.studycapturing.SamplingEvent")
+
 			success()
 		}
 
@@ -150,6 +152,7 @@ class GdtImporterController {
 
                 flow.gdtImporter_attachSamplesToSubjects    = (params.attachSamples == 'on')
                 flow.gdtImporter_attachEventsToSubjects     = (params.attachEvents == 'on')
+                flow.gdtImporter_samplingEventTemplate      = (Template.get(params.samplingEvent_template))
 
                 if (!flash.gdtImporter_params.importfile) {
                     log.error('.gdtImporterWizard [fileImportPage] no file specified.')
@@ -293,9 +296,7 @@ class GdtImporterController {
                 flow.gdtImporter_failedFields = doValidation(flow, entityList, flow.gdtImporter_parentEntity) + failedFields
 
                 if (flow.gdtImporter_failedFields) {
-                    flow.wizardErrors.each {
-                        println it
-                    }
+
                     error()
 
                 } else {
@@ -309,7 +310,7 @@ class GdtImporterController {
                         // the original event order to the consolidated events.
                         def (consolidatedEvents, eventIndices) = gdtImporterService.consolidateEntities(flow.gdtImporter_entityList)
                         flow.gdtImporter_entityList     = consolidatedEvents
-                        flow.gdtImporter_enventIndices  = eventIndices
+                        flow.gdtImporter_eventIndices   = eventIndices
 
                     }
 
@@ -341,7 +342,9 @@ class GdtImporterController {
                             flow.gdtImporter_subjectNamesToAttach,      // subject names from the sheet representing subject to attach samples to
                             flow.gdtImporter_timePoints,                // time points from the sheet that will be stored in sampling events
                             flow.gdtImporter_template,                  // sample template
-                            flow.gdtImporter_parentEntity)
+                            flow.gdtImporter_parentEntity,
+                            flow.gdtImporter_samplingEventTemplate      // the sampling event template for the sampling events that will be generated
+                    )
 
                 // Or are we in 'attach events to subjects' mode?
                 } else if (flow.gdtImporter_attachEventsToSubjects) {
@@ -462,9 +465,15 @@ class GdtImporterController {
 	 * @return JSON object containing the found templates
 	 */
 	def ajaxGetTemplatesByEntity = {
-		// fetch all templates for a specific entity
-		def templates = Template.findAllByEntity(gdtService.getInstanceByEntity(params.entity.decodeURL()))
 
+        def templates = []
+
+        if (params.entity) {
+            // fetch all templates for a specific entity
+            def entityName = gdtService.decryptEntity(params.entity.decodeURL())
+            def entity = gdtService.getInstanceByEntityName(entityName)
+            templates = Template.findAllByEntity(entity)
+        }
 		// render as JSON
 		render templates as JSON
 	}
@@ -715,6 +724,12 @@ class GdtImporterController {
 
         if (flow.gdtImporter_attachSamplesToSubjects) {
 
+            if (!flow.gdtImporter_samplingEventTemplate) {
+                log.error 'importer wizard - no sampling event template selected'
+                appendErrorMap(['error': "When attaching samples to subjects you need to supply a sampling event template. Please add a sampling event template first."], flow.wizardErrors)
+                return false
+            }
+
             // store timepoints in the flow
             def timepointColumnNumber   = flow.gdtImporter_header.findIndexOf{it.property == "Timepoint"}
             flow.gdtImporter_header[timepointColumnNumber].dontimport = true
@@ -811,15 +826,16 @@ class GdtImporterController {
    def getHumanReadableErrors(object) {
        def errors = [:]
        object.errors.getAllErrors().each() { error ->
-           // error.codes.each() { code -> println code }
+            // error.codes.each() { code -> println code }
 
-           // generally speaking g.message(...) should work,
-           // however it fails in some steps of the wizard
-           // (add event, add assay, etc) so g is not always
-           // availably. Using our own instance of the
-           // validationTagLib instead so it is always
-           // available to us
-           errors[error.getArguments()[0]] = validationTagLib.message(error: error)
+            // generally speaking g.message(...) should work,
+            // however it fails in some steps of the wizard
+            // (add event, add assay, etc) so g is not always
+            // availably. Using our own instance of the
+            // validationTagLib instead so it is always
+            // available to us
+            if (error.field != 'parent') // don't show 'parent' related messages
+                errors[error.getArguments()[0]] = validationTagLib.message(error: error)
        }
 
        return errors

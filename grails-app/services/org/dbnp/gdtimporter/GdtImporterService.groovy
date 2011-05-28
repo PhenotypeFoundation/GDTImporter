@@ -154,10 +154,6 @@ class GdtImporterService {
                         case Cell.CELL_TYPE_STRING:     dataMatrixRow.add( cell.stringCellValue )
                                                         break
                         case Cell.CELL_TYPE_NUMERIC:    dataMatrixRow.add( df.formatCellValue(cell) )
-                                                        /*if ( HSSFDateUtil.isCellDateFormatted(cell) ) {
-                                                            SimpleDateFormat GSCFDateFormatter = new SimpleDateFormat("dd/MM/yyyy")
-                                                            println "gscfdatuum = " + GSCFDateFormatter.format( cell.getDateCellValue() )
-                                                        } */
                                                         break
                         case Cell.CELL_TYPE_FORMULA:    (cell != null) ? dataMatrixRow.add(formulaEvaluator.evaluateInCell(cell)) :
                                                             dataMatrixRow.add('')
@@ -491,7 +487,7 @@ class GdtImporterService {
      *  events and event groups will be added to
      * @return -
      */
-    def attachSamplesToSubjects(samples, subjectNames, timePoints, sampleTemplate, parentEntity) {
+    def attachSamplesToSubjects(samples, subjectNames, timePoints, sampleTemplate, parentEntity, samplingEventTemplate) {
 
         // get a list of subject names with duplicates removed
         def uniqueSubjectNames = subjectNames.clone().unique()
@@ -514,7 +510,7 @@ class GdtImporterService {
             parentEntity.samplingEvents*.identifier
 
             // we can't do 'new SamplingEvent()' because we're inside the plugin and not GSCF ...
-            parentEntity.addToSamplingEvents(startTime: startTime, sampleTemplate: sampleTemplate)
+            parentEntity.addToSamplingEvents(startTime: startTime, sampleTemplate: sampleTemplate, template: samplingEventTemplate)
 
             // find the last inserted sampling event, which is the one with the highest identifier
             parentEntity.samplingEvents.sort{it.identifier}[-1]
@@ -657,10 +653,6 @@ class GdtImporterService {
 
             }
 
-            println eventGroupBaseName
-            println eventGroupName
-            println existingEventGroupNames
-
             // make sure all existing event groups have identifiers
             parentEntity.eventGroups*.identifier
 
@@ -700,9 +692,6 @@ class GdtImporterService {
 
         // figure out the collection name via the hasMany property
         def hasMany         = GrailsClassUtils.getStaticPropertyValue(parentEntity.class, 'hasMany')
-        /*hasMany.each {
-            println "hasmany=" + hasMany.find { print "" + it.value +"/" }
-        }*/
         def collectionName  = hasMany.find{it.value == domainClass.clazz}.key.capitalize()
 
         // add the entities one by one to the parent entity (unless it's set already)
