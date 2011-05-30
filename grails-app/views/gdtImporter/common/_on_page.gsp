@@ -46,10 +46,6 @@
       return false;
     });
 
-    $('#attachSamplesDiv').hide();
-    $('#attachEventsDiv').hide();
-    $('#samplingEvent_template_id').hide();
-
     // attach event to apply fuzzy matching
     $('#fuzzymatchselect').click(function() {
       $("#fuzzymatching").val("true")
@@ -151,7 +147,7 @@
     $('#parentEntityField').show();
     $('#attachSamplesDiv').hide();
     $('#attachEventsDiv').hide();
-    $('#samplingEvent_template_id').hide();
+    $('#attachSamplesSamplingTemplateDiv').hide();
 
     $('#attachEvents').attr('checked', false);
 
@@ -164,7 +160,8 @@
       case 'Sample':
         $('#attachSamplesDiv').show();
         if ($('#attachSamples').attr('checked')) {
-          $('#samplingEvent_template_id').show();
+          $('#attachSamplesSamplingTemplateDiv').show();
+//          $('#samplingEvent_template_id').show();
           uncheckAttachSamples = false;
         }
         break
@@ -200,11 +197,23 @@
       });
     }
 
-    if (!calledByCheckBox) {
+    if (calledByCheckBox) {
+//      new SelectAddMore().init({
+//                rel     : 'samplingTemplate',
+//                url     : baseUrl + '/templateEditor',
+//                vars    : 'entity', // can be a comma separated list of variable names to pass on
+//                label   : 'add / modify ...',
+//                style   : 'modify',
+//                onClose : function(scope) {
+//                  refreshFlow()
+//                }
+//              });
+
+    } else {
       // handle template selects
       new SelectAddMore().init({
-                rel      : 'template',
-                url      : baseUrl + '/templateEditor',
+                rel     : 'template',
+                url     : baseUrl + '/templateEditor',
                 vars    : 'entity', // can be a comma separated list of variable names to pass on
                 label   : 'add / modify ...',
                 style   : 'modify',

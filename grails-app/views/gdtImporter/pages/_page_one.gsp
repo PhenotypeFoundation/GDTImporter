@@ -84,21 +84,24 @@
           <div id="attachSamplesDiv">
             <script type="text/javascript">
               $(document).ready(function() {
-               $(':checkbox[name=attachSamples]').bind('click', function() {
-                 ${remoteFunction( controller: 'gdtImporter',
+                $(':checkbox[name=attachSamples]').bind('click', function() {
+                  ${remoteFunction( controller: 'gdtImporter',
                  	    action:'ajaxGetTemplatesByEntity',
 					    params: '\'entity='+samplingEventEntity.encodeAsURL()+'\'',
 					    onSuccess:'updateSelect(\'samplingEvent_template_id\',data,false,false,\'default\',true)')}
-               })
+                })
               });
             </script>
             <g:checkBox name="attachSamples"
                         id="attachSamples"
                         value="${false}" />
             Attach Samples to Existing Subjects<br />
-            Using this sampling template:<br />
-            <g:select name="samplingEvent_template"
-                      id="samplingEvent_template_id" from="" />
+
+            <div id="attachSamplesSamplingTemplateDiv">
+              Using this sampling template:<br />
+              <g:select name="samplingEvent_template"
+                        id="samplingEvent_template_id" from="" />
+            </div>
           </div>
 
           <div id="attachEventsDiv">
@@ -159,16 +162,16 @@
 
           $('#datamatrixpreview').html('<table cellpadding="0" cellspacing="0" border="0" class="display" id="datamatrix"></table>');
 
-					// show the please wait spinner
-					showSpinner();
+          // show the please wait spinner
+          showSpinner();
 
-					// perform the ajax call to render the excel preview
-					$.ajax({
-							type: "POST",
-							data: "importfile=" + $("#importfile").val() + "&sheetIndex=0", //+ $("#sheetIndex").val() ,
-							url: "getDatamatrixAsJSON",
-							success: function(msg) {
-								var jsonDatamatrix = eval(msg);
+          // perform the ajax call to render the excel preview
+          $.ajax({
+                    type: "POST",
+                    data: "importfile=" + $("#importfile").val() + "&sheetIndex=0", //+ $("#sheetIndex").val() ,
+                    url: "getDatamatrixAsJSON",
+                    success: function(msg) {
+                      var jsonDatamatrix = eval(msg);
 
                       // Update sheet selector by first clearing it and appending the sheets user can choose from
                       $("select[name='sheetIndex']").find('option').remove().end()
@@ -177,30 +180,49 @@
                         $("select[name='sheetIndex']").append(new Option(i + 1, i));
                       }
 
-								dataTable = $('#datamatrix').dataTable({
-										"sScrollX": "100%",
-										"bScrollCollapse": true,
-										"iDisplayLength": 5,
-										"aLengthMenu": [
-											[5, 10, 25, 50],
-											[5, 10, 25, "All"]
-										],
-										"bSort" : false,
-										"aaData": jsonDatamatrix.aaData,
-										"aoColumns": jsonDatamatrix.aoColumns
-									});
-							},
-							complete: function() {
-								// hide the spinner
-								hideSpinner();
-							}
-						});
+                      dataTable = $('#datamatrix').dataTable({
+                                "sScrollX": "100%",
+                                "bScrollCollapse": true,
+                                "iDisplayLength": 5,
+                                "aLengthMenu": [
+                                  [5, 10, 25, 50],
+                                  [5, 10, 25, "All"]
+                                ],
+                                "bSort" : false,
+                                "aaData": jsonDatamatrix.aaData,
+                                "aoColumns": jsonDatamatrix.aoColumns
+                              });
+                    },
+                    complete: function() {
+                      // hide the spinner
+                      hideSpinner();
+                    }
+                  });
 
           // Update the original
           oldImportfile = $("#importfile").val()
 
-				}
-			}, checkEverySeconds * 200);
-		});
-	</script>
+        }
+      }, checkEverySeconds * 200);
+
+
+
+//      // initialize Sampling Template select box for attach samples to subjects mode
+//      new SelectAddMore().init({
+//                rel     : 'samplingTemplate',
+//                url     : baseUrl + '/templateEditor',
+//                vars    : 'entity', // can be a comma separated list of variable names to pass on
+//                label   : 'add / modify ...',
+//                style   : 'modify',
+//                onClose : function(scope) {
+//                  refreshFlow()
+//                }
+//              });
+      
+    $('#attachSamplesDiv').hide();
+    $('#attachEventsDiv').hide();
+    $('#attachSamplesSamplingTemplateDiv').hide();
+
+    });
+  </script>
 </af:page>
