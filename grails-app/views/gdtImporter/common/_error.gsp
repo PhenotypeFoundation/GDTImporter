@@ -14,6 +14,7 @@
  * $Date: 2011-01-21 21:05:36 +0100 (Fri, 21 Jan 2011) $
  */
 %>
+
 <g:if test="${wizardErrors}">
 	<div id="wizardError" class="error" title="Import wizard errors">
 		<g:each in="${wizardErrors}" var="error" status="e">

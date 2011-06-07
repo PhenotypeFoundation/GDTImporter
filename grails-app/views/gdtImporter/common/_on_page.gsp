@@ -252,11 +252,17 @@
                 $('#datamatrixpreview').html('<table cellpadding="0" cellspacing="0" border="0" class="display" id="datamatrix"></table>');
 
                 dataTable = $('#datamatrix').dataTable({
+                          "oLanguage": {
+                            //"sInfo": "Page _START_ of _END_"
+                              "sInfo": "Showing rows _START_ to _END_ (as read from Excel, including the header)"
+                           },
+
                           "sScrollX": "100%",
                           "bScrollCollapse": true,
                           "bRetrieve": false,
                           "bDestroy": true,
                           "bPaginate": false,
+
                           "bSort" : false,
                           "aaData": jsonDatamatrix.aaData,
                           "aoColumns": jsonDatamatrix.aoColumns
