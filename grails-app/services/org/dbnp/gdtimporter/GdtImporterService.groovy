@@ -31,7 +31,6 @@ import java.text.SimpleDateFormat
 import org.apache.poi.hssf.usermodel.HSSFFormulaEvaluator
 import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator
 
-
 class GdtImporterService {
     def authenticationService
     def gdtService
@@ -81,12 +80,13 @@ class GdtImporterService {
 
         header
 
-//        datamatrix[headerRowIndex].collectWithIndex{ headerName, columnIndex ->
+//        def i = 0
+//        datamatrix[headerRowIndex].collect{ headerName ->
 //
 //            new GdtMappingColumn(
 //                    name:               headerName,
 //					templatefieldtype:  TemplateField.STRING,
-//					index:              columnIndex,
+//					index:              i++,
 //					entityclass:        entityInstance.class,
 //					property:           "")
 //        }
@@ -520,18 +520,9 @@ class GdtImporterService {
         // generate event groups, one for each sampling event
         def eventGroups = samplingEvents.collect { samplingEvent ->
 
-            def eventGroupBaseName = "Sampling_${sampleTemplate.name.split(' ').collect{it.capitalize()}.join()}_${new RelTime(samplingEvent.startTime).toString()}"
+            def eventGroupBaseName = "Sampling_${sampleTemplate.name.split(' ')*.capitalize().join()}_${new RelTime(samplingEvent.startTime)}".toString()
 
-            def existingEventGroupNames = parentEntity.eventGroups*.name
-
-            def eventGroupName = eventGroupBaseName
-            if (eventGroupName in existingEventGroupNames) {
-
-                int i = 2;
-                while ("$eventGroupBaseName (${i})".toString() in existingEventGroupNames) { i++ }
-                eventGroupName = "$eventGroupBaseName (${i})"
-
-            }
+            def eventGroupName = generateUniqueString(eventGroupBaseName, parentEntity.eventGroups*.name)
 
             // make sure all existing event groups have identifiers
             parentEntity.eventGroups*.identifier
@@ -637,21 +628,10 @@ class GdtImporterService {
         uniqueEventCombos.each { eventCombo ->
 
             def eventGroupBaseName = eventCombo.collect { event ->
-                "${event.template.name}_${new RelTime(event.startTime)}"
-            }.join('_').split(' ')*.capitalize().join()
+                "${ event.template.name.split(' ')*.capitalize().join() }_${ new RelTime(event.startTime) }"
+            }.join('_')
 
-            def existingEventGroupNames = parentEntity.eventGroups*.name
-
-            def eventGroupName = eventGroupBaseName
-
-            if (eventGroupName in existingEventGroupNames) {
-
-                int j = 2;
-                
-                while ("${eventGroupBaseName} (${j})".toString() in existingEventGroupNames) { j++ }
-                eventGroupName = "${eventGroupBaseName} (${j})"
-
-            }
+            def eventGroupName = generateUniqueString(eventGroupBaseName, parentEntity.eventGroups*.name)
 
             // make sure all existing event groups have identifiers
             parentEntity.eventGroups*.identifier
@@ -674,6 +654,45 @@ class GdtImporterService {
         }
 
         events.each { parentEntity.addToEvents( it ) }
+
+    }
+
+    /**
+     * Generates a unique string based on 'baseString' by appending a number
+     * between parentheses if necessary. The existing strings are scanned for
+     * strings following the pattern "baseString ($i)" where i > 1. If
+     * fillMissing is set, the lowest available number is used, otherwise the
+     * largest + 1. If baseString does not exist but there are string following
+     * the pattern, then the output also depends on fillMissing, with the result
+     * being equal to baseString if fillMissing is true but with a number larger
+     * than the existing ones if not.
+     *
+     * @param baseString Input string to make unique
+     * @param existingStrings Strings which the output should not equal
+     * @param fillMissing If true, fills gaps in the sequence
+     * @return a string based on 'baseString' which does not exist in
+     * 'existingStrings'
+     */
+    def generateUniqueString(baseString, existingStrings, fillMissing = false) {
+
+        def baseStringExists = (baseString in existingStrings)
+
+        // find all strings which follow the pattern: "$baseString ($number)", where number is an integer > 1
+        def matchingStrings = existingStrings.findAll { it =~ /${baseString} \([2-9]{1}[0-9]*\)$/ }
+
+        // grab all numbers from within the parentheses and sort; prepend '1' if baseStringExists
+        def iterators = (baseStringExists ? [1] : []) + matchingStrings?.collect{ it[baseString.length()+2..-2].toInteger() }?.sort()
+
+        // iterator will be largest_value_from(iterators) + 1, or 1 if iterators == []
+        def iterator = iterators.size() ? iterators[-1] + 1 : 1
+
+        // if we're filling gaps, find the lowest unused number
+        if (fillMissing) iterator = (1 .. iterator).find { !(it in iterators) }
+
+        // append the iterator if needed
+        if (iterator > 1) baseString += " ($iterator)"
+
+        baseString
 
     }
 
