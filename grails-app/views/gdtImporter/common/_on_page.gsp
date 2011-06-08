@@ -185,6 +185,9 @@
         i--
       }
 
+      // Add first option which tells the user to select a data template
+      rselect.options[0] = new Option("-Select data template-", "null")
+
       // add new options
       $.each(items, function() {
         var i = rselect.options.length
@@ -195,6 +198,7 @@
         );
         if (this.id == selected) rselect.options[i].selected = true
       });
+
     }
 
     if (calledByCheckBox) {

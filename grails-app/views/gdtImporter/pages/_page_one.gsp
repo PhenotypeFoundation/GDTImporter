@@ -49,6 +49,7 @@
         <td width="100px">
           <g:select name="sheetIndex" value="${gdtImporter_params?.sheetIndex}"
                     from="${gdtImporter_sheets}"
+                    optionKey="${{it-1}}"
                     onchange="updateDatamatrixPreview()" />
         </td>
       </tr>
@@ -74,7 +75,7 @@
                   value="${gdtImporter_params?.entity}"
                   optionValue="${{it.name}}"
                   optionKey="${{it.encoded}}"
-                  noSelection="['':'-Choose type of data-']"
+                  noSelection="${['null':'-Select type of data-']}"
                   onChange="${remoteFunction( controller: 'gdtImporter',
 					    action:'ajaxGetTemplatesByEntity',
 					    params: '\'entity=\'+escape(this.value)',
@@ -117,6 +118,7 @@
         </td>
         <td>
           <g:select name="parentEntity.id"
+                    noSelection="${['null':'-Select study-']}"
                     from="${gdtImporter_userParentEntities}" optionKey="id" />
           %{--<g:select name="parentEntity.id" from="${gdtImporter_userParentEntities}" optionKey="id" optionValue="${ it.code + ' - ' + it.title }"/>--}%
         </td>
@@ -133,6 +135,7 @@
         </g:else>
 
         <g:select rel="template" entity="${entity}" name="template_id"
+                  noSelection="${['null':'-Select template-']}"
                   optionKey="id" optionValue="name"
                   from="${gdtImporter_entityTemplates}"
                   value="${gdtImporter_params?.template_id}" />
@@ -143,14 +146,17 @@
   <div id="datamatrixpreview"></div>
 
   <script type="text/javascript">
+
     if (pageOneTimer) clearTimeout(pageOneTimer);
     var pageOneTimer = null;
     $(document).ready(function() {
       // Create listener which is checking whether a (new) file has been uploaded
       oldImportfile = $("#importfile").val();
       pageOneTimer = setInterval(function() {
+
         // A file was uploaded and a next page call was issued which failed?
         if ($("#importfile").val().length > "existing*".length && $("#pageOneRefresh").val() == "true") {
+
           updateDatamatrixPreview()
           // Reset the refresh page value
           $("#pageOneRefresh").val("")

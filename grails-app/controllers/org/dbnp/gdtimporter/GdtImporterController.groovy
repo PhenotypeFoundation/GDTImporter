@@ -162,7 +162,7 @@ class GdtImporterController {
                     flash.gdtImporter_params.importfile = params.importfile.replaceAll(/<pre.*?>/,'').replace('</pre>','').replace('existing*','')
                 }
 
-				if (params.entity) {
+				if (params.entity != "null") {
 					flow.gdtImporter_entityTemplates = Template.findAllByEntity(gdtService.getInstanceByEntity(params.entity.decodeURL()))
 					def gdtImporter_entity_type = gdtService.decryptEntity(params.entity.decodeURL()).toString().split(/\./)
 					flow.gdtImporter_entity_type = gdtImporter_entity_type[-1]
@@ -170,7 +170,7 @@ class GdtImporterController {
 
                 // get selected instance of parent entity through a reference of
                 // parent entity's domain class (if applicable).
-                if (flow.gdtImporter_entity_type != flow.gdtImporter_parentEntityClassName)
+                if (flow.gdtImporter_entity_type != flow.gdtImporter_parentEntityClassName && (params.parentEntity.id != "null"))
     				flow.gdtImporter_parentEntity = flow.gdtImporter_parentEntityReferenceInstance.get(params.parentEntity.id)
 				// Trying to import data into an existing parent entity?
 				if (flow.gdtImporter_parentEntity && grailsApplication.config.gdtImporter.parentEntityHasOwner ) {
@@ -474,6 +474,7 @@ class GdtImporterController {
             def entity = gdtService.getInstanceByEntityName(entityName)
             templates = Template.findAllByEntity(entity)
         }
+
 		// render as JSON
 		render templates as JSON
 	}
@@ -512,7 +513,7 @@ class GdtImporterController {
             return false
         }
 
-		if (params.entity && params.template_id) {
+		if ( (params.parentEntity.id != "null") && params.template_id && params.sheetIndex) {
 
 			def entityName = gdtService.decryptEntity(params.entity.decodeURL())
 
@@ -854,6 +855,7 @@ class GdtImporterController {
 			sheetIndex = params.sheetIndex.toInteger()
 
 		def importedFile = fileService.get(importfile)
+
 		def headerColumns = []
 
 		if (importedFile.exists()) {
@@ -881,6 +883,7 @@ class GdtImporterController {
 
 			dataTables = [numberOfSheets: numberOfSheets, iTotalRecords: datamatrix.length, iColumns: datamatrix.length, iTotalDisplayRecords: datamatrix.length, aoColumns: headerColumns, aaData: datamatrix]
 		}
+
 		render dataTables as JSON
     }
 }
