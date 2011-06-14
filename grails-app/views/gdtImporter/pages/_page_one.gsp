@@ -19,7 +19,7 @@
 
   <p>You can import your Excel data to the server by choosing a file from your local harddisk in the form below.</p>
   <input type="hidden" id="pageOneRefresh" name="pageOneRefresh"
-         value="${gdtImporter_params?.pageOneRefresh}" />
+         value="${(gdtImporter_params?.pageOneRefresh !=null) ? gdtImporter_params?.pageOneRefresh : gdtImporter_pageOneRefresh}" />
   <table border="0">
     <colgroup width="30%">
       <tr>
@@ -28,7 +28,7 @@
         </td>
         <td width="100px">
           <af:fileFieldElement name="importfile"
-                               value="${gdtImporter_params?.importfile}"
+                               value="${ (gdtImporter_params?.importfile!=null) ? gdtImporter_params?.importfile : gdtImporter_importfile}"
                                id="importfile" />
         </td>
       </tr>
@@ -119,7 +119,7 @@
         <td>
           <g:select name="parentEntity.id"
                     noSelection="${['null':'-Select study-']}"
-                    from="${gdtImporter_userParentEntities}" optionKey="id" />
+                    from="${gdtImporter_userParentEntities}" optionKey="id" optionValue="${{ it.toString()[0..Math.min(80, it.toString().length()-1)] + ' (...)' }}"/>
           %{--<g:select name="parentEntity.id" from="${gdtImporter_userParentEntities}" optionKey="id" optionValue="${ it.code + ' - ' + it.title }"/>--}%
         </td>
       </tr>
@@ -187,6 +187,10 @@
                       }
 
                       dataTable = $('#datamatrix').dataTable({
+                                "oLanguage": {
+                                    //"sInfo": "Page _START_ of _END_"
+                                    "sInfo": "Showing rows _START_ to _END_ (as read from Excel, including the header)"
+                                },
                                 "sScrollX": "100%",
                                 "bScrollCollapse": true,
                                 "iDisplayLength": 5,

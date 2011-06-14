@@ -114,7 +114,8 @@ class GdtImporterController {
                 def userParentEntities              = parentEntityReferenceInstance.findAllWhere(owner: authenticationService.loggedInUser)
 
                 flow.gdtImporter_parentEntityReferenceInstance  = parentEntityReferenceInstance
-                flow.gdtImporter_userParentEntities             = userParentEntities.sort{ it.toString() }.each { it.toString()[0..Math.min(70, it.toString().length()-1)]}
+                flow.gdtImporter_userParentEntities             = userParentEntities.sort{ it.toString() }
+
                 flow.gdtImporter_parentEntityClassName          = domainClass.shortName
 
 				success()
@@ -122,7 +123,7 @@ class GdtImporterController {
 
 			on("refresh") {
 
-				if (params.entity) {
+				if (params.entity != "null") {
 					flow.gdtImporter_entityTemplates = Template.findAllByEntity(gdtService.getInstanceByEntity(params.entity.decodeURL()))
 				}
 
@@ -196,9 +197,6 @@ class GdtImporterController {
 			onRender {
 				log.info ".import wizard properties page"
 
-                // Delete the uploaded file
-                fileService.delete flow.gdtImporter_importfile
-
 				def template = Template.get(flow.gdtImporter_template_id)
 
                 flow.gdtImporter_importmappings = GdtImportMapping.findAllByTemplate(template)
@@ -241,6 +239,7 @@ class GdtImporterController {
 				}
 			}.to "mappingPage"
 			on("previous"){
+                flash.gdtImporter_pageOneRefresh = 'true'
                 flow.wizardErrors = [:]
             }.to "fileImportPage"
 		}
@@ -403,7 +402,10 @@ class GdtImporterController {
 		finalPage {
 			render(view: "_final_page", plugin: "gdtimporter")
 			onRender {
-				success()
+                // Delete the uploaded file
+                fileService.delete flow.gdtImporter_importfile
+
+                success()
 			}
 			onEnd {
 				// clean flow scope
@@ -468,7 +470,7 @@ class GdtImporterController {
 
         def templates = []
 
-        if (params.entity) {
+        if (params.entity!="null") {
             // fetch all templates for a specific entity
             def entityName = gdtService.decryptEntity(params.entity.decodeURL())
             def entity = gdtService.getInstanceByEntityName(entityName)

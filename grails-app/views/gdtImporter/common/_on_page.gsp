@@ -234,7 +234,7 @@
   function updateDatamatrixPreview() {
     $.ajax({
               type: "POST",
-              data: "importfile=" + $("#importfile").val() + "&sheetIndex=" + $("#sheetIndex").val() ,
+              data: "importfile=" + $("#importfile").val().replace("existing*", "") + "&sheetIndex=" + $("#sheetIndex").val() ,
               url: "getDatamatrixAsJSON",
               success: function(msg) {
 
