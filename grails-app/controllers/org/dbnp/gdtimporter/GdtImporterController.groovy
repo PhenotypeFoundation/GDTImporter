@@ -148,8 +148,13 @@ class GdtImporterController {
 				flash.gdtImporter_params = params
 				flash.gdtImporter_params.importfile = params.importfile.replaceAll(/<pre.*?>/,'').replace('</pre>','').replace('existing*','')
                 flash.gdtImporter_params.pageOneRefresh = 'true'
+
+                // Remember variables if the user is going to move back/forward in the wizard
                 flow.gdtImporter_importfile = flash.gdtImporter_params.importfile
                 flow.gdtImporter_dateformat = params.dateformat
+                //flow.gdtImporter_entity = params.entity
+                flow.gdtImporter_parentEntityid = params.parentEntity.id
+                flow.gdtImporter_templateid = params.template_id
 
                 flow.gdtImporter_attachSamplesToSubjects    = (params.attachSamples == 'on')
                 flow.gdtImporter_attachEventsToSubjects     = (params.attachEvents == 'on')
@@ -240,6 +245,7 @@ class GdtImporterController {
 			}.to "mappingPage"
 			on("previous"){
                 flash.gdtImporter_pageOneRefresh = 'true'
+
                 flow.wizardErrors = [:]
             }.to "fileImportPage"
 		}
@@ -515,7 +521,7 @@ class GdtImporterController {
             return false
         }
 
-		if ( (params.parentEntity.id != "null") && params.template_id && params.sheetIndex) {
+		if ( (params.parentEntity.id != "null") && (params.template_id != "null") && params.sheetIndex) {
 
 			def entityName = gdtService.decryptEntity(params.entity.decodeURL())
 

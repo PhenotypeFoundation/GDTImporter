@@ -31,20 +31,6 @@
   function onPage() {
     // GENERAL
     onStudyWizardPage();
-    $('#simplewizardform').submit(function() {
-      if ($('#file').val() == "") {
-        alert("Please choose your Excel file to import.");
-        return false
-      } else
-      if ($('#entity').val() == "") {
-        $('#datatemplate').addClass("validationfail");
-        return false
-      } else {
-        $('#simplewizardform').submit();
-      }
-
-      return false;
-    });
 
     // attach event to apply fuzzy matching
     $('#fuzzymatchselect').click(function() {

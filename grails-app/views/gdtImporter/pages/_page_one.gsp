@@ -72,7 +72,7 @@
                   name="entity"
                   id="entity"
                   from="${GdtService.cachedEntities}"
-                  value="${gdtImporter_params?.entity}"
+                  value="${gdtImporter_entity?.encoded}"
                   optionValue="${{it.name}}"
                   optionKey="${{it.encoded}}"
                   noSelection="${['null':'-Select type of data-']}"
@@ -119,6 +119,7 @@
         <td>
           <g:select name="parentEntity.id"
                     noSelection="${['null':'-Select study-']}"
+                    value="${ (gdtImporter_params?.entity == null)? gdtImporter_parentEntityid :  gdtImporter_params?.entity.id}"
                     from="${gdtImporter_userParentEntities}" optionKey="id" optionValue="${{ it.toString()[0..Math.min(80, it.toString().length()-1)] + ' (...)' }}"/>
           %{--<g:select name="parentEntity.id" from="${gdtImporter_userParentEntities}" optionKey="id" optionValue="${ it.code + ' - ' + it.title }"/>--}%
         </td>
@@ -138,18 +139,26 @@
                   noSelection="${['null':'-Select template-']}"
                   optionKey="id" optionValue="name"
                   from="${gdtImporter_entityTemplates}"
-                  value="${gdtImporter_params?.template_id}" />
+                  value="${ (gdtImporter_params?.template_id == null) ? gdtImporter_templateid  : gdtImporter_params?.template_id}" />
         </td>
       </tr>
   </table>
 
   <div id="datamatrixpreview"></div>
 
+    das ${gdtImporter_params?.entity?.name} EN ${gdtImporter_entity?.name}
+
   <script type="text/javascript">
+
+    // Study entity is selected,hide study chooser
+    <g:if test="${ (gdtImporter_params?.entity?.name == 'Study') || (gdtImporter_entity?.name == 'Study') }">
+        $('#parentEntityField').hide();
+    </g:if>
 
     if (pageOneTimer) clearTimeout(pageOneTimer);
     var pageOneTimer = null;
     $(document).ready(function() {
+
       // Create listener which is checking whether a (new) file has been uploaded
       oldImportfile = $("#importfile").val();
       pageOneTimer = setInterval(function() {
@@ -234,5 +243,6 @@
     $('#attachSamplesSamplingTemplateDiv').hide();
 
     });
+
   </script>
 </af:page>
