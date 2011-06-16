@@ -131,9 +131,12 @@ class GdtImporterController {
                 // that the JS will reload the Excel preview and the amount of sheets via JSON
                 flash.gdtImporter_pageOneRefresh = 'true'
 
-
                 // Clone all parameters so they are available again after a refresh
                 flash.gdtImporter_params = params
+
+                // Put the entity object in the flow scope
+                def entityName = gdtService.decryptEntity(params.entity.decodeURL())
+                flow.gdtImporter_entity = gdtService.cachedEntities.find { it.entity == entityName }
 
 				// If the file already exists an "existing*" string is added, but we don't
 				// want that after a refresh of the first step in the import wizard, so remove
@@ -153,7 +156,12 @@ class GdtImporterController {
                 flow.gdtImporter_importfile = flash.gdtImporter_params.importfile
                 flow.gdtImporter_dateformat = params.dateformat
                 //flow.gdtImporter_entity = params.entity
-                flow.gdtImporter_parentEntityid = params.parentEntity.id
+
+                // Put the entity object in the flow scope
+                def entityName = gdtService.decryptEntity(params.entity.decodeURL())
+                flow.gdtImporter_entity = gdtService.cachedEntities.find { it.entity == entityName }
+
+                flow.gdtImporter_parentEntityid = params.parentEntityid
                 flow.gdtImporter_templateid = params.template_id
 
                 flow.gdtImporter_attachSamplesToSubjects    = (params.attachSamples == 'on')
@@ -176,8 +184,8 @@ class GdtImporterController {
 
                 // get selected instance of parent entity through a reference of
                 // parent entity's domain class (if applicable).
-                if (flow.gdtImporter_entity_type != flow.gdtImporter_parentEntityClassName && (params.parentEntity.id != "null"))
-    				flow.gdtImporter_parentEntity = flow.gdtImporter_parentEntityReferenceInstance.get(params.parentEntity.id)
+                if (flow.gdtImporter_entity_type != flow.gdtImporter_parentEntityClassName && (params.parentEntityid != "null"))
+    				flow.gdtImporter_parentEntity = flow.gdtImporter_parentEntityReferenceInstance.get(params.parentEntityid)
 				// Trying to import data into an existing parent entity?
 				if (flow.gdtImporter_parentEntity && grailsApplication.config.gdtImporter.parentEntityHasOwner ) {
 					if (flow.gdtImporter_parentEntity.canWrite(authenticationService.getLoggedInUser())) {
@@ -245,6 +253,7 @@ class GdtImporterController {
 			}.to "mappingPage"
 			on("previous"){
                 flash.gdtImporter_pageOneRefresh = 'true'
+                flash.en
 
                 flow.wizardErrors = [:]
             }.to "fileImportPage"
@@ -495,6 +504,7 @@ class GdtImporterController {
 	 * @returns boolean true if correctly validated, otherwise false
 	 */
 	boolean handleFileImportPage(flow, flash, params) {
+        def allFieldsValid = false
 
         if (!params['importfile']) {
             log.error ".importer wizard: no file selected."
@@ -521,7 +531,15 @@ class GdtImporterController {
             return false
         }
 
-		if ( (params.parentEntity.id != "null") && (params.template_id != "null") && params.sheetIndex) {
+        // Are we importing a Study entity and no parent has been selected? Then make an exception
+        if (flow.gdtImporter_entity?.name=="Study" && (params.template_id != "null") && params.sheetIndex)
+            allFieldsValid = true
+        // We are importing a specific entity (Subject, Sample, et cetera)
+        else if ( (params.parentEntityid != "null") && (params.template_id != "null") && params.sheetIndex)
+            allFieldsValid = true
+
+		// parentEntity (e.g. a study) was selected, template selected and sheet index was selected
+        if ( allFieldsValid ) {
 
 			def entityName = gdtService.decryptEntity(params.entity.decodeURL())
 

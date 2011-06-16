@@ -117,9 +117,9 @@
           Choose your ${gdtImporter_parentEntityClassName.toLowerCase()}:
         </td>
         <td>
-          <g:select name="parentEntity.id"
+          <g:select name="parentEntityid"
                     noSelection="${['null':'-Select study-']}"
-                    value="${ (gdtImporter_params?.entity == null)? gdtImporter_parentEntityid :  gdtImporter_params?.entity.id}"
+                    value="${ (gdtImporter_params?.parentEntityid == null)? gdtImporter_parentEntityid :  gdtImporter_params?.parentEntityid}"
                     from="${gdtImporter_userParentEntities}" optionKey="id" optionValue="${{ it.toString()[0..Math.min(80, it.toString().length()-1)] + ' (...)' }}"/>
           %{--<g:select name="parentEntity.id" from="${gdtImporter_userParentEntities}" optionKey="id" optionValue="${ it.code + ' - ' + it.title }"/>--}%
         </td>
@@ -146,14 +146,13 @@
 
   <div id="datamatrixpreview"></div>
 
-    das ${gdtImporter_params?.entity?.name} EN ${gdtImporter_entity?.name}
-
   <script type="text/javascript">
 
-    // Study entity is selected,hide study chooser
-    <g:if test="${ (gdtImporter_params?.entity?.name == 'Study') || (gdtImporter_entity?.name == 'Study') }">
+    // Study entity is selected, hide study chooser
+    <g:if test="${ (gdtImporter_entity?.name == 'Study') }">
         $('#parentEntityField').hide();
     </g:if>
+
 
     if (pageOneTimer) clearTimeout(pageOneTimer);
     var pageOneTimer = null;
@@ -223,7 +222,6 @@
 
         }
       }, checkEverySeconds * 200);
-
 
 
 //      // initialize Sampling Template select box for attach samples to subjects mode
