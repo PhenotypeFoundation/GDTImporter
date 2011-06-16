@@ -120,7 +120,7 @@
           <g:select name="parentEntityid"
                     noSelection="${['null':'-Select study-']}"
                     value="${ (gdtImporter_params?.parentEntityid == null)? gdtImporter_parentEntityid :  gdtImporter_params?.parentEntityid}"
-                    from="${gdtImporter_userParentEntities}" optionKey="id" optionValue="${{ it.toString()[0..Math.min(80, it.toString().length()-1)] + ' (...)' }}"/>
+                    from="${gdtImporter_userParentEntities}" optionKey="id" optionValue="${{ (it.toString().length()<80) ? it.toString() : it.toString()[0..Math.min(80, it.toString().length()-1)] + ' (...)' }}"/>
           %{--<g:select name="parentEntity.id" from="${gdtImporter_userParentEntities}" optionKey="id" optionValue="${ it.code + ' - ' + it.title }"/>--}%
         </td>
       </tr>
