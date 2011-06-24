@@ -20,5 +20,5 @@
     <h1>Please make any adjustments if required</h1>
   </g:else>
 
-  <GdtImporter:validation entityList="${gdtImporter_entityList}" failedFields="${gdtImporter_failedFields}"/>
+  <GdtImporter:validation entityList="${importedEntitiesList}" failedFields="${gdtImporter_failedFields}"/>
 </af:page>

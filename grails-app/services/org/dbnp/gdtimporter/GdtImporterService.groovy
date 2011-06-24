@@ -1,6 +1,6 @@
 /**
  *  GDTImporter, a plugin for importing data into Grails Domain Templates
- *  Copyright (C) 2011 Tjeerd Abma
+ *  Copyright (C) 2011 Tjeerd Abma, Siemen Sikkema
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.

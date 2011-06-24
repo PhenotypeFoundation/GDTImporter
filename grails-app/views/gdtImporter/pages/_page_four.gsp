@@ -13,8 +13,8 @@
 %>
 <af:page>
  <h1>Confirmation</h1>
-  The import preparation was successful. You are about to import ${gdtImporter_entityList.size()}
-  <g:if test="${gdtImporter_entityList.size() == 1}">entity.</g:if>
+  The import preparation was successful. You are about to import ${importedEntitiesList.size()}
+  <g:if test="${importedEntitiesList.size() == 1}">entity.</g:if>
   <g:else >entities.</g:else>
 
   <g:if test="${gdtImporter_numberOfUpdatedEntities}" >

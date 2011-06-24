@@ -18,8 +18,8 @@
   <h1>Importer wizard</h1>
 
   <p>You can import your Excel data to the server by choosing a file from your local harddisk in the form below.</p>
-  <input type="hidden" id="pageOneRefresh" name="pageOneRefresh"
-         value="${(gdtImporter_params?.pageOneRefresh !=null) ? gdtImporter_params?.pageOneRefresh : gdtImporter_pageOneRefresh}" />
+  <input type="hidden" id="refreshPageOne" name="refreshPageOne"
+         value="${(refreshParams?.refrshPageOne !=null) ? refreshParams?.refreshPageOne : refreshPageOne}" />
   <table border="0">
     <colgroup width="30%">
       <tr>
@@ -28,7 +28,7 @@
         </td>
         <td width="100px">
           <af:fileFieldElement name="importfile"
-                               value="${ (gdtImporter_params?.importfile!=null) ? gdtImporter_params?.importfile : gdtImporter_importfile}"
+                               value="${ (refreshParams?.importfile!=null) ? refreshParams?.importfile : gdtImporter_importfile}"
                                id="importfile" />
         </td>
       </tr>
@@ -37,7 +37,7 @@
           Date format:
         </td>
         <td width="100px">
-          <g:select name="dateformat" value="${gdtImporter_params?.dateformat}"
+          <g:select name="dateformat" value="${refreshParams?.dateformat}"
                     from="${['dd/MM/yyyy (EU/India/South America/North Africa/Asia/Australia)', 'yyyy/MM/dd (China/Korea/Iran/Japan)', 'MM/dd/yyyy (US)']}"
                     keys="${['dd/MM/yyyy','yyyy/MM/dd','MM/dd/yyyy']}" />
         </td>
@@ -47,7 +47,7 @@
           Use data from sheet:
         </td>
         <td width="100px">
-          <g:select name="sheetIndex" value="${gdtImporter_params?.sheetIndex}"
+          <g:select name="sheetIndex" value="${refreshParams?.sheetIndex}"
                     from="${gdtImporter_sheets}"
                     optionKey="${{it-1}}"
                     onchange="updateDatamatrixPreview()" />
@@ -59,7 +59,7 @@
         </td>
         <td width="100px">
           <g:select name="headerRowIndex" from="${1..9}"
-                    value="${gdtImporter_params?.headerRowIndex} optionKey="${{
+                    value="${refreshParams?.headerRowIndex} optionKey="${{
                     it-1}}" />
         </td>
       </tr>
@@ -72,7 +72,7 @@
                   name="entity"
                   id="entity"
                   from="${GdtService.cachedEntities}"
-                  value="${gdtImporter_entity?.encoded}"
+                  value="${entityToImport?.encoded}"
                   optionValue="${{it.name}}"
                   optionKey="${{it.encoded}}"
                   noSelection="${['null':'-Select type of data-']}"
@@ -114,22 +114,21 @@
       </tr>
       <tr id="parentEntityField">
         <td>
-          Choose your ${gdtImporter_parentEntityClassName.toLowerCase()}:
+          Choose your ${parentEntityClassName.toLowerCase()}:
         </td>
         <td>
           <g:select name="parentEntityid"
                     noSelection="${['null':'-Select study-']}"
-                    value="${ (gdtImporter_params?.parentEntityid == null)? gdtImporter_parentEntityid :  gdtImporter_params?.parentEntityid}"
-                    from="${gdtImporter_userParentEntities}" optionKey="id" optionValue="${{ (it.toString().length()<80) ? it.toString() : it.toString()[0..Math.min(80, it.toString().length()-1)] + ' (...)' }}"/>
-          %{--<g:select name="parentEntity.id" from="${gdtImporter_userParentEntities}" optionKey="id" optionValue="${ it.code + ' - ' + it.title }"/>--}%
+                    value="${ (refreshParams?.parentEntityid == null)? gdtImporter_parentEntityid :  refreshParams?.parentEntityid}"
+                    from="${persistedParentEntities}" optionKey="id" optionValue="${{ (it.toString().length()<80) ? it.toString() : it.toString()[0..Math.min(80, it.toString().length()-1)] + ' (...)' }}"/>
         </td>
       </tr>
       <tr>
         <td>
           <div id="datatemplate">Choose type of data template:</div>
         </td>
-        <td><g:if test="${gdtImporter_params?.entity}">
-          <g:set var="entity" value="${gdtImporter_params?.entity}" />
+        <td><g:if test="${refreshParams?.entity}">
+          <g:set var="entity" value="${refreshParams?.entity}" />
         </g:if>
         <g:else>
           <g:set var="entity" value="None" />
@@ -138,8 +137,8 @@
         <g:select rel="template" entity="${entity}" name="template_id"
                   noSelection="${['null':'-Select template-']}"
                   optionKey="id" optionValue="name"
-                  from="${gdtImporter_entityTemplates}"
-                  value="${ (gdtImporter_params?.template_id == null) ? gdtImporter_templateid  : gdtImporter_params?.template_id}" />
+                  from="${entityToImportTemplates}"
+                  value="${ (refreshParams?.template_id == null) ? gdtImporter_templateid  : refreshParams?.template_id}" />
         </td>
       </tr>
   </table>
@@ -149,7 +148,7 @@
   <script type="text/javascript">
 
     // Study entity is selected, hide study chooser
-    <g:if test="${ (gdtImporter_entity?.name == 'Study') }">
+    <g:if test="${ (entityToImport?.name == 'Study') }">
         $('#parentEntityField').hide();
     </g:if>
 
@@ -163,16 +162,16 @@
       pageOneTimer = setInterval(function() {
 
         // A file was uploaded and a next page call was issued which failed?
-        if ($("#importfile").val().length > "existing*".length && $("#pageOneRefresh").val() == "true") {
+        if ($("#importfile").val().length > "existing*".length && $("#refreshPageOne").val() == "true") {
 
           updateDatamatrixPreview()
           // Reset the refresh page value
-          $("#pageOneRefresh").val("")
+          $("#refreshPageOne").val("")
         }
 
-        if (($("#importfile").val() != oldImportfile) || $("#pageOneRefresh").val() == "true") {
+        if (($("#importfile").val() != oldImportfile) || $("#refreshPageOne").val() == "true") {
           // Reset the refresh page value
-          $("#pageOneRefresh").val("")
+          $("#refreshPageOne").val("")
 
           $('#datamatrixpreview').html('<table cellpadding="0" cellspacing="0" border="0" class="display" id="datamatrix"></table>');
 

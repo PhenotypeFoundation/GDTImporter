@@ -81,7 +81,7 @@ class GdtImporterTagLib {
 	 * @param matchvalue value which will be looked up via fuzzy matching against the list of options and will be selected
      * @param selected value to be selected by default
 	 * @param MappingColumn object containing all required information
-     * @param fuzzymatching boolean true if fuzzy matching should be used, otherwise false
+     * @param useFuzzymatching boolean true if fuzzy matching should be used, otherwise false
 	 * @param allfieldtypes boolean true if all templatefields should be listed, otherwise only show filtered templatefields
      * @param extraOptions options to add to the select boxes (e.g. non template field items)
 	 * @return chooser object
@@ -92,7 +92,7 @@ class GdtImporterTagLib {
 
  		def t = Template.get(attrs['template_id'])
 		def mc = attrs['mappingcolumn']
-        def matchvalue = (attrs['fuzzymatching']=="true") ? attrs['matchvalue'] : ""
+        def matchvalue = (attrs['useFuzzymatching']=="true") ? attrs['matchvalue'] : ""
         def selected = (attrs['selected']) ? attrs['selected'] : ""
 		def fuzzyTreshold = attrs[ 'treshold' ] && attrs[ 'treshold' ].toString().isNumber() ? Float.valueOf( attrs[ 'treshold' ] ) : 0.1;
         def returnmatchonly = attrs['returnmatchonly']

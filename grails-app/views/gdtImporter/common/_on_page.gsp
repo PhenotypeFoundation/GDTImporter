@@ -34,7 +34,7 @@
 
     // attach event to apply fuzzy matching
     $('#fuzzymatchselect').click(function() {
-      $("#fuzzymatching").val("true")
+      $("#useFuzzymatching").val("true")
       refreshFlow()
     });
 

@@ -16,7 +16,7 @@
 %>
 
 <table>
-	<tr><td colspan="3"><h4>${gdtImporter_entity.name}</h4></td></tr>
+	<tr><td colspan="3"><h4>${entityToImport.name}</h4></td></tr>
 	<tr>
 		<td class="header" width="70%">
 			<div id="currentmapping">Current import mapping:
@@ -32,7 +32,7 @@
 				   title="Clear all selections">
 			<input class="buttonsmall" id="fuzzymatchselect" type="button" value="Match" name="fuzzymatchselect"
 				   title="Automatically match columns to properties">
-			<input type="hidden" name="fuzzymatching" id="fuzzymatching" value="false">
+			<input type="hidden" name="useFuzzymatching" id="useFuzzymatching" value="false">
 			<input class="buttonsmall" id="savepropertiesbutton" type="button" value="Save" name="savepropertiesbutton"
 				   title="Save the currently set mappings">
 			<input class="buttonsmall" id="loadpropertiesbutton" type="button" value="Load" name="loadpropertiesbutton"
@@ -82,7 +82,7 @@
 				<th class="importerheader">${mappingcolumn.name}<br/>
 					<!-- store the found match -->
 					<g:set var="fuzzymatch"
-						   value="${GdtImporter.propertyChooser(name:columnproperty, mappingcolumn:mappingcolumn, matchvalue:mappingcolumn.name, selected:selected, fuzzymatching:gdtImporter_fuzzymatching, template_id:gdtImporter_template_id, returnmatchonly:'true')}"/>
+						   value="${GdtImporter.propertyChooser(name:columnproperty, mappingcolumn:mappingcolumn, matchvalue:mappingcolumn.name, selected:selected, useFuzzymatching:useFuzzymatching, template_id:gdtImporter_template_id, returnmatchonly:'true')}"/>
 
 					<g:if test="${usedfuzzymatches.contains( fuzzymatch.toString() ) }">
 						<g:set var="matchvalue" value=""/>
@@ -90,7 +90,7 @@
 
 					<GdtImporter:propertyChooser name="columnproperty" mappingcolumn="${mappingcolumn}"
 												 matchvalue="${matchvalue}" selected="${selected}"
-												 fuzzymatching="${gdtImporter_fuzzymatching}"
+												 useFuzzymatching="${useFuzzymatching}"
 												 template_id="${gdtImporter_template_id}" allfieldtypes="true"
 												 treshold="0.3" extraOptions="${gdtImporter_extraOptions}"/>
 				</th>
