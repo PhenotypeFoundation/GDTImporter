@@ -23,7 +23,7 @@
    */
 %>
 <script type="text/javascript">
-  var oldImportfile = '';
+  var oldImportFileName = '';
   var checkEverySeconds = 2;
   var dataTable;
 
@@ -128,7 +128,7 @@
     var rselect = $('#' + name).get(0)
     var items = data
 
-    var selectedEntity = $('#entity :selected').text();
+    var selectedEntity = $('#templateBasedEntity :selected').text();
 
     $('#parentEntityField').show();
     $('#attachSamplesDiv').hide();
@@ -158,7 +158,7 @@
 
     if (uncheckAttachSamples) $('#attachSamples').attr('checked', false);
 
-    $('select[name=template_id]').attr('entity', $('#' + 'entity').val());
+    $('select[name=entityToImportSelectedTemplateId]').attr('templateBasedEntity', $('#' + 'templateBasedEntity').val());
 
     if (items) {
 
@@ -204,7 +204,7 @@
       new SelectAddMore().init({
                 rel     : 'template',
                 url     : baseUrl + '/templateEditor',
-                vars    : 'entity', // can be a comma separated list of variable names to pass on
+                vars    : 'templateBasedEntity', // can be a comma separated list of variable names to pass on
                 label   : 'add / modify ...',
                 style   : 'modify',
                 onClose : function(scope) {
@@ -220,7 +220,7 @@
   function updateDatamatrixPreview() {
     $.ajax({
               type: "POST",
-              data: "importfile=" + $("#importfile").val().replace("existing*", "") + "&sheetIndex=" + $("#sheetIndex").val() ,
+              data: "importFileName=" + $("#importFileName").val().replace("existing*", "") + "&sheetIndex=" + $("#sheetIndex").val() ,
               url: "getDatamatrixAsJSON",
               success: function(msg) {
 

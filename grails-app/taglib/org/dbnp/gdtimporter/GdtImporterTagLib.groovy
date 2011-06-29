@@ -77,7 +77,7 @@ class GdtImporterTagLib {
 	 * Possibly this will later on return an AJAX-like autocompletion chooser for the fields?
 	 *
 	 * @param name name for the property chooser element
-	 * @param importtemplate_id template identifier where fields are retrieved from
+	 * @param templateId template identifier where fields are retrieved from
 	 * @param matchvalue value which will be looked up via fuzzy matching against the list of options and will be selected
      * @param selected value to be selected by default
 	 * @param MappingColumn object containing all required information
@@ -87,10 +87,9 @@ class GdtImporterTagLib {
 	 * @return chooser object
 	 * */
 	def propertyChooser = { attrs ->
-		// TODO: this should be changed to retrieving fields per entity instead of from one template
-		//	 and session variables should not be used inside the service, migrate to controller
 
- 		def t = Template.get(attrs['template_id'])
+		// TODO: this should be changed to retrieving fields per entity instead of from one template?
+ 		def t = Template.get(attrs['templateId'])
 		def mc = attrs['mappingcolumn']
         def matchvalue = (attrs['useFuzzymatching']=="true") ? attrs['matchvalue'] : ""
         def selected = (attrs['selected']) ? attrs['selected'] : ""
@@ -140,6 +139,7 @@ class GdtImporterTagLib {
 		}
 
         res += "</select>"
+
 		return res
 	}
 }

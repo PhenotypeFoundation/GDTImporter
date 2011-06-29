@@ -27,9 +27,9 @@
           Choose your Excel file to import:
         </td>
         <td width="100px">
-          <af:fileFieldElement name="importfile"
-                               value="${ (refreshParams?.importfile!=null) ? refreshParams?.importfile : gdtImporter_importfile}"
-                               id="importfile" />
+          <af:fileFieldElement name="importFileName"
+                               value="${ (refreshParams?.importFileName!=null) ? refreshParams?.importFileName : importFileName}"
+                               id="importFileName" />
         </td>
       </tr>
       <tr>
@@ -37,7 +37,7 @@
           Date format:
         </td>
         <td width="100px">
-          <g:select name="dateformat" value="${refreshParams?.dateformat}"
+          <g:select name="dateFormat" value="${refreshParams?.dateFormat}"
                     from="${['dd/MM/yyyy (EU/India/South America/North Africa/Asia/Australia)', 'yyyy/MM/dd (China/Korea/Iran/Japan)', 'MM/dd/yyyy (US)']}"
                     keys="${['dd/MM/yyyy','yyyy/MM/dd','MM/dd/yyyy']}" />
         </td>
@@ -69,8 +69,8 @@
         </td>
         <td>
           <g:select
-                  name="entity"
-                  id="entity"
+                  name="templateBasedEntity"
+                  id="templateBasedEntity"
                   from="${GdtService.cachedEntities}"
                   value="${entityToImport?.encoded}"
                   optionValue="${{it.name}}"
@@ -78,8 +78,8 @@
                   noSelection="${['null':'-Select type of data-']}"
                   onChange="${remoteFunction( controller: 'gdtImporter',
 					    action:'ajaxGetTemplatesByEntity',
-					    params: '\'entity=\'+escape(this.value)',
-					    onSuccess:'updateSelect(\'template_id\',data,false,false,\'default\',false)')}" />
+					    params: '\'templateBasedEntity=\'+escape(this.value)',
+					    onSuccess:'updateSelect(\'entityToImportSelectedTemplateId\',data,false,false,\'default\',false)')}" />
         </td>
         <td>
           <div id="attachSamplesDiv">
@@ -117,28 +117,28 @@
           Choose your ${parentEntityClassName.toLowerCase()}:
         </td>
         <td>
-          <g:select name="parentEntityid"
+          <g:select name="parentEntityId"
                     noSelection="${['null':'-Select study-']}"
-                    value="${ (refreshParams?.parentEntityid == null)? gdtImporter_parentEntityid :  refreshParams?.parentEntityid}"
+                    value="${ (refreshParams?.parentEntityId == null)? parentEntityId :  refreshParams?.parentEntityId}"
                     from="${persistedParentEntities}" optionKey="id" optionValue="${{ (it.toString().length()<80) ? it.toString() : it.toString()[0..Math.min(80, it.toString().length()-1)] + ' (...)' }}"/>
         </td>
       </tr>
       <tr>
         <td>
-          <div id="datatemplate">Choose type of data template:</div>
+          <div id="entityToImportSelectedTemplateId">Choose type of data template:</div>
         </td>
-        <td><g:if test="${refreshParams?.entity}">
-          <g:set var="entity" value="${refreshParams?.entity}" />
+        <td><g:if test="${refreshParams?.templateBasedEntity}">
+          <g:set var="entityToImportSelectedTemplateId" value="${refreshParams?.entityToImportSelectedTemplateId}" />
         </g:if>
         <g:else>
-          <g:set var="entity" value="None" />
+          <g:set var="entityToImportSelectedTemplateId" value="None" />
         </g:else>
 
-        <g:select rel="template" entity="${entity}" name="template_id"
+        <g:select rel="template" entityToImportSelectedTemplateId="${entityToImportSelectedTemplateId}" name="entityToImportSelectedTemplateId"
                   noSelection="${['null':'-Select template-']}"
                   optionKey="id" optionValue="name"
                   from="${entityToImportTemplates}"
-                  value="${ (refreshParams?.template_id == null) ? gdtImporter_templateid  : refreshParams?.template_id}" />
+                  value="${ (refreshParams?.entityToImportSelectedTemplateId == null) ? entityToImportSelectedTemplateId : refreshParams?.entityToImportSelectedTemplateId}" />
         </td>
       </tr>
   </table>
@@ -158,18 +158,18 @@
     $(document).ready(function() {
 
       // Create listener which is checking whether a (new) file has been uploaded
-      oldImportfile = $("#importfile").val();
+      oldImportFileName = $("#importFileName").val();
       pageOneTimer = setInterval(function() {
 
         // A file was uploaded and a next page call was issued which failed?
-        if ($("#importfile").val().length > "existing*".length && $("#refreshPageOne").val() == "true") {
+        if ($("#importFileName").val().length > "existing*".length && $("#refreshPageOne").val() == "true") {
 
           updateDatamatrixPreview()
           // Reset the refresh page value
           $("#refreshPageOne").val("")
         }
 
-        if (($("#importfile").val() != oldImportfile) || $("#refreshPageOne").val() == "true") {
+        if (($("#importFileName").val() != oldImportFileName) || $("#refreshPageOne").val() == "true") {
           // Reset the refresh page value
           $("#refreshPageOne").val("")
 
@@ -181,7 +181,7 @@
           // perform the ajax call to render the excel preview
           $.ajax({
                     type: "POST",
-                    data: "importfile=" + $("#importfile").val() + "&sheetIndex=0", //+ $("#sheetIndex").val() ,
+                    data: "importFileName=" + $("#importFileName").val() + "&sheetIndex=0", //+ $("#sheetIndex").val() ,
                     url: "getDatamatrixAsJSON",
                     success: function(msg) {
                       var jsonDatamatrix = eval(msg);
@@ -217,7 +217,7 @@
                   });
 
           // Update the original
-          oldImportfile = $("#importfile").val()
+          oldImportFileName = $("#importFileName").val()
 
         }
       }, checkEverySeconds * 200);

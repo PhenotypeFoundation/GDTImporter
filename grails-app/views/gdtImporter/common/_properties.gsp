@@ -82,7 +82,7 @@
 				<th class="importerheader">${mappingcolumn.name}<br/>
 					<!-- store the found match -->
 					<g:set var="fuzzymatch"
-						   value="${GdtImporter.propertyChooser(name:columnproperty, mappingcolumn:mappingcolumn, matchvalue:mappingcolumn.name, selected:selected, useFuzzymatching:useFuzzymatching, template_id:gdtImporter_template_id, returnmatchonly:'true')}"/>
+						   value="${GdtImporter.propertyChooser(name:columnproperty, mappingcolumn:mappingcolumn, matchvalue:mappingcolumn.name, selected:selected, useFuzzymatching:useFuzzymatching, templateId:entityToImportSelectedTemplateId, returnmatchonly:'true')}"/>
 
 					<g:if test="${usedfuzzymatches.contains( fuzzymatch.toString() ) }">
 						<g:set var="matchvalue" value=""/>
@@ -91,7 +91,7 @@
 					<GdtImporter:propertyChooser name="columnproperty" mappingcolumn="${mappingcolumn}"
 												 matchvalue="${matchvalue}" selected="${selected}"
 												 useFuzzymatching="${useFuzzymatching}"
-												 template_id="${gdtImporter_template_id}" allfieldtypes="true"
+												 templateId="${entityToImportSelectedTemplateId}" allfieldtypes="true"
 												 treshold="0.3" extraOptions="${gdtImporter_extraOptions}"/>
 				</th>
 				<!-- build up a string with fuzzy matches used, to prevent duplicate fuzzy matching -->

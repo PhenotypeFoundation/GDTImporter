@@ -178,12 +178,12 @@ class GdtImporterService {
 	 * @param theTemplate Template to use
 	 * @param dataMatrix Two-dimensional string array containing excel data
 	 * @param mcmap linked hashmap (preserved order) of GdtMappingColumns
-	 * @param dateformat date formatter used when parsing/reading dates (yy/MM/dddd et cetera)
+	 * @param dateFormat date formatter used when parsing/reading dates (yy/MM/dddd et cetera)
 	 * @return list containing entities
 	 *
 	 * @see org.dbnp.gdtimporter.GdtMappingColumn
 	 */
-	def getDataMatrixAsEntityList(theEntity, theTemplate, dataMatrix, mcmap, dateformat) {
+	def getDataMatrixAsEntityList(theEntity, theTemplate, dataMatrix, mcmap, dateFormat) {
 		def entityList = []
 		def errorList = []
 
@@ -191,7 +191,7 @@ class GdtImporterService {
 		dataMatrix.each { row ->
 
             // Create an entity record based on a row read from Excel and store the cells which failed to be mapped
-			def (entity, error) = createEntity(theEntity, theTemplate, row, mcmap, dateformat)
+			def (entity, error) = createEntity(theEntity, theTemplate, row, mcmap, dateFormat)
 
             // Add entity to the table if it is not empty
             if (!isEntityEmpty(entity))
@@ -738,10 +738,10 @@ class GdtImporterService {
 	 * @param theTemplate Template object
 	 * @param row list of string values
 	 * @param mcmap map containing MappingColumn objects
-     * @param dateformat date formatter (yyyy/MM/dd et cetera)
+     * @param dateFormat date formatter (yyyy/MM/dd et cetera)
 	 * @return list of entities and list of failed cells
 	 */
-    def createEntity(theEntity, theTemplate, String[] row, mcmap, dateformat) {
+    def createEntity(theEntity, theTemplate, String[] row, mcmap, dateFormat) {
         def error
 
 		// Initialize the entity with the chosen template
@@ -757,7 +757,7 @@ class GdtImporterService {
 			if (mc != null) if (!mc.dontimport) {
 				try {
                     // Format the cell conform the TemplateFieldType
-                    value = formatValue(value, mc.templatefieldtype, dateformat)
+                    value = formatValue(value, mc.templatefieldtype, dateFormat)
                 } catch (NumberFormatException nfe) {
                     // Formatting went wrong, so set the value to an empty string
 					value = ""
@@ -786,17 +786,17 @@ class GdtImporterService {
      *
 	 * @param value string containing the value to be formatted
      * @param templateFieldType TemplateFieldType to cast this value to
-     * @param dateformat date formatter (yyyy/MM/dd format)
+     * @param dateFormat date formatter (yyyy/MM/dd format)
 	 * @return object corresponding to the TemplateFieldType
 	 */
-	def formatValue(String value, TemplateFieldType templateFieldType, String dateformat) throws NumberFormatException {
+	def formatValue(String value, TemplateFieldType templateFieldType, String dateFormat) throws NumberFormatException {
 		switch (templateFieldType) {
             case TemplateFieldType.LONG:    return Double.valueOf(value.replace(",", ".")).longValue()
             case TemplateFieldType.DOUBLE:  return Double.valueOf(value.replace(",", "."))
             case TemplateFieldType.DATE:    try {
                                                 // Build the date formatter using date format from the parameter to
                                                 // parse the value to a date object
-                                                SimpleDateFormat parseDateFormatter = new SimpleDateFormat(dateformat);
+                                                SimpleDateFormat parseDateFormatter = new SimpleDateFormat(dateFormat);
 
                                                 // Replace dashes with slashes
                                                 def parsedDate = parseDateFormatter.parse( value.replace("-", "/") )
@@ -807,7 +807,7 @@ class GdtImporterService {
                                                 return GSCFDateFormatter.format(parsedDate)
                                             }
                                             catch (Exception e) {
-                                                log.error ".importer wizard: could not format value `${value}` using formatter [${dateformat}]"
+                                                log.error ".importer wizard: could not format value `${value}` using formatter [${dateFormat}]"
                                                 return value
                                             }
 		}
