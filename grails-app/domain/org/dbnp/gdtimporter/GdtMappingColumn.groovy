@@ -57,6 +57,7 @@ class GdtMappingColumn implements Serializable {
 
     static mapping = {
             tablePerHierarchy false
+            index column:'columnindex'
     }
 
     String toString() {
