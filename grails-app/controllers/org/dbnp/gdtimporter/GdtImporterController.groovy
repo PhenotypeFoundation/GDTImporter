@@ -182,10 +182,10 @@ class GdtImporterController {
                 // get selected instance of parent entity through a reference of
                 // parent entity's domain class (if applicable).
                 if (flow.entityToImportType != flow.parentEntityDomainClassShortName && (params.parentEntityId != "null"))
-    				flow.gdtImporter_parentEntity = flow.parentEntityReferenceInstance.get(params.parentEntityId)
+    				flow.parentEntityObject = flow.parentEntityReferenceInstance.get(params.parentEntityId)
 				// Trying to import data into an existing parent entity?
-				if (flow.gdtImporter_parentEntity && grailsApplication.config.gdtImporter.parentEntityHasOwner ) {
-					if (flow.gdtImporter_parentEntity.canWrite(authenticationService.getLoggedInUser())) {
+				if (flow.parentEntityObject && grailsApplication.config.gdtImporter.parentEntityHasOwner ) {
+					if (flow.parentEntityObject.canWrite(authenticationService.getLoggedInUser())) {
 						handleFileImportPage(flow, flash, params) ? success() : error()
                     }
 					else {
@@ -279,7 +279,7 @@ class GdtImporterController {
                 // if the entities being imported have a preferred identifier
                 // that already exists (within the parent entity, if applicable)
                 // load and update them instead of adding new ones.
-                (importedEntitiesList, numberOfUpdatedEntities, numberOfChangedTemplates) = gdtImporterService.replaceEntitiesByExistingOnesIfNeeded(importedEntitiesList, flow.gdtImporter_parentEntity, grailsApplication.config.gdtImporter.childEntityParentName)
+                (importedEntitiesList, numberOfUpdatedEntities, numberOfChangedTemplates) = gdtImporterService.replaceEntitiesByExistingOnesIfNeeded(importedEntitiesList, flow.parentEntityObject, grailsApplication.config.gdtImporter.childEntityParentName)
 
                 if (numberOfUpdatedEntities) {
                     if (flow.gdtImporter_attachSamplesToSubjects) {
@@ -303,7 +303,7 @@ class GdtImporterController {
                 flow.gdtImporter_numberOfUpdatedEntities = numberOfUpdatedEntities
 
                 // try to validate the entities
-                flow.gdtImporter_failedFields = doValidation(flow, importedEntitiesList, flow.gdtImporter_parentEntity) + failedFields
+                flow.gdtImporter_failedFields = doValidation(flow, importedEntitiesList, flow.parentEntityObject) + failedFields
 
                 if (flow.gdtImporter_failedFields) {
 
@@ -354,7 +354,7 @@ class GdtImporterController {
                             flow.gdtImporter_subjectNamesToAttach,      // subject names from the sheet representing subject to attach samples to
                             flow.gdtImporter_timePoints,                // time points from the sheet that will be stored in sampling events
                             flow.gdtImporter_template,                  // sample template
-                            flow.gdtImporter_parentEntity,
+                            flow.parentEntityObject,
                             flow.gdtImporter_samplingEventTemplate      // the sampling event template for the sampling events that will be generated
                     )
 
@@ -366,18 +366,18 @@ class GdtImporterController {
                             flow.importedEntitiesList,                  // events
                             flow.gdtImporter_eventIndices,              // indices relating row number to unique event
                             flow.gdtImporter_subjectNamesToAttach,      // subject names from the sheet representing subject to attach events to
-                            flow.gdtImporter_parentEntity)
+                            flow.parentEntityObject)
 
                 // We're in 'standard' mode.
                 // If there's a parent entity, add the entities it.
-                } else if (flow.gdtImporter_parentEntity) {
+                } else if (flow.parentEntityObject) {
 
                     gdtImporterService.addEntitiesToParentEntity(
                             flow.importedEntitiesList,
-                            flow.gdtImporter_parentEntity,
+                            flow.parentEntityObject,
                             grailsApplication.config.gdtImporter.childEntityParentName)
 
-                    if (!flow.gdtImporter_parentEntity.save()) {
+                    if (!flow.parentEntityObject.save()) {
                         log.error ".gdtImporter [confirmation page] could not save parent entity."
                         error()
                     } else success()
@@ -740,7 +740,7 @@ class GdtImporterController {
             // store subject names in the flow
             flow.gdtImporter_subjectNamesToAttach = flow.gdtImporter_dataMatrix.collect{it[subjectNameColumnNumber]}
 
-            def studySubjectNames = flow.gdtImporter_parentEntity.subjects*.name
+            def studySubjectNames = flow.parentEntityObject.subjects*.name
 
             def missingSubjectNames = flow.gdtImporter_subjectNamesToAttach.clone().unique()
             missingSubjectNames.removeAll( studySubjectNames )
@@ -779,7 +779,7 @@ class GdtImporterController {
             // search the parent entity for samples with the same name
             def sampleNameColumnNumber  = flow.gdtImporter_header.findIndexOf{it.property == "name"}
             def existingSamples         = flow.gdtImporter_dataMatrix.collect{it[sampleNameColumnNumber]}.findAll{ sampleName ->
-                flow.gdtImporter_parentEntity.samples.find{it.name == sampleName}
+                flow.parentEntityObject.samples.find{it.name == sampleName}
             }
             // Don't allow to continue when there are pre-existing samples in the sheet
             if (existingSamples) {
@@ -805,7 +805,7 @@ class GdtImporterController {
         // try to validate the entities and combine possible errors with errors
         // from the previous step
         // Concatenate failed fields and validated fields from the validation method
-        def failedFieldsList = failedFields + doValidation(flow, importedEntitiesList, flow.gdtImporter_parentEntity)
+        def failedFieldsList = failedFields + doValidation(flow, importedEntitiesList, flow.parentEntityObject)
 
         // Remove redundant entities where original value is empty and same entity also contains an invalid value
         flow.gdtImporter_failedFields = failedFieldsList.groupBy{it.entity.toString().trim()}.collect { entity ->

@@ -125,16 +125,16 @@
       </tr>
       <tr>
         <td>
-          <div id="entityToImportSelectedTemplateId">Choose type of data template:</div>
+          <div id="datatemplate">Choose type of data template: ${entityToImportSelectedTemplateId}</div>
         </td>
         <td><g:if test="${refreshParams?.templateBasedEntity}">
-          <g:set var="entityToImportSelectedTemplateId" value="${refreshParams?.entityToImportSelectedTemplateId}" />
+          <g:set var="templateBasedEntity" value="${refreshParams?.templateBasedEntity}" />
         </g:if>
         <g:else>
-          <g:set var="entityToImportSelectedTemplateId" value="None" />
+          <g:set var="templateBasedEntity" value="None" />
         </g:else>
 
-        <g:select rel="template" entityToImportSelectedTemplateId="${entityToImportSelectedTemplateId}" name="entityToImportSelectedTemplateId"
+        <g:select rel="template" templateBasedEntity="${templateBasedEntity}" name="entityToImportSelectedTemplateId"
                   noSelection="${['null':'-Select template-']}"
                   optionKey="id" optionValue="name"
                   from="${entityToImportTemplates}"

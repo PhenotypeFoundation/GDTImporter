@@ -12,16 +12,16 @@
  */
 %>
 <script type="text/javascript">
-                // disable redirect warning
-                var warnOnRedirect = false;
+    // disable redirect warning
+    var warnOnRedirect = false;
 </script>
 
 <af:page>
 <h1>Final Page</h1>
 <p>
 This concludes the importer wizard. You can click <g:link action="index">here</g:link> to restart the wizard.
-<g:if test="${gdtImporter_parentEntity}">
-    Or go to <g:link controller="study" action="show" id="${gdtImporter_parentEntity.id}">${gdtImporter_parentEntity}</g:link> to
+<g:if test="${parentEntityObject}">
+    Or go to <g:link controller="study" action="show" id="${parentEntityObject.id}">${parentEntityObject}</g:link> to
 browse your imported data.</g:if>
 </p>
 
