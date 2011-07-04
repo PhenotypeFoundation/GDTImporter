@@ -15,7 +15,7 @@
 <script type="text/javascript">
  $(document).ready(function() {
         // mark error fields
-        <g:each in="${gdtImporter_failedFields}" var="field">
+        <g:each in="${failedFields}" var="field">
           var element = $("select[name=${field.entity}]");
 
           if (element.size()) {

@@ -82,7 +82,6 @@ class GdtImporterTagLib {
      * @param selected value to be selected by default
 	 * @param MappingColumn object containing all required information
      * @param useFuzzymatching boolean true if fuzzy matching should be used, otherwise false
-	 * @param allfieldtypes boolean true if all templatefields should be listed, otherwise only show filtered templatefields
      * @param extraOptions options to add to the select boxes (e.g. non template field items)
 	 * @return chooser object
 	 * */

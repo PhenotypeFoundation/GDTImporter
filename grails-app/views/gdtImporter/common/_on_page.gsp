@@ -45,7 +45,7 @@
 
     // mapping has been chosen and OK button pressed? refresh the flow page
     $('#loadmappingok').click(function() {
-      if ($("#loadimportmapping_id").val()) refreshFlow()
+      if ($("#loadImportMappingId").val()) refreshFlow()
     });
 
     // open delete box
@@ -55,19 +55,19 @@
 
     // mapping has been chosen and OK button pressed? refresh the flow page
     $('#deletemappingok').click(function() {
-      if ($("#deleteimportmapping_id").val()) refreshFlow()
+      if ($("#deleteImportMappingId").val()) refreshFlow()
     });
 
     // open save box
     $('#savepropertiesbutton').click(function() {
       $("#savemapping").toggle("scale")
 
-      if ($("#mappingname").val()) refreshFlow();
+      if ($("#importMappingName").val()) refreshFlow();
     });
 
     // mapping given a name and OK button pressed? Then refresh the flow
     $('#savemappingok').click(function() {
-      if ($("#mappingname").val()) refreshFlow();
+      if ($("#importMappingName").val()) refreshFlow();
     });
 
     // Disable Enter key

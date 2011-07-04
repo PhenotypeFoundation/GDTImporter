@@ -20,8 +20,8 @@
 	<tr>
 		<td class="header" width="70%">
 			<div id="currentmapping">Current import mapping:
-			<g:if test="${gdtImporter_importmapping}">
-				'${gdtImporter_importmapping.name}'
+			<g:if test="${importMappingInstance}">
+				'${importMappingInstance.name}'
 			</g:if>
 			<g:else>
 				none
@@ -42,20 +42,20 @@
 
 			<div id="savemapping" style="display:none">
 				Give current mapping a name:
-				<input type="text" name="mappingname" size="20" id="mappingname">
+				<input type="text" name="importMappingName" size="20" id="importMappingName">
 				<input type="button" id="savemappingok" value="OK">
 			</div>
 
 			<div id="loadmapping" style="display:none">
 				Select an existing mapping:
-				<g:select name="loadimportmapping_id" from="${gdtImporter_importmappings}"
+				<g:select name="loadImportMappingId" from="${ImportMappingList}"
 						  noSelection="['':'-Select mapping-']" optionValue="name" optionKey="id"/>
 				<input type="button" id="loadmappingok" value="OK">
 			</div>
 
 			<div id="deletemapping" style="display:none">
 				Delete a mapping:
-				<g:select name="deleteimportmapping_id" from="${gdtImporter_importmappings}"
+				<g:select name="deleteImportMappingId" from="${ImportMappingList}"
 						  noSelection="['':'-Select mapping-']" optionValue="name" optionKey="id"/>
 				<input type="button" id="deletemappingok" value="OK">
 			</div>
@@ -69,10 +69,10 @@
 		<thead>
 		<tr>
 			<g:set var="usedfuzzymatches" value="${'-'}"/>
-			<g:each var="mappingcolumn" in="${gdtImporter_header}" status="index">
+			<g:each var="mappingcolumn" in="${header}" status="index">
 				<!-- set selected values based on submitted columnproperties, actually refresh -->
-				<g:if test="${gdtImporter_columnproperty}">
-					<g:set var="selected" value="${gdtImporter_columnproperty.index['' + mappingcolumn.index + '']}"/>
+				<g:if test="${columnProperty}">
+					<g:set var="selected" value="${columnProperty.index['' + mappingcolumn.index + '']}"/>
 				</g:if>
 				<g:else>
 					<g:set var="selected" value="${mappingcolumn.property}"/>
@@ -91,8 +91,8 @@
 					<GdtImporter:propertyChooser name="columnproperty" mappingcolumn="${mappingcolumn}"
 												 matchvalue="${matchvalue}" selected="${selected}"
 												 useFuzzymatching="${useFuzzymatching}"
-												 templateId="${entityToImportSelectedTemplateId}" allfieldtypes="true"
-												 treshold="0.3" extraOptions="${gdtImporter_extraOptions}"/>
+												 templateId="${entityToImportSelectedTemplateId}"
+												 treshold="0.3" extraOptions="${NONGENERIC_extraOptions}"/>
 				</th>
 				<!-- build up a string with fuzzy matches used, to prevent duplicate fuzzy matching -->
 				<g:set var="usedfuzzymatches" value="${usedfuzzymatches + ',' + fuzzymatch.toString() }"/>
@@ -101,7 +101,7 @@
 		</tr>
 		</thead>
 		<tbody>
-		<g:each var="row" in="${gdtImporter_dataMatrix}">
+		<g:each var="row" in="${dataMatrix}">
 			<tr>
 				<g:each var="column" in="${row}">
 					<td class="dataMatrix">

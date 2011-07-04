@@ -161,9 +161,9 @@ class GdtImporterController {
                 flow.entityToImportSelectedTemplateId = params.entityToImportSelectedTemplateId
 
                 // TODO: specific code, should be moved outside of the gdtImporters
-                flow.gdtImporter_attachSamplesToSubjects    = (params.attachSamples == 'on')
-                flow.gdtImporter_attachEventsToSubjects     = (params.attachEvents == 'on')
-                flow.gdtImporter_samplingEventTemplate      = (Template.get(params.samplingEvent_template))
+                flow.NONGENERIC_attachSamplesToSubjects    = (params.attachSamples == 'on')
+                flow.NONGENERIC_attachEventsToSubjects     = (params.attachEvents == 'on')
+                flow.NONGENERIC_samplingEventTemplate      = (Template.get(params.samplingEvent_template))
 
                 if (!flash.refreshParams.importFileName) {
                     log.error('.gdtImporterWizard [fileImportPage] no file specified.')
@@ -209,7 +209,7 @@ class GdtImporterController {
 
 				def template = Template.get(flow.entityToImportSelectedTemplateId)
 
-                flow.gdtImporter_importmappings = GdtImportMapping.findAllByTemplate(template)
+                flow.ImportMappingList = GdtImportMapping.findAllByTemplate(template)
 
 				flow.page = 2
 				success()
@@ -217,17 +217,17 @@ class GdtImporterController {
 			on("refresh") {
 
 				def template = Template.get(flow.entityToImportSelectedTemplateId)
-				flow.gdtImporter_importmappings = GdtImportMapping.findAllByTemplate(template)
+				flow.ImportMappingList = GdtImportMapping.findAllByTemplate(template)
 
 				// a name was given to the current property mapping, try to store it
-				if (params.mappingname) {
-					flash.gdtImporter_columnproperty = params.columnproperty
-					 flow.gdtImporter_importmapping = propertiesSaveImportMappingPage(flow, flash, params)
+				if (params.importMappingName) {
+					flash.columnProperty = params.columnproperty
+					 flow.importMappingInstance = propertiesSaveImportMappingPage(flow, flash, params)
 				} else // trying to load an existing import mapping
-                    if (params.loadimportmapping_id) {
-                        flow.gdtImporter_importmapping = propertiesLoadImportMappingPage(flow, flash, params)
+                    if (params.loadImportMappingId) {
+                        flow.importMappingInstance = propertiesLoadImportMappingPage(flow, flash, params)
                     } else // trying to delete an existing import mapping
-                    if (params.deleteimportmapping_id) {
+                    if (params.deleteImportMappingId) {
                         propertiesDeleteImportMappingPage(flow, flash, params)
                     }
 
@@ -282,11 +282,11 @@ class GdtImporterController {
                 (importedEntitiesList, numberOfUpdatedEntities, numberOfChangedTemplates) = gdtImporterService.replaceEntitiesByExistingOnesIfNeeded(importedEntitiesList, flow.parentEntityObject, grailsApplication.config.gdtImporter.childEntityParentName)
 
                 if (numberOfUpdatedEntities) {
-                    if (flow.gdtImporter_attachSamplesToSubjects) {
+                    if (flow.NONGENERIC_attachSamplesToSubjects) {
 
                         appendErrorMap(['Error': "There are $numberOfUpdatedEntities samples that exist in the database. In 'attach samples to existing subjects' mode it is not possible to update existing samples."], flow.wizardErrors)
 
-                    } else if (flow.gdtImporter_attachEventsToSubjects) {
+                    } else if (flow.NONGENERIC_attachEventsToSubjects) {
 
                         appendErrorMap(['Error': "There are $numberOfUpdatedEntities events that exist in the database. In 'attach events to existing subjects' mode it is not possible to update existing events."], flow.wizardErrors)
 
@@ -300,19 +300,19 @@ class GdtImporterController {
                 // overwrite the flow's entityList and store amount of
                 // updated entities in the flow.
                 flow.importedEntitiesList = importedEntitiesList
-                flow.gdtImporter_numberOfUpdatedEntities = numberOfUpdatedEntities
+                flow.numberOfUpdatedEntities = numberOfUpdatedEntities
 
                 // try to validate the entities
-                flow.gdtImporter_failedFields = doValidation(flow, importedEntitiesList, flow.parentEntityObject) + failedFields
+                flow.failedFields = doValidation(flow, importedEntitiesList, flow.parentEntityObject) + failedFields
 
-                if (flow.gdtImporter_failedFields) {
+                if (flow.failedFields) {
 
                     error()
 
                 } else {
 
                     // TODO: specific code, should be moved outside of the gdtImporter
-                    if (flow.gdtImporter_attachEventsToSubjects) {
+                    if (flow.NONGENERIC_attachEventsToSubjects) {
 
                         // In this mode it is expected to have events be repeated
                         // in order to relate the same event to different subjects.
@@ -321,7 +321,7 @@ class GdtImporterController {
                         // the original event order to the consolidated events.
                         def (consolidatedEvents, eventIndices) = gdtImporterService.consolidateEntities(flow.importedEntitiesList)
                         flow.importedEntitiesList       = consolidatedEvents
-                        flow.gdtImporter_eventIndices   = eventIndices
+                        flow.NONGENERIC_eventIndices   = eventIndices
 
                     }
 
@@ -347,25 +347,25 @@ class GdtImporterController {
 
                 // TODO: specific code, should be moved outside of the gdtImporter
                 // If we're in 'attach samples to subjects' mode, now it's time to do so
-                if (flow.gdtImporter_attachSamplesToSubjects) {
+                if (flow.NONGENERIC_attachSamplesToSubjects) {
 
                     gdtImporterService.attachSamplesToSubjects(
                             flow.importedEntitiesList,                  // samples
-                            flow.gdtImporter_subjectNamesToAttach,      // subject names from the sheet representing subject to attach samples to
-                            flow.gdtImporter_timePoints,                // time points from the sheet that will be stored in sampling events
-                            flow.gdtImporter_template,                  // sample template
+                            flow.NONGENERIC_subjectNamesToAttach,      // subject names from the sheet representing subject to attach samples to
+                            flow.NONGENERIC_timePoints,                // time points from the sheet that will be stored in sampling events
+                            flow.entityToImportTemplate,                  // sample template
                             flow.parentEntityObject,
-                            flow.gdtImporter_samplingEventTemplate      // the sampling event template for the sampling events that will be generated
+                            flow.NONGENERIC_samplingEventTemplate      // the sampling event template for the sampling events that will be generated
                     )
 
                 // TODO: specific code, should be moved outside of the gdtImporter
                 // Or are we in 'attach events to subjects' mode?
-                } else if (flow.gdtImporter_attachEventsToSubjects) {
+                } else if (flow.NONGENERIC_attachEventsToSubjects) {
 
                     gdtImporterService.attachEventsToSubjects(
                             flow.importedEntitiesList,                  // events
-                            flow.gdtImporter_eventIndices,              // indices relating row number to unique event
-                            flow.gdtImporter_subjectNamesToAttach,      // subject names from the sheet representing subject to attach events to
+                            flow.NONGENERIC_eventIndices,              // indices relating row number to unique event
+                            flow.NONGENERIC_subjectNamesToAttach,      // subject names from the sheet representing subject to attach events to
                             flow.parentEntityObject)
 
                 // We're in 'standard' mode.
@@ -522,7 +522,7 @@ class GdtImporterController {
             workbook.getNumberOfSheets().times {
                 sheets.add (it+1)
             }
-            flow.gdtImporter_sheets = sheets
+            flow.sheetList = sheets
 
         } catch (Exception e) {
             log.error ".importer wizard could not load file: " + e
@@ -544,43 +544,41 @@ class GdtImporterController {
 			def entityName = gdtService.decryptEntity(params.templateBasedEntity.decodeURL())
 
 			flow.entityToImportSelectedTemplateId = params.entityToImportSelectedTemplateId
-			flow.gdtImporter_sheetIndex = params.sheetIndex.toInteger() // 0 == first sheet
-			flow.gdtImporter_headerRowIndex = params.headerRowIndex.toInteger()
+			flow.sheetIndex = params.sheetIndex.toInteger() // 0 == first sheet
+			flow.headerRowIndex = params.headerRowIndex.toInteger()
 			flow.entityToImportClass = gdtService.getInstanceByEntityName(entityName)
 			flow.entityToImport = gdtService.cachedEntities.find { it.entity == entityName }
 
-            flow.gdtImporter_template = Template.get(flow.entityToImportSelectedTemplateId)
+            flow.entityToImportTemplate = Template.get(flow.entityToImportSelectedTemplateId)
 
-            def entityInstance = flow.entityToImportClass.newInstance(template: flow.gdtImporter_template)
+            def entityInstance = flow.entityToImportClass.newInstance(template: flow.entityToImportTemplate)
 
             // Load raw data
-            flow.gdtImporter_dataMatrix = gdtImporterService.getDataMatrix(workbook, flow.gdtImporter_sheetIndex, 0)
+            flow.dataMatrix = gdtImporterService.getDataMatrix(workbook, flow.sheetIndex, 0)
 
 			// Get the header from the Excel file using the arguments given in the first step of the wizard
-			flow.gdtImporter_header = gdtImporterService.getHeader(
-                    flow.gdtImporter_dataMatrix,
-                    flow.gdtImporter_headerRowIndex,
+			flow.header = gdtImporterService.getHeader(
+                    flow.dataMatrix,
+                    flow.headerRowIndex,
                     entityInstance)
 
 			// Remove all rows before and including the header to keep only the "real" data
-            flow.gdtImporter_dataMatrix -= flow.gdtImporter_dataMatrix[0..flow.gdtImporter_headerRowIndex]
-
-			flow.gdtImporter_allfieldtypes = "true"
+            flow.dataMatrix -= flow.dataMatrix[0..flow.headerRowIndex]
 
             // TODO: specific code, should be moved outside of the gdtImporter
             // if the user wants to add the samples or events to existing
             // subjects make it possible to select the required extra options
-            if (flow.gdtImporter_attachSamplesToSubjects) {
+            if (flow.NONGENERIC_attachSamplesToSubjects) {
 
-                flow.gdtImporter_extraOptions = [
+                flow.NONGENERIC_extraOptions = [
                         [preferredIdentifier: false, name: 'Subject name', unit: false],
                         [preferredIdentifier: false, name: 'Timepoint', unit: false]
                 ]
 
             // TODO: specific code, should be moved outside of the gdtImporter
-            } else if (flow.gdtImporter_attachEventsToSubjects) {
+            } else if (flow.NONGENERIC_attachEventsToSubjects) {
 
-                flow.gdtImporter_extraOptions = [
+                flow.NONGENERIC_extraOptions = [
                         [preferredIdentifier: false, name: 'Subject name', unit: false],
                 ]
 
@@ -602,11 +600,11 @@ class GdtImporterController {
 	 * @returns return GdtImportMapping object
 	 */
 	def propertiesLoadImportMappingPage(flow, flash, params) {
-		def im = GdtImportMapping.get(params.loadimportmapping_id.toInteger())
+		def im = GdtImportMapping.get(params.loadImportMappingId.toInteger())
 		im.refresh()
 
 		im.gdtmappingcolumns.each { gdtMappingColumn ->
-			flow.gdtImporter_header[gdtMappingColumn.index.toInteger()] = gdtMappingColumn
+			flow.header[gdtMappingColumn.index.toInteger()] = gdtMappingColumn
 		}
 
         im
@@ -620,7 +618,7 @@ class GdtImporterController {
 	 * @returns return ImportMapping object
 	 */
 	def propertiesDeleteImportMappingPage(flow, flash, params) {
-        def importmapping_id = params.deleteimportmapping_id.toLong()
+        def importmapping_id = params.deleteImportMappingId.toLong()
 
         // Manual deletion is necessary; the delete isn't performed by Hibernate directly and this
         // results in deleted items being still visible in the dropdown box
@@ -646,7 +644,7 @@ class GdtImporterController {
 		def template = Template.get(flow.entityToImportSelectedTemplateId)
 
 		// Create new GDTImportMapping instance and persist it
-		def im = new GdtImportMapping(name: params.mappingname, entity: flow.entityToImportClass, template: template).save()
+		def im = new GdtImportMapping(name: params.importMappingName, entity: flow.entityToImportClass, template: template).save()
 
 		params.columnproperty.index.each { columnindex, property ->
 
@@ -662,7 +660,7 @@ class GdtImporterController {
 
             // Create new GDTMappingColumn instance
             def mc = new GdtMappingColumn(gdtimportmapping: im,
-                name: flow.gdtImporter_header[columnindex.toInteger()].name,
+                name: flow.header[columnindex.toInteger()].name,
                 property: property,
                 index: columnindex,
                 entityclass: flow.entityToImportClass,
@@ -716,7 +714,7 @@ class GdtImporterController {
 
 		params.columnproperty.index.each { columnIndex, property ->
 
-            def column = flow.gdtImporter_header[columnIndex.toInteger()]
+            def column = flow.header[columnIndex.toInteger()]
 
 			// Store the selected property for this column into the column map for the gdtImporterService
 			column.property = property
@@ -731,18 +729,18 @@ class GdtImporterController {
 
         // TODO: specific code, should be moved outside of the gdtImporter
         // check whether the user entered the required fields when in 'attach samples/events to subjects' mode
-        if (flow.gdtImporter_attachSamplesToSubjects || flow.gdtImporter_attachEventsToSubjects) {
+        if (flow.NONGENERIC_attachSamplesToSubjects || flow.NONGENERIC_attachEventsToSubjects) {
 
-            def subjectNameColumnNumber = flow.gdtImporter_header.findIndexOf{it.property == "Subject name"}
+            def subjectNameColumnNumber = flow.header.findIndexOf{it.property == "Subject name"}
 
-            flow.gdtImporter_header[subjectNameColumnNumber].dontimport = true
+            flow.header[subjectNameColumnNumber].dontimport = true
 
             // store subject names in the flow
-            flow.gdtImporter_subjectNamesToAttach = flow.gdtImporter_dataMatrix.collect{it[subjectNameColumnNumber]}
+            flow.NONGENERIC_subjectNamesToAttach = flow.dataMatrix.collect{it[subjectNameColumnNumber]}
 
             def studySubjectNames = flow.parentEntityObject.subjects*.name
 
-            def missingSubjectNames = flow.gdtImporter_subjectNamesToAttach.clone().unique()
+            def missingSubjectNames = flow.NONGENERIC_subjectNamesToAttach.clone().unique()
             missingSubjectNames.removeAll( studySubjectNames )
 
             if (missingSubjectNames) {
@@ -753,23 +751,23 @@ class GdtImporterController {
         }
 
         // TODO: specific code, should be moved outside of the gdtImporter
-        if (flow.gdtImporter_attachSamplesToSubjects) {
+        if (flow.NONGENERIC_attachSamplesToSubjects) {
 
-            if (!flow.gdtImporter_samplingEventTemplate) {
+            if (!flow.NONGENERIC_samplingEventTemplate) {
                 log.error 'importer wizard - no sampling event template selected'
                 appendErrorMap(['error': "When attaching samples to subjects you need to supply a sampling event template. Please add a sampling event template first."], flow.wizardErrors)
                 return false
             }
 
             // store timepoints in the flow
-            def timepointColumnNumber   = flow.gdtImporter_header.findIndexOf{it.property == "Timepoint"}
-            flow.gdtImporter_header[timepointColumnNumber].dontimport = true
+            def timepointColumnNumber   = flow.header.findIndexOf{it.property == "Timepoint"}
+            flow.header[timepointColumnNumber].dontimport = true
 
-            flow.gdtImporter_timePoints = flow.gdtImporter_dataMatrix.collect{it[timepointColumnNumber]}
+            flow.NONGENERIC_timePoints = flow.dataMatrix.collect{it[timepointColumnNumber]}
             // TODO: check timepoints for valid values
 
             // check whether user specified subject names and timepoints
-            if (!(flow.gdtImporter_subjectNamesToAttach && flow.gdtImporter_timePoints )) {
+            if (!(flow.NONGENERIC_subjectNamesToAttach && flow.NONGENERIC_timePoints )) {
                 log.error ".importer wizard - could not find both subject name and timepoint selected in the header columns."
                 appendErrorMap(['error': "When attaching samples to subjects you need to select both \"Subject name\" and \"Timepoint\" in the header columns."], flow.wizardErrors)
                 return false
@@ -777,8 +775,8 @@ class GdtImporterController {
 
 
             // search the parent entity for samples with the same name
-            def sampleNameColumnNumber  = flow.gdtImporter_header.findIndexOf{it.property == "name"}
-            def existingSamples         = flow.gdtImporter_dataMatrix.collect{it[sampleNameColumnNumber]}.findAll{ sampleName ->
+            def sampleNameColumnNumber  = flow.header.findIndexOf{it.property == "name"}
+            def existingSamples         = flow.dataMatrix.collect{it[sampleNameColumnNumber]}.findAll{ sampleName ->
                 flow.parentEntityObject.samples.find{it.name == sampleName}
             }
             // Don't allow to continue when there are pre-existing samples in the sheet
@@ -792,8 +790,8 @@ class GdtImporterController {
 
 		// Import the workbook and store the table with entity records and store the failed cells
 		def (importedEntitiesList, failedFields) = gdtImporterService.getDataMatrixAsEntityList(flow.entityToImport, template,
-			flow.gdtImporter_dataMatrix,
-			flow.gdtImporter_header,
+			flow.dataMatrix,
+			flow.header,
             flow.dateFormat)
 
         if (!importedEntitiesList) {
@@ -808,7 +806,7 @@ class GdtImporterController {
         def failedFieldsList = failedFields + doValidation(flow, importedEntitiesList, flow.parentEntityObject)
 
         // Remove redundant entities where original value is empty and same entity also contains an invalid value
-        flow.gdtImporter_failedFields = failedFieldsList.groupBy{it.entity.toString().trim()}.collect { entity ->
+        flow.failedFields = failedFieldsList.groupBy{it.entity.toString().trim()}.collect { entity ->
            [entity: entity.key, originalValue: (entity.value.size() > 1) ? entity.value.originalValue.find{it} : entity.value.originalValue[0]]
         }
 

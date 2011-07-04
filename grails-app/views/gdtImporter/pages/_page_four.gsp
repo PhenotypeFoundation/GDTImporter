@@ -17,9 +17,9 @@
   <g:if test="${importedEntitiesList.size() == 1}">entity.</g:if>
   <g:else >entities.</g:else>
 
-  <g:if test="${gdtImporter_numberOfUpdatedEntities}" >
-    Of those entities, ${gdtImporter_numberOfUpdatedEntities} already
-    <g:if test="${gdtImporter_numberOfUpdatedEntities == 1}" >
+  <g:if test="${numberOfUpdatedEntities}" >
+    Of those entities, ${numberOfUpdatedEntities} already
+    <g:if test="${numberOfUpdatedEntities == 1}" >
       exists
     </g:if>
     <g:else>

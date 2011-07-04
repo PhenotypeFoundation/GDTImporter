@@ -48,7 +48,7 @@
         </td>
         <td width="100px">
           <g:select name="sheetIndex" value="${refreshParams?.sheetIndex}"
-                    from="${gdtImporter_sheets}"
+                    from="${sheetList}"
                     optionKey="${{it-1}}"
                     onchange="updateDatamatrixPreview()" />
         </td>

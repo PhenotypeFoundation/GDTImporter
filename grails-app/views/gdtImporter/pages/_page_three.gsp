@@ -13,12 +13,12 @@
 %>
 <af:page>
 
-  <g:if test="${gdtImporter_failedFields}">
+  <g:if test="${failedFields}">
     <h1>Please correct the failed property assignments and make any further adjustments if required</h1>
   </g:if>
   <g:else>
     <h1>Please make any adjustments if required</h1>
   </g:else>
 
-  <GdtImporter:validation entityList="${importedEntitiesList}" failedFields="${gdtImporter_failedFields}"/>
+  <GdtImporter:validation entityList="${importedEntitiesList}" failedFields="${failedFields}"/>
 </af:page>

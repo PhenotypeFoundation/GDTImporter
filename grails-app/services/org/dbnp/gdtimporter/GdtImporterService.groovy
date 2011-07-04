@@ -422,6 +422,8 @@ class GdtImporterService {
 
         }
 
+        println "das " + failedFields
+
         failedFields
 
 	}
