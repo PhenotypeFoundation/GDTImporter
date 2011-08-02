@@ -64,6 +64,20 @@ class GdtImporterTagLib {
 		out << render(template: "common/validation", plugin: "gdtimporter", model: [entityList: entityList, failedFields: failedFields])
 	}
 
+   /**
+     * Show checkbox and put it checked if more than 50 rows, if more than 300 rows show a warning
+     *
+     *  @param size datamatrix size (number of rows)
+     *  @param checkedIfRowsMoreThan amount of rows required to set the checkbox on checked
+     *  @param warningIfRowsMoreThan amount of rows before a warning is given
+     */
+    def showTableEditorCheckBox= { attrs ->
+        def warningMessage = "if (\$('#showTableEditor').is(':checked')) alert ('Warning: you are importing a large number of rows, using this function might render the import wizard unresponsive.')"
+
+        out << "Show editable table before importing " + g.checkBox(id:"showTableEditor", name:"showTableEditor", checked: (attrs.size.toInteger()>=attrs.checkedIfRowsMoreThan.toInteger()),
+                onClick:(attrs.warningIfRowsMoreThan.toInteger() >= attrs.size.toInteger()) ? "":warningMessage)
+    }
+
 	/**	 
 	 * @param header array containing mappingcolumn objects	 
 	 */

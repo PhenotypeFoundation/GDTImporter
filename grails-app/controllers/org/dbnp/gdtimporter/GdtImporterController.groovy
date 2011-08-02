@@ -378,7 +378,10 @@ class GdtImporterController {
                             grailsApplication.config.gdtImporter.childEntityParentName)
 
                     if (!flow.parentEntityObject.save()) {
-                        log.error ".gdtImporter [confirmation page] could not save parent entity."
+                        log.error ".gdtImporter [confirmation page] could not save parent entity, see errors:"
+                         flow.parentEntityObject.errors.each {
+                            println it
+                         }
                         error()
                     } else success()
 
@@ -432,7 +435,7 @@ class GdtImporterController {
      * Collects validation errors. Explicitly checks for unique constraint
      * validation errors for entities belonging to a parent entity. Fills
      *
-	 * @param flow flow we are in
+     * @param flow flow we are in
      * @param entityList The entity list
      * @param parentEntity The parent entity (if any
      * @return a list of validation errors
