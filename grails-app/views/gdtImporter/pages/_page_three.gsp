@@ -20,5 +20,25 @@
     <h1>Please make any adjustments if required</h1>
   </g:else>
 
+  <g:if test="${showTableEditor == 'on'}">
   <GdtImporter:validation entityList="${importedEntitiesList}" failedFields="${failedFields}"/>
+  </g:if>
+  <g:else>
+      <table>
+          <tr>
+              <td><b>Entity</b></td>
+              <td><b>Original value</b></td>
+          </tr>
+        <g:each var="failedfield" in="${failedFields}">
+            <tr>
+                 <td>
+                     ${failedfield.entity}
+                     </td>
+                 <td>
+                     ${failedfield.originalValue}
+                 </td>
+            </tr>
+        </g:each>
+      </table>
+  </g:else>
 </af:page>

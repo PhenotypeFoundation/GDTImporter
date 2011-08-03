@@ -238,6 +238,7 @@ class GdtImporterController {
 
 			on("next") {
 				flow.useFuzzymatching = "false"
+                flow.showTableEditor = params.showTableEditor
 
                 flow.wizardErrors = [:]
 

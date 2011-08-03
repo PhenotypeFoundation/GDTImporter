@@ -65,10 +65,10 @@ class GdtImporterTagLib {
 	}
 
    /**
-     * Show checkbox and put it checked if more than 50 rows, if more than 300 rows show a warning
+     * Show checkbox and put it checked if more than 'checkedIfRowsMoreThan' rows, show a warning if more than 'warningIfRowsMoreThan' rows
      *
      *  @param size datamatrix size (number of rows)
-     *  @param checkedIfRowsMoreThan amount of rows required to set the checkbox on checked
+     *  @param checkedIfRowsMoreThan amount of rows required to set the checkbox to checked
      *  @param warningIfRowsMoreThan amount of rows before a warning is given
      */
     def showTableEditorCheckBox= { attrs ->
