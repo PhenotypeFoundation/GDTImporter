@@ -13,12 +13,15 @@
 %>
 <af:page>
 
-  <g:if test="${failedFields}">
+  <g:if test="${failedFields && showTableEditor}">
     <h1>Please correct the failed property assignments and make any further adjustments if required</h1>
   </g:if>
-  <g:else>
+  <g:elseif test="${failedFields && !showTableEditor}">
+    <h1>You are seeing a preview of the data, you will not be able to in-browser edit the data</h1>
+  </g:elseif>
+  <g:elseif test="${1}">
     <h1>Please make any adjustments if required</h1>
-  </g:else>
+  </g:elseif>
 
   <g:if test="${showTableEditor == 'on'}">
   <GdtImporter:validation entityList="${importedEntitiesList}" failedFields="${failedFields}"/>

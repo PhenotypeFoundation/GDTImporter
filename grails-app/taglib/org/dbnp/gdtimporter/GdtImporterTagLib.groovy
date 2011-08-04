@@ -22,6 +22,7 @@
 package org.dbnp.gdtimporter
 
 import org.dbnp.gdt.*
+import grails.converters.JSON
 
 /**
  * The GdtImporter tag library contains easy tags for displaying and
@@ -85,7 +86,22 @@ class GdtImporterTagLib {
      */
 
     def previewImportedAndFailedEntities = { attrs ->
-        out << '<table><thead><tr><th>Entity</th><th>Failed fields</th></tr></thead>'
+
+        out << '<script>'
+        out << '$(document).ready(function() {'
+	    out << '$("#previewImportedAndFailedEntities").dataTable( { "sScrollX": "100%", "bScrollCollapse": true, "bPaginate": false, "bSort" : false })'
+        out << "} );"
+        out << '</script>'
+
+        out << '<table id="previewImportedAndFailedEntities" class="display"><thead><tr>'
+
+        // Give all fields of the entity to build up the table header for the datatables JS library
+        attrs.entityList[0].giveFields().each {
+            out << "<th>${it}</th>"
+        }
+
+        out << '</tr></thead>'
+        out << '<tbody>'
 
         // For every entity check the failed fields
         attrs.entityList.each { importedEntity ->
@@ -95,14 +111,22 @@ class GdtImporterTagLib {
                 field.identifier == importedEntity.identifier
             }
 
-            failedFieldList.each { failedField ->
-                out << '<tr>'
-                out << '<td>' + importedEntity + '</td>'
-                out << '<td>' + failedField.originalValue + '</td>'
-                out << '</tr>'
-            }
+
+            // For every entity show the fields and the values, including the highlighting of failed fields
+            out << '<tr>'
+                importedEntity.giveFields().each { field ->
+                    out << "<td>${ (importedEntity.getFieldValue(field.name)) ?:""}"
+
+                    // Highlight the current cell if it is listed in the failed fields collection
+                    if (attrs.failedFields.find { it.identifier == importedEntity.identifier && it.property == field.name})
+                        out << ' <span style="color:red"><b> (invalid)</b></span>'
+
+                    out << "</td>"
+                }
+            out << '</tr>'
         }
 
+        out << '</tbody>'
         out << '</table>'
     }
 
