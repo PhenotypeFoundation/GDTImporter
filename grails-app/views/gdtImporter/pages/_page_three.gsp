@@ -24,21 +24,6 @@
   <GdtImporter:validation entityList="${importedEntitiesList}" failedFields="${failedFields}"/>
   </g:if>
   <g:else>
-      <table>
-          <tr>
-              <td><b>Entity</b></td>
-              <td><b>Original value</b></td>
-          </tr>
-        <g:each var="failedfield" in="${failedFields}">
-            <tr>
-                 <td>
-                     ${failedfield.entity}
-                     </td>
-                 <td>
-                     ${failedfield.originalValue}
-                 </td>
-            </tr>
-        </g:each>
-      </table>
+    <GdtImporter:previewImportedAndFailedEntities entityList="${importedEntitiesList}" failedFields="${failedFields}"/>
   </g:else>
 </af:page>

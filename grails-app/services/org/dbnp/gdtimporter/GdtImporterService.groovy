@@ -320,7 +320,7 @@ class GdtImporterService {
 
                     } catch(Exception e) {
 
-                        failedFields += [entity: cellName, originalValue: value]
+                        failedFields += [error: 'Empty or non-valid value', identifier: entity.getIdentifier(), property: field.name, entity: cellName, originalValue: value]
 
                     }
                 }
@@ -393,7 +393,9 @@ class GdtImporterService {
                 // property. Add corresponding entries to 'failedFields'.
                 failedFields += entityList.findAll { it."$propertyName" in duplicates }.collect { duplicate ->
 
-                    [   entity :        "entity_${duplicate.identifier}_$propertyName",
+                    [   identifier: duplicate.getIdentifier(),
+                        entity :        "entity_${duplicate.identifier}_$propertyName",
+                        property: propertyName,
                         originalValue : duplicate[propertyName] ]
 
                 }
@@ -462,7 +464,7 @@ class GdtImporterService {
                     def entityIdentifier = "entity_${entity.identifier}_${fieldError.field.toLowerCase().replaceAll("([^a-z0-9])", "_")}"
                     if (!failedFields.find {
                             it.entity == entityIdentifier
-                        }) failedFields += [entity: entityIdentifier, originalValue: fieldError.rejectedValue ?: '']
+                        }) failedFields += [error:fieldError, identifier:entity.getIdentifier(), property:fieldError.field.toLowerCase().replaceAll("([^a-z0-9])", "_"), entity: entityIdentifier, originalValue: fieldError.rejectedValue ?: '']
                 }
             }
         }
@@ -772,7 +774,7 @@ class GdtImporterService {
 
 					// Store the fieldError value (might improve this with name of entity instead of "entity_")
                     // as a map containing the entity+identifier+property and the original value which failed
-                    error = [ entity: "entity_" + entity.getIdentifier() + "_" + mc.property.toLowerCase(), originalValue: value]
+                    error = [ error: 'Empty or non-valid value', identifier: entity.getIdentifier(), property: mc.property.toLowerCase(), entity: "entity_" + entity.getIdentifier() + "_" + mc.property.toLowerCase(), originalValue: value]
 				}
 			}
 		}

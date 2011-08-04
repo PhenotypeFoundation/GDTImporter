@@ -68,14 +68,42 @@ class GdtImporterTagLib {
      * Show checkbox and put it checked if more than 'checkedIfRowsMoreThan' rows, show a warning if more than 'warningIfRowsMoreThan' rows
      *
      *  @param size datamatrix size (number of rows)
-     *  @param checkedIfRowsMoreThan amount of rows required to set the checkbox to checked
+     *  @param checkedIfRowsLessThan amount of rows required to set the checkbox to checked
      *  @param warningIfRowsMoreThan amount of rows before a warning is given
      */
     def showTableEditorCheckBox= { attrs ->
         def warningMessage = "if (\$('#showTableEditor').is(':checked')) alert ('Warning: you are importing a large number of rows, using this function might render the import wizard unresponsive.')"
 
-        out << "Show editable table before importing " + g.checkBox(id:"showTableEditor", name:"showTableEditor", checked: (attrs.size.toInteger()>=attrs.checkedIfRowsMoreThan.toInteger()),
+        out << "Show editable table before importing " + g.checkBox(id:"showTableEditor", name:"showTableEditor", checked: (attrs.size.toInteger()<=attrs.checkedIfRowsLessThan.toInteger()),
                 onClick:(attrs.warningIfRowsMoreThan.toInteger() >= attrs.size.toInteger()) ? "":warningMessage)
+    }
+
+    /**
+     * @param entityList list of imported entities
+     * @param failedFields list of failed fields
+     * @return preview of the imported entities
+     */
+
+    def previewImportedAndFailedEntities = { attrs ->
+        out << '<table><thead><tr><th>Entity</th><th>Failed fields</th></tr></thead>'
+
+        // For every entity check the failed fields
+        attrs.entityList.each { importedEntity ->
+
+            // Find all fields which failed for the current entity
+            def failedFieldList = attrs.failedFields.findAll { field ->
+                field.identifier == importedEntity.identifier
+            }
+
+            failedFieldList.each { failedField ->
+                out << '<tr>'
+                out << '<td>' + importedEntity + '</td>'
+                out << '<td>' + failedField.originalValue + '</td>'
+                out << '</tr>'
+            }
+        }
+
+        out << '</table>'
     }
 
 	/**	 

@@ -15,7 +15,7 @@
 	<h1>Assign properties to columns</h1>
 
 	Below you see a preview of your imported file, please correct the automatically detected types.<br/>
-    <p><GdtImporter:showTableEditorCheckBox size="${dataMatrix.size()}" checkedIfRowsMoreThan="50" warningIfRowsMoreThan="300"/></p>
+    <p><GdtImporter:showTableEditorCheckBox size="${dataMatrix.size()}" checkedIfRowsLessThan="50" warningIfRowsMoreThan="300"/></p>
 	<GdtImporter:properties header="${header}" dataMatrix="${dataMatrix}"/>
 	<script language="text/javascript">
 		$('html, body').animate({scrollTop:0}, 'fast');
