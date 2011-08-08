@@ -88,7 +88,7 @@
                 $(':checkbox[name=attachSamples]').bind('click', function() {
                   ${remoteFunction( controller: 'gdtImporter',
                  	    action:'ajaxGetTemplatesByEntity',
-					    params: '\'entity='+samplingEventEntity.encodeAsURL()+'\'',
+					    params: '\'templateBasedEntity='+samplingEventEntity.encodeAsURL()+'\'',
 					    onSuccess:'updateSelect(\'samplingEvent_template_id\',data,false,false,\'default\',true)')}
                 })
               });
