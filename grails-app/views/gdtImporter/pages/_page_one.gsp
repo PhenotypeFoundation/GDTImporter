@@ -134,7 +134,7 @@
           <g:set var="templateBasedEntity" value="None" />
         </g:else>
 
-        <g:select rel="template" templateBasedEntity="${templateBasedEntity}" name="entityToImportSelectedTemplateId"
+        <g:select rel="template" entity="${templateBasedEntity}" name="entityToImportSelectedTemplateId"
                   noSelection="${['null':'-Select template-']}"
                   optionKey="id" optionValue="name"
                   from="${entityToImportTemplates}"

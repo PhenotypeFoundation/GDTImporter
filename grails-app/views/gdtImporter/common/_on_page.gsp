@@ -158,7 +158,7 @@
 
     if (uncheckAttachSamples) $('#attachSamples').attr('checked', false);
 
-    $('select[name=entityToImportSelectedTemplateId]').attr('templateBasedEntity', $('#' + 'templateBasedEntity').val());
+    $('select[name=entityToImportSelectedTemplateId]').attr('entity', $('#' + 'templateBasedEntity').val());
 
     if (items) {
 
@@ -204,7 +204,7 @@
       new SelectAddMore().init({
                 rel     : 'template',
                 url     : baseUrl + '/templateEditor',
-                vars    : 'templateBasedEntity', // can be a comma separated list of variable names to pass on
+                vars    : 'entity', // can be a comma separated list of variable names to pass on
                 label   : 'add / modify ...',
                 style   : 'modify',
                 onClose : function(scope) {
