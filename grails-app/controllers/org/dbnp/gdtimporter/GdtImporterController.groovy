@@ -882,7 +882,7 @@ class GdtImporterController {
      */
 
     def getDatamatrixAsJSON = {
-		def workbook
+		def workbook = null
 		def sheetIndex = 0
 		def numberOfSheets = 0
 
@@ -898,10 +898,11 @@ class GdtImporterController {
 		def headerColumns = []
 
 		if (importedFile.exists()) {
-			try {
-				workbook = gdtImporterService.getWorkbook(new FileInputStream(importedFile))
-			} catch (Exception e) {
-				log.error ".importer wizard could not load file, exception: " + e
+            workbook = gdtImporterService.getWorkbook(new FileInputStream(importedFile))
+
+            // A file was passed which could not be recognized by POI as an Excel file
+			if (!workbook) {
+                log.error ".importer wizard doesn't recognize the file, try a supported format like XLS(X)"
 				return false
 			}
 		}
