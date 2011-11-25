@@ -26,7 +26,6 @@ import grails.converters.JSON
 import org.codehaus.groovy.grails.plugins.web.taglib.ValidationTagLib
 import grails.plugins.springsecurity.Secured
 import org.codehaus.groovy.grails.commons.ApplicationHolder as AH
-import org.hibernate.FlushMode
 
 @Secured(['IS_AUTHENTICATED_REMEMBERED'])
 class GdtImporterController {
@@ -163,7 +162,7 @@ class GdtImporterController {
                 // TODO: specific code, should be moved outside of the gdtImporters
                 flow.NONGENERIC_attachSamplesToSubjects    = (params.attachSamples == 'on')
                 flow.NONGENERIC_attachEventsToSubjects     = (params.attachEvents == 'on')
-                flow.NONGENERIC_samplingEventTemplate      = (Template.get(params.samplingEvent_template))
+                flow.NONGENERIC_samplingEventTemplate      = (Template.get(params.samplingEvent_template ?: 0))
 
                 if (!flash.refreshParams.importFileName) {
                     log.error('.gdtImporterWizard [fileImportPage] no file specified.')
@@ -243,6 +242,8 @@ class GdtImporterController {
                 flow.wizardErrors = [:]
 
 				if (propertiesPage(flow, flash, params)) {
+					// Always show table editor in case of error so user can correct it
+					if (flow.wizardErrors) flow.showTableEditor = 'on'
 					success()
 				} else {
 					log.error ".import wizard, properties are set wrong"
