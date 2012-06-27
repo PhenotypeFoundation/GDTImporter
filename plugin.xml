@@ -1,25 +1,41 @@
-<plugin name='gdtimporter' version='0.4.6.7' grailsVersion='1.3.6 &gt; *'>
+<plugin name='gdtimporter' version='0.5.0' grailsVersion='1.3.7 &gt; *'>
   <author>Tjeerd Abma</author>
-  <authorEmail>t[dot]w[dot]abma[at]gmail[dot]com</authorEmail>
+  <authorEmail>t.w.abma@gmail.com</authorEmail>
   <title>Importer plugin for Grails Domain Templates (GDT)</title>
   <description>\
 This plugin allows one to import data into Grails Domain Templates (GDT).
 </description>
-  <documentation>http://grails.org/plugin/gdtimporter</documentation>
+  <documentation>https://github.com/PhenotypeFoundation/GDTImporter/blob/master/README.md</documentation>
+  <type>GdtimporterGrailsPlugin</type>
   <resources>
-    <resource>BuildConfig</resource>
-    <resource>Config</resource>
-    <resource>DataSource</resource>
-    <resource>UrlMappings</resource>
     <resource>org.dbnp.gdtimporter.GdtImporterController</resource>
     <resource>org.dbnp.gdtimporter.GdtImportMapping</resource>
     <resource>org.dbnp.gdtimporter.GdtMappingColumn</resource>
     <resource>org.dbnp.gdtimporter.GdtImporterService</resource>
     <resource>org.dbnp.gdtimporter.GdtImporterTagLib</resource>
   </resources>
-  <dependencies>
-    <plugin name='gdt' version='0.1.9 =&gt; *' />
-    <plugin name='ajaxflow' version='0.2.1 =&gt; *' />
-  </dependencies>
+  <repositories>
+    <repository name='grailsCentral' url='http://plugins.grails.org' />
+    <repository name='http://repo.grails.org/grails/plugins' url='http://repo.grails.org/grails/plugins/' />
+    <repository name='http://repo.grails.org/grails/core' url='http://repo.grails.org/grails/core/' />
+    <repository name='grailsCore' url='http://svn.codehaus.org/grails/trunk/grails-plugins' />
+    <repository name='http://grails.org/plugins' url='http://grails.org/plugins' />
+    <repository name='mavenCentral' url='http://repo1.maven.org/maven2/' />
+    <repository name='http://nexus.nmcdsp.org/content/repositories/releases' url='http://nexus.nmcdsp.org/content/repositories/releases/' />
+    <repository name='http://repository.springsource.com/maven/bundles/release' url='http://repository.springsource.com/maven/bundles/release/' />
+    <repository name='http://repository.springsource.com/maven/bundles/external' url='http://repository.springsource.com/maven/bundles/external/' />
+    <repository name='http://repository.springsource.com/maven/libraries/release' url='http://repository.springsource.com/maven/libraries/release/' />
+    <repository name='http://repository.springsource.com/maven/libraries/external' url='http://repository.springsource.com/maven/libraries/external/' />
+  </repositories>
+  <dependencies />
+  <plugins>
+    <compile>
+      <plugin group='org.grails.plugins' name='gdt' version='0.3.0' />
+    </compile>
+  </plugins>
+  <runtimePluginRequirements>
+    <plugin name='ajaxflow' version='0.2.1 &gt; *' />
+    <plugin name='gdt' version='0.1.9 &gt; *' />
+  </runtimePluginRequirements>
   <behavior />
 </plugin>
