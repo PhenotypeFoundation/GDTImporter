@@ -421,12 +421,13 @@ class GdtImporterController {
 		finalPage {
 			render(view: "_final_page", plugin: "gdtimporter")
 			onRender {
-                // Delete the uploaded file
-                fileService.delete flow.importFileName
-
                 success()
 			}
 			onEnd {
+			
+                // Delete the uploaded file
+                fileService.delete flow.importFileName			
+			
 				// clean flow scope
 				flow.clear()
 			}
@@ -532,6 +533,10 @@ class GdtImporterController {
         } catch (Exception e) {
             log.error ".importer wizard could not load file: " + e
             this.appendErrorMap(['error': "Wrong file (format), the importer requires an Excel file as input"], flow.wizardErrors)
+            
+            //remove tmp file
+            importedFile.delete()
+            
             return false
         }
 
@@ -904,6 +909,10 @@ class GdtImporterController {
             // A file was passed which could not be recognized by POI as an Excel file
 			if (!workbook) {
                 log.error ".importer wizard doesn't recognize the file, try a supported format like XLS(X)"
+                
+	            //remove tmp file
+     	       importedFile.delete()
+                
 				return false
 			}
 		}
