@@ -41,10 +41,10 @@ grails.project.dependency.resolution = {
                 ":jquery:1.7.2",
                 ":webflow:1.3.8",
                 ":ajaxflow:0.2.3",
-                ":crypto:2.0"
-//                ,
-//                ":spring-security-core:1.1.2"
-        ) {
+                ":crypto:2.0",
+                //":spring-security-core:1.1.2"
+				":spring-security-core:1.2.7.3") 
+		{
             export = false
         }
 
