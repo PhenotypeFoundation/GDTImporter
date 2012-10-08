@@ -505,7 +505,13 @@ class GdtImporterService {
         // generate sampling events based on the time points
         def samplingEvents = uniqueTimePoints.collect { String timePoint ->
 
-            def startTime = new RelTime(timePoint).getValue()
+            def startTime
+            try {
+                startTime = new RelTime(timePoint).getValue()
+            } catch (e) {
+                startTime = new RelTime('0s').getValue()
+                log.error "Invalid or no timepoint defined! : ${e}"
+            }
 
             // make sure all existing sampling events have identifiers
             parentEntity.samplingEvents*.identifier
@@ -539,7 +545,13 @@ class GdtImporterService {
         samples.eachWithIndex { sample, idx ->
 
             def subject         = subjects.find{it.name == subjectNames[idx]}
-            def startTime       = new RelTime(timePoints[idx]).getValue()
+            def startTime
+            try {
+                startTime = new RelTime(timePoints[idx]).getValue()
+            } catch (e) {
+                startTime = new RelTime('0s').getValue()
+                log.error "Invalid or no timepoint defined! : ${e}"
+            }
             def samplingEvent   = samplingEvents.find{it.startTime == startTime}
             def eventGroup      = eventGroups.find{it.samplingEvents.toList()[0] == samplingEvent}
 
@@ -551,7 +563,6 @@ class GdtImporterService {
             sample.parentEventGroup = eventGroup
 
         }
-
     }
 
     /**
