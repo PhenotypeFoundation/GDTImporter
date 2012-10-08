@@ -30,6 +30,7 @@ grails.project.dependency.resolution = {
 
     plugins {
         build(
+		":tomcat:$grailsVersion",
                 ":release:latest.integration",
                 ":rest-client-builder:latest.integration"
         ) {
@@ -38,6 +39,7 @@ grails.project.dependency.resolution = {
         }
 
         compile(
+                ":hibernate:$grailsVersion",
                 ":jquery:1.7.2",
                 ":webflow:1.3.8",
                 ":ajaxflow:0.2.3",
