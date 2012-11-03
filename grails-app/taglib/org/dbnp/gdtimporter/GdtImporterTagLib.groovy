@@ -161,7 +161,7 @@ class GdtImporterTagLib {
 		def fuzzyTreshold = attrs[ 'treshold' ] && attrs[ 'treshold' ].toString().isNumber() ? Float.valueOf( attrs[ 'treshold' ] ) : 0.1;
         def returnmatchonly = attrs['returnmatchonly']
 
-        def templatefields = t.fields + mc.entityclass.giveDomainFields() + (attrs.extraOptions ?: [])
+        def templatefields = t.fields + mc.entityclass.newInstance().giveDomainFields() + (attrs.extraOptions ?: [])
 
         //  Just return the matched value only
         if (returnmatchonly)
