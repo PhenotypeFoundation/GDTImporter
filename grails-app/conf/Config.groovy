@@ -24,3 +24,4 @@ log4j = {
 
 grails.views.gsp.encoding="UTF-8"
 grails.views.javascript.library = "jquery"
+grails.views.default.codec="none" // none, html, base64
