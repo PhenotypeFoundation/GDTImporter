@@ -59,7 +59,7 @@
 			</td>
 			<td width="100px">
 				<g:select name="headerRowIndex" from="${1..9}"
-						  value="${refreshParams?.headerRowIndex} optionKey="${{it-1}}"/>
+						  value="${refreshParams?.headerRowIndex}" optionKey="${{it-1}}"/>
 			</td>
 		</tr>
 		<tr>
