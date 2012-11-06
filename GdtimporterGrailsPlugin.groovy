@@ -20,7 +20,7 @@
  */
 
 class GdtimporterGrailsPlugin {
-    def version         = "0.5.6"
+    def version         = "0.5.6.1"
     def grailsVersion   = "1.3.7 > *"
     def dependsOn       = [ajaxflow: "0.2.1 > *", gdt: "0.3.5 > *"]
     def pluginExcludes  = [
@@ -41,6 +41,7 @@ This plugin allows one to import data into Grails Domain Templates (GDT).
     def developers      = [
             [ name: "Jeroen Wesbeek", email:  "work@osx.eu" ],
             [ name: "Kees van Bochove", email: "kees@thehyve.nl" ],
+            [ name: "Michael van Vliet", email: "m.s.vanvliet@lacdr.leidenuniv.nl" ],
             [ name: "Siemen Sikkema", email: "s.h.sikkema@gmail.com" ]
     ]
 

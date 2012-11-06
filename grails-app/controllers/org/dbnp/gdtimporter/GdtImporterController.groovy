@@ -76,7 +76,7 @@ class GdtImporterController {
             }
 
             // TODO: specific code, should be moved outside of the gdtImporter
-            flow.samplingEventEntity = gdtService.encryptEntity("dbnp.studycapturing.SamplingEvent")
+            flow.samplingEventEntity = gdtService.encodeEntity("dbnp.studycapturing.SamplingEvent")
 
 			success()
 		}
@@ -131,7 +131,7 @@ class GdtImporterController {
                 flash.refreshParams = params
 
                 // Put the entity object in the flow scope
-                def entityName = gdtService.decryptEntity(params.templateBasedEntity.decodeURL())
+                def entityName = gdtService.decodeEntity(params.templateBasedEntity.decodeURL())
                 flow.entityToImport = gdtService.cachedEntities.find { it.entity == entityName }
 
 				// If the file already exists an "existing*" string is added, but we don't
@@ -153,7 +153,7 @@ class GdtImporterController {
                 flow.dateFormat = params.dateFormat
 
                 // Put the entity object in the flow scope
-                def entityName = gdtService.decryptEntity(params.templateBasedEntity.decodeURL())
+                def entityName = gdtService.decodeEntity(params.templateBasedEntity.decodeURL())
                 flow.entityToImport = gdtService.cachedEntities.find { it.entity == entityName }
 
                 flow.parentEntityId = params.parentEntityId
@@ -174,7 +174,7 @@ class GdtImporterController {
 
 				if (params.templateBasedEntity != "null") {
 					flow.entityToImportTemplates = Template.findAllByEntity(gdtService.getInstanceByEntity(params.templateBasedEntity.decodeURL()))
-					def entityToImportType = gdtService.decryptEntity(params.templateBasedEntity.decodeURL()).toString().split(/\./)
+					def entityToImportType = gdtService.decodeEntity(params.templateBasedEntity.decodeURL()).toString().split(/\./)
 					flow.entityToImportType= entityToImportType[-1]
 				}
 
@@ -424,10 +424,10 @@ class GdtImporterController {
                 success()
 			}
 			onEnd {
-			
+
                 // Delete the uploaded file
-                fileService.delete flow.importFileName			
-			
+                fileService.delete flow.importFileName
+
 				// clean flow scope
 				flow.clear()
 			}
@@ -492,7 +492,7 @@ class GdtImporterController {
 
         if (params.templateBasedEntity!="null") {
             // fetch all templates for a specific entity
-            def entityName = gdtService.decryptEntity(params.templateBasedEntity.decodeURL())
+            def entityName = gdtService.decodeEntity(params.templateBasedEntity.decodeURL())
             def entityInstance = gdtService.getInstanceByEntityName(entityName)
             templates = Template.findAllByEntity(entityInstance)
         }
@@ -533,10 +533,10 @@ class GdtImporterController {
         } catch (Exception e) {
             log.error ".importer wizard could not load file: " + e
             this.appendErrorMap(['error': "Wrong file (format), the importer requires an Excel file as input"], flow.wizardErrors)
-            
+
             //remove tmp file
             importedFile.delete()
-            
+
             return false
         }
 
@@ -551,7 +551,7 @@ class GdtImporterController {
 		// parentEntity (e.g. a study) was selected, template selected and sheet index was selected
         if ( allFieldsValid ) {
 
-			def entityName = gdtService.decryptEntity(params.templateBasedEntity.decodeURL())
+			def entityName = gdtService.decodeEntity(params.templateBasedEntity.decodeURL())
 
 			flow.entityToImportSelectedTemplateId = params.entityToImportSelectedTemplateId
 			flow.sheetIndex = params.sheetIndex.toInteger() // 0 == first sheet
@@ -909,10 +909,10 @@ class GdtImporterController {
             // A file was passed which could not be recognized by POI as an Excel file
 			if (!workbook) {
                 log.error ".importer wizard doesn't recognize the file, try a supported format like XLS(X)"
-                
+
 	            //remove tmp file
      	       importedFile.delete()
-                
+
 				return false
 			}
 		}
