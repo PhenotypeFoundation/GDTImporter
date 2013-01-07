@@ -37,18 +37,12 @@ grails.project.dependency.resolution = {
         }
 
         compile(
-                ":hibernate:$grailsVersion",
-                ":jquery:1.7.2",
-                ":webflow:1.3.8",
-                ":ajaxflow:0.2.4",
-                //":spring-security-core:1.1.2"
-				":spring-security-core:1.2.7.3") 
-		{
+        ":webflow:2.0.0",
+        ":ajaxflow:latest.integration",
+        ":jquery:latest.integration",
+        ":crypto:2.0",
+        ":gdt:0.3.7.6") {
             export = false
-        }
-
-        compile(":gdt:0.3.5") {
-            export = true
         }
     }
 }

@@ -24,10 +24,8 @@ package org.dbnp.gdtimporter
 import org.dbnp.gdt.*
 import grails.converters.JSON
 import org.codehaus.groovy.grails.plugins.web.taglib.ValidationTagLib
-import grails.plugins.springsecurity.Secured
 import org.codehaus.groovy.grails.commons.ApplicationHolder as AH
 
-@Secured(['IS_AUTHENTICATED_REMEMBERED'])
 class GdtImporterController {
     def authenticationService
 	def fileService
