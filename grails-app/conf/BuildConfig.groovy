@@ -36,11 +36,8 @@ grails.project.dependency.resolution = {
             export = false
         }
 
-        compile ':webflow:2.0.0', {
-            exclude 'grails-webflow'
-        }
-
         compile(
+        ":webflow:2.0.0",
         ":ajaxflow:latest.integration",
         ":jquery:latest.integration",
         ":crypto:2.0",
