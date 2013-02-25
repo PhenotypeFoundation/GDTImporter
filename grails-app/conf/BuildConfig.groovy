@@ -16,7 +16,7 @@ grails.project.dependency.resolution = {
         grailsRepo "http://grails.org/plugins"
 
         mavenCentral()
-        mavenRepo "http://nexus.nmcdsp.org/content/repositories/releases"
+        mavenRepo "http://nexus.dbnp.org/content/repositories/releases"
         mavenRepo "http://repository.springsource.com/maven/bundles/release"
         mavenRepo "http://repository.springsource.com/maven/bundles/external"
         mavenRepo "http://repository.springsource.com/maven/libraries/release"
@@ -37,11 +37,13 @@ grails.project.dependency.resolution = {
         }
 
         compile(
-        ":webflow:2.0.0",
+        ":webflow:2.0.0" {
+            exclude 'grails-webflow'
+        },
         ":ajaxflow:latest.integration",
         ":jquery:latest.integration",
         ":crypto:2.0",
-        ":gdt:0.3.7.6") {
+        ":gdt:0.4.1") {
             export = false
         }
     }
