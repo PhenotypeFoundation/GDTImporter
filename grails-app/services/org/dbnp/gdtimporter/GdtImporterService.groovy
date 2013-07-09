@@ -785,7 +785,7 @@ class GdtImporterService {
 
 					// Store the fieldError value (might improve this with name of entity instead of "entity_")
                     // as a map containing the entity+identifier+property and the original value which failed
-                    error = [ error: 'Empty or non-valid value', identifier: entity.getIdentifier(), property: mc.property.toLowerCase(), entity: "entity_" + entity.getIdentifier() + "_" + mc.property.toLowerCase(), originalValue: value]
+                    error = [ error: 'Empty or non-valid value', identifier: entity.getIdentifier(), property: mc.property.toLowerCase(), entity: "entity_" + entity.getIdentifier() + "_" + mc.property.toLowerCase().replaceAll("([^a-z0-9])", "_"), originalValue: value]
 				}
 			}
 		}
