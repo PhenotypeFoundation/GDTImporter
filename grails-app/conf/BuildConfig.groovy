@@ -41,7 +41,7 @@ grails.project.dependency.resolution = {
         ":ajaxflow:latest.integration",
         ":jquery:latest.integration",
         ":crypto:2.0",
-        ":gdt:0.4.2") {
+        ":gdt:0.4.3") {
             export = false
         }
     }
