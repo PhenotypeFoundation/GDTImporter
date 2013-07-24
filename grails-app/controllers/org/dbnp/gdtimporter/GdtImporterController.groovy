@@ -132,11 +132,6 @@ class GdtImporterController {
                 def entityName = gdtService.decodeEntity(params.templateBasedEntity.decodeURL())
                 flow.entityToImport = gdtService.cachedEntities.find { it.entity == entityName }
 
-				// If the file already exists an "existing*" string is added, but we don't
-				// want that after a refresh of the first step in the import wizard, so remove
-				// that string
-				flash.refreshParams.importFileName = params.importFileName.replaceAll(/<pre.*?>/,'').replace('</pre>','').replace('existing*','')
-
 				success()
 			}.to "fileImportPage"
 

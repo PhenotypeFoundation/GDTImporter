@@ -19,9 +19,9 @@
   <g:elseif test="${failedFields && !showTableEditor}">
     <h1>You are seeing a preview of the data, you will not be able to in-browser edit the data</h1>
   </g:elseif>
-  <g:elseif test="${1}">
+  <g:else>
     <h1>The following data will be imported</h1>
-  </g:elseif>
+  </g:else>
 
   <g:if test="${showTableEditor == 'on'}">
   <GdtImporter:validation entityList="${importedEntitiesList}" failedFields="${failedFields}"/>
