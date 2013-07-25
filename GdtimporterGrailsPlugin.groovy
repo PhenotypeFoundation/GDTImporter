@@ -20,7 +20,7 @@
  */
 
 class GdtimporterGrailsPlugin {
-    def version         = "0.5.6.7"
+    def version         = "0.5.6.8"
     def grailsVersion   = "1.3.7 > *"
     def dependsOn       = [ajaxflow: "0.2.1 > *", gdt: "0.3.5 > *"]
     def pluginExcludes  = [
