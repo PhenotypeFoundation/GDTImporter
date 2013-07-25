@@ -224,15 +224,18 @@
 			url: "getDatamatrixAsJSON",
 			success: function(msg) {
 
+                console.log(msg);
+
 				var jsonDatamatrix = eval(msg);
 				var sheetIndex = $("#sheetIndex").val()
 
 				// Update sheet selector by first clearing it and appending the sheets user can choose from
 				$("select[name='sheetIndex']").find('option').remove().end()
 
-				for (i = 0; i < jsonDatamatrix.numberOfSheets; i++) {
-					$("select[name='sheetIndex']").append(new Option(i + 1, i));
-				}
+                for (i = 0; i < jsonDatamatrix.availableSheets.length; i++) {
+                    var sheetNumber = jsonDatamatrix.availableSheets[i];
+                    $("select[name='sheetIndex']").append(new Option(sheetNumber + 1, sheetNumber));
+                }
 
 				// Set selected sheet
 				$("#sheetIndex").val(sheetIndex).attr('selected', true);
