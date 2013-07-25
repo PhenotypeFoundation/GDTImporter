@@ -30,3 +30,16 @@
     <GdtImporter:previewImportedAndFailedEntities entityList="${importedEntitiesList}" failedFields="${failedFields}"/>
   </g:else>
 </af:page>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var previousElement = $(".navigation input[name='previous']");
+        previousElement.data('onclick', previousElement.attr('onclick'));
+        previousElement[0].onclick = function() {
+            if(!confirm('Warning: When returning to the mapping page you will lose any edits you made on this page. Are you sure you want to continue?')) {
+                return false;
+            }
+            eval($(this).data('onclick'));
+        };
+    });
+</script>
