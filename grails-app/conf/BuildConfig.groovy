@@ -29,7 +29,7 @@ grails.project.dependency.resolution = {
     }
 
     plugins {
-        build(  ":release:latest.integration",
+        build(  ":release:2.2.1",
                 ":rest-client-builder:latest.integration"
         ) {
             // plugin only plugin, should not be transitive to the application
