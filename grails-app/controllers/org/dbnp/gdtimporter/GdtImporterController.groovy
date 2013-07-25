@@ -883,16 +883,13 @@ class GdtImporterController {
     def getDatamatrixAsJSON = {
 		def workbook = null
 		def sheetIndex = 0
-		def numberOfSheets = 0
-
-		//TODO: fix annoying existing uploaded prefix issue
-		def importFileName = params.importFileName.replaceAll(/<pre.*?>/, '').replace('</pre>', '').replace('existing*', '')
+        def availableSheets = [];
 
 		// A sheet has been selected?
 		if (params.sheetIndex != "null")
 			sheetIndex = params.sheetIndex.toInteger()
 
-		def importedFile = fileService.get(importFileName)
+		def importedFile = fileService.get(params.importFileName)
 
 		def headerColumns = []
 
@@ -920,10 +917,10 @@ class GdtImporterController {
 			// Determine number of sheets actually used
 			workbook.getNumberOfSheets().times {
 				def sheet = workbook.getSheetAt(it)
-				if (sheet.getRow(sheet.getFirstRowNum()) != null) numberOfSheets++
+				if (sheet.getRow(sheet.getFirstRowNum()) != null) availableSheets.add(it)
 			}
 
-			dataTables = [numberOfSheets: numberOfSheets, iTotalRecords: datamatrix.length, iColumns: datamatrix.length, iTotalDisplayRecords: datamatrix.length, aoColumns: headerColumns, aaData: datamatrix]
+			dataTables = [availableSheets: availableSheets, iTotalRecords: datamatrix.length, iColumns: datamatrix.length, iTotalDisplayRecords: datamatrix.length, aoColumns: headerColumns, aaData: datamatrix]
 		}
 
 		render dataTables as JSON
