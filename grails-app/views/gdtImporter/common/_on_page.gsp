@@ -224,8 +224,6 @@
 			url: "getDatamatrixAsJSON",
 			success: function(msg) {
 
-                console.log(msg);
-
 				var jsonDatamatrix = eval(msg);
 				var sheetIndex = $("#sheetIndex").val()
 
