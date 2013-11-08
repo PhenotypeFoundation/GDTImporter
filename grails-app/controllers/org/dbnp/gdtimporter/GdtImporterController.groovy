@@ -38,7 +38,7 @@ class GdtImporterController {
 	 * @void
 	 */
 	def index = {
-		redirect(action: 'pages')
+		redirect(action: 'pages', params: [parentEntityId: params.id, template: params.template])
 	}
 
     /**
@@ -86,6 +86,7 @@ class GdtImporterController {
 		mainPage {
 			render(view: "/gdtImporter/index")
 			onRender {
+                session["params"] = params
 				// let the view know we're in page 1
 				flow.page = 1
 				success()
@@ -99,6 +100,11 @@ class GdtImporterController {
 			onRender {
 				log.info ".entering import wizard"
 
+                flash.refreshParams = session["params"]
+                if(flash.refreshParams.template) {
+                    flash.refreshParams.entityToImport = gdtService.cachedEntities.find
+                            { it.name.toLowerCase() == flash.refreshParams.template.toLowerCase() }
+                }
                 flow.page = 1
                 flow.useFuzzymatching= "false"
 

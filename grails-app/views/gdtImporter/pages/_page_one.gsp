@@ -71,7 +71,7 @@
 					name="templateBasedEntity"
 					id="templateBasedEntity"
 					from="${GdtService.cachedEntities}"
-					value="${entityToImport?.encoded}"
+					value="${(refreshParams?.entityToImport == null)? entityToImport?.encoded : refreshParams?.entityToImport.encoded}"
 					optionValue="${{it.name}}"
 					optionKey="${{it.encoded}}"
 					noSelection="${['null':'-Select type of data-']}"
