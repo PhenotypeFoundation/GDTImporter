@@ -104,6 +104,9 @@ class GdtImporterController {
                 if(flash.refreshParams.template) {
                     flash.refreshParams.entityToImport = gdtService.cachedEntities.find
                             { it.name.toLowerCase() == flash.refreshParams.template.toLowerCase() }
+                    flow.entityToImportTemplates = Template.findAllByEntity(
+                           gdtService.getInstanceByEntity(flash.refreshParams.entityToImport.encoded)
+                    )
                 }
                 flow.page = 1
                 flow.useFuzzymatching= "false"
