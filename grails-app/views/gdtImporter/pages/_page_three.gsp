@@ -19,9 +19,9 @@
   <g:elseif test="${failedFields && !showTableEditor}">
     <h1>You are seeing a preview of the data, you will not be able to in-browser edit the data</h1>
   </g:elseif>
-  <g:elseif test="${1}">
+  <g:else>
     <h1>The following data will be imported</h1>
-  </g:elseif>
+  </g:else>
 
   <g:if test="${showTableEditor == 'on'}">
   <GdtImporter:validation entityList="${importedEntitiesList}" failedFields="${failedFields}"/>
@@ -30,3 +30,16 @@
     <GdtImporter:previewImportedAndFailedEntities entityList="${importedEntitiesList}" failedFields="${failedFields}"/>
   </g:else>
 </af:page>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var previousElement = $(".navigation input[name='previous']");
+        previousElement.data('onclick', previousElement.attr('onclick'));
+        previousElement[0].onclick = function() {
+            if(!confirm('Warning: When returning to the mapping page you will lose any edits you made on this page. Are you sure you want to continue?')) {
+                return false;
+            }
+            eval($(this).data('onclick'));
+        };
+    });
+</script>

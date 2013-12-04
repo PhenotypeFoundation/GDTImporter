@@ -143,6 +143,7 @@ class GdtImporterService {
                     // Read the cell, even is it a blank
                     def cell = excelRow.getCell(columnIndex, Row.CREATE_NULL_AS_BLANK)
                     // Set the cell type to string, this prevents any kind of formatting
+                    def dateValue
 
                     // It is a numeric cell?
                     if (cell.cellType == Cell.CELL_TYPE_NUMERIC)
@@ -153,7 +154,13 @@ class GdtImporterService {
                     switch (cell.cellType) {
                         case Cell.CELL_TYPE_STRING:     dataMatrixRow.add( cell.stringCellValue )
                                                         break
-                        case Cell.CELL_TYPE_NUMERIC:    dataMatrixRow.add( df.formatCellValue(cell) )
+                        case Cell.CELL_TYPE_NUMERIC:    try {
+                                                            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+                                                            dateValue = sdf.format(cell.getDateCellValue());
+                                                            dataMatrixRow.add( dateValue )
+                                                        } catch (Exception e) {
+                                                            e.printStackTrace();
+                                                        }
                                                         break
                         case Cell.CELL_TYPE_FORMULA:    (cell != null) ? dataMatrixRow.add(formulaEvaluator.evaluateInCell(cell)) :
                                                             dataMatrixRow.add('')
