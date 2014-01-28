@@ -12,3 +12,5 @@ plugin.xml
 *.zip
 target-eclipse
 *.iml
+.classpath
+.project
