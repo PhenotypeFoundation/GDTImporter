@@ -94,12 +94,6 @@
 								id="attachSamples"
 								value="${false}"/>
 					Attach Samples to Existing Subjects<br/>
-
-					<div id="attachSamplesSamplingTemplateDiv">
-						Using this sampling template:<br/>
-						<g:select name="samplingEvent_template"
-								  id="samplingEvent_template_id" from=""/>
-					</div>
 				</div>
 
 				<div id="attachEventsDiv">
