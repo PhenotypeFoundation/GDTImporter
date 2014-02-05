@@ -96,12 +96,7 @@
 					Attach Samples to Existing Subjects<br/>
 				</div>
 
-				<div id="attachEventsDiv">
-					<g:checkBox name="attachEvents" id="attachEvents"
-								value="${false}"/>
-					Attach Events to Existing Subjects
-				</div>
-			</td>
+				</td>
 		</tr>
 		<tr id="parentEntityField">
 			<td>
