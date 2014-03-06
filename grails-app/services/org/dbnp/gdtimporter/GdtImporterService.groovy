@@ -495,7 +495,7 @@ class GdtImporterService {
      *  events and event groups will be added to
      * @return -
      */
-    def attachSamplesToSubjects(samples, subjectNames, timePoints, sampleTemplate, parentEntity, samplingEventTemplate) {
+    def attachSamplesToSubjects(samples, subjectNames, sampleTemplate, parentEntity) {
 
         // get a list of subject names with duplicates removed
         def uniqueSubjectNames = subjectNames.clone().unique()
@@ -507,68 +507,12 @@ class GdtImporterService {
             }
         }
 
-        def uniqueTimePoints = timePoints.clone().unique()
-
-        // generate sampling events based on the time points
-        def samplingEvents = uniqueTimePoints.collect { String timePoint ->
-
-            def startTime
-            try {
-                startTime = new RelTime(timePoint).getValue()
-            } catch (e) {
-                startTime = new RelTime('0s').getValue()
-                log.error "Invalid or no timepoint defined! : ${e}"
-            }
-
-            // make sure all existing sampling events have identifiers
-            parentEntity.samplingEvents*.identifier
-
-            // we can't do 'new SamplingEvent()' because we're inside the plugin and not GSCF ...
-            parentEntity.addToSamplingEvents(startTime: startTime, sampleTemplate: sampleTemplate, template: samplingEventTemplate)
-
-            // find the last inserted sampling event, which is the one with the highest identifier
-            parentEntity.samplingEvents.sort{it.identifier}[-1]
-
-        }
-
-        // generate event groups, one for each sampling event
-        def eventGroups = samplingEvents.collect { samplingEvent ->
-
-            def eventGroupBaseName = "Sampling_${sampleTemplate.name.split(' ')*.capitalize().join()}_${new RelTime(samplingEvent.startTime)}".toString()
-
-            def eventGroupName = generateUniqueString(eventGroupBaseName, parentEntity.eventGroups*.name)
-
-            // make sure all existing event groups have identifiers
-            parentEntity.eventGroups*.identifier
-
-            parentEntity.addToEventGroups(name: eventGroupName, samplingEvents: [samplingEvent])
-
-            // find the last inserted event group, which is the one with the highest identifier
-            parentEntity.eventGroups.sort{it.identifier}[-1]
-
-        }
-
         // add each sample to their corresponding subject
         samples.eachWithIndex { sample, idx ->
-
             def subject         = subjects.find{it.name == subjectNames[idx]}
-            def startTime
-            try {
-                startTime = new RelTime(timePoints[idx]).getValue()
-            } catch (e) {
-                startTime = new RelTime('0s').getValue()
-                log.error "Invalid or no timepoint defined! : ${e}"
-            }
-            def samplingEvent   = samplingEvents.find{it.startTime == startTime}
-            def eventGroup      = eventGroups.find{it.samplingEvents.toList()[0] == samplingEvent}
 
-            samplingEvent.addToSamples(sample)
-            if (!eventGroup.subjects.find{it.name == subject.name}) eventGroup.addToSubjects(subject)
             parentEntity.addToSamples(sample)
-
             sample.parentSubject    = subject
-            sample.parentEventGroup = eventGroup
-
         }
     }
 

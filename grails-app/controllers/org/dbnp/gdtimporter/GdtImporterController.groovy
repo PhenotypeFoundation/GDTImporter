@@ -38,7 +38,7 @@ class GdtImporterController {
 	 * @void
 	 */
 	def index = {
-		redirect(action: 'pages')
+		redirect(action: 'pages', params: [parentEntityId: params.id, template: params.template])
 	}
 
     /**
@@ -86,6 +86,7 @@ class GdtImporterController {
 		mainPage {
 			render(view: "/gdtImporter/index")
 			onRender {
+                session["params"] = params
 				// let the view know we're in page 1
 				flow.page = 1
 				success()
@@ -99,6 +100,14 @@ class GdtImporterController {
 			onRender {
 				log.info ".entering import wizard"
 
+                flash.refreshParams = session["params"]
+                if(flash.refreshParams.template) {
+                    flash.refreshParams.entityToImport = gdtService.cachedEntities.find
+                            { it.name.toLowerCase() == flash.refreshParams.template.toLowerCase() }
+                    flow.entityToImportTemplates = Template.findAllByEntity(
+                           gdtService.getInstanceByEntity(flash.refreshParams.entityToImport.encoded)
+                    )
+                }
                 flow.page = 1
                 flow.useFuzzymatching= "false"
 
@@ -155,7 +164,6 @@ class GdtImporterController {
                 // TODO: specific code, should be moved outside of the gdtImporters
                 flow.NONGENERIC_attachSamplesToSubjects    = (params.attachSamples == 'on')
                 flow.NONGENERIC_attachEventsToSubjects     = (params.attachEvents == 'on')
-                flow.NONGENERIC_samplingEventTemplate      = (Template.get(params.samplingEvent_template ?: 0))
 
                 if (!flash.refreshParams.importFileName) {
                     log.error('.gdtImporterWizard [fileImportPage] no file specified.')
@@ -347,10 +355,8 @@ class GdtImporterController {
                     gdtImporterService.attachSamplesToSubjects(
                             flow.importedEntitiesList,                  // samples
                             flow.NONGENERIC_subjectNamesToAttach,      // subject names from the sheet representing subject to attach samples to
-                            flow.NONGENERIC_timePoints,                // time points from the sheet that will be stored in sampling events
                             flow.entityToImportTemplate,                  // sample template
-                            flow.parentEntityObject,
-                            flow.NONGENERIC_samplingEventTemplate      // the sampling event template for the sampling events that will be generated
+                            flow.parentEntityObject
                     )
 
                 // TODO: specific code, should be moved outside of the gdtImporter
@@ -575,7 +581,6 @@ class GdtImporterController {
 
                 flow.NONGENERIC_extraOptions = [
                         [preferredIdentifier: false, name: 'Subject name', unit: false],
-                        [preferredIdentifier: false, name: 'Timepoint', unit: false]
                 ]
 
             // TODO: specific code, should be moved outside of the gdtImporter
@@ -755,27 +760,6 @@ class GdtImporterController {
 
         // TODO: specific code, should be moved outside of the gdtImporter
         if (flow.NONGENERIC_attachSamplesToSubjects) {
-
-            if (!flow.NONGENERIC_samplingEventTemplate) {
-                log.error 'importer wizard - no sampling event template selected'
-                appendErrorMap(['error': "When attaching samples to subjects you need to supply a sampling event template. Please add a sampling event template first."], flow.wizardErrors)
-                return false
-            }
-
-            // store timepoints in the flow
-            def timepointColumnNumber   = flow.header.findIndexOf{it.property == "Timepoint"}
-            flow.header[timepointColumnNumber].dontimport = true
-
-            flow.NONGENERIC_timePoints = flow.dataMatrix.collect{it[timepointColumnNumber]}
-            // TODO: check timepoints for valid values
-
-            // check whether user specified subject names and timepoints
-            if (!(flow.NONGENERIC_subjectNamesToAttach && flow.NONGENERIC_timePoints )) {
-                log.error ".importer wizard - could not find both subject name and timepoint selected in the header columns."
-                appendErrorMap(['error': "When attaching samples to subjects you need to select both \"Subject name\" and \"Timepoint\" in the header columns."], flow.wizardErrors)
-                return false
-            }
-
 
             // search the parent entity for samples with the same name
             def sampleNameColumnNumber  = flow.header.findIndexOf{it.property == "name"}

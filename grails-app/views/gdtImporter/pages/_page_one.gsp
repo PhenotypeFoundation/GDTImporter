@@ -71,7 +71,7 @@
 					name="templateBasedEntity"
 					id="templateBasedEntity"
 					from="${GdtService.cachedEntities}"
-					value="${entityToImport?.encoded}"
+					value="${(refreshParams?.entityToImport == null)? entityToImport?.encoded : refreshParams?.entityToImport.encoded}"
 					optionValue="${{it.name}}"
 					optionKey="${{it.encoded}}"
 					noSelection="${['null':'-Select type of data-']}"
@@ -94,20 +94,9 @@
 								id="attachSamples"
 								value="${false}"/>
 					Attach Samples to Existing Subjects<br/>
-
-					<div id="attachSamplesSamplingTemplateDiv">
-						Using this sampling template:<br/>
-						<g:select name="samplingEvent_template"
-								  id="samplingEvent_template_id" from=""/>
-					</div>
 				</div>
 
-				<div id="attachEventsDiv">
-					<g:checkBox name="attachEvents" id="attachEvents"
-								value="${false}"/>
-					Attach Events to Existing Subjects
-				</div>
-			</td>
+				</td>
 		</tr>
 		<tr id="parentEntityField">
 			<td>
