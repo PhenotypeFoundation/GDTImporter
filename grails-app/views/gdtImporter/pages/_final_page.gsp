@@ -22,7 +22,7 @@
 This concludes the importer wizard. <br />
 <g:if test="${parentEntityObject}">
     Continue to
-    <g:link class="edit linktips" title="Edit this study" controller="studyEdit" action="subjects" id="${parentEntityObject.id}">
+    <g:link class="edit linktips" title="Edit this study" controller="studyEdit" action="${entityToImport?.name}s" id="${parentEntityObject.id}">
         edit ${parentEntityObject}
     </g:link>
     or just <g:link controller="study" action="show" id="${parentEntityObject.id}">view ${parentEntityObject}</g:link><br /></g:if>
