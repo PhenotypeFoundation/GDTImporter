@@ -221,7 +221,9 @@
 //                }
 //              });
 
-		$('#attachSamplesDiv').hide();
+		<g:if test="${refreshParams?.entityToImport?.name != 'Sample'}">
+			$('#attachSamplesDiv').hide();
+		</g:if>
 		$('#attachEventsDiv').hide();
 		$('#attachSamplesSamplingTemplateDiv').hide();
 
