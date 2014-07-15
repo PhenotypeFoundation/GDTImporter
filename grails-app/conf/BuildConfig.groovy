@@ -11,6 +11,7 @@ grails.project.dependency.resolution = {
         // excludes 'ehcache'
     }
     log "warn" // log level of Ivy resolver, either 'error', 'warn', 'info', 'debug' or 'verbose'
+	legacyResolve true
     repositories {
         grailsCentral()
         grailsRepo "http://grails.org/plugins"
@@ -41,7 +42,7 @@ grails.project.dependency.resolution = {
         ":ajaxflow:latest.integration",
         ":jquery:latest.integration",
         ":crypto:2.0",
-        ":gdt:0.5.0.3"
+        ":gdt:0.5.0.4"
         ) {
             export = false
         }
