@@ -30,7 +30,7 @@ grails.project.dependency.resolution = {
 
     plugins {
         build(  ":release:2.2.1",
-                ":rest-client-builder:latest.integration"
+                ":rest-client-builder:2.0.1"
         ) {
             // plugin only plugin, should not be transitive to the application
             export = false
@@ -38,9 +38,10 @@ grails.project.dependency.resolution = {
 
         compile(
         ":ajaxflow:latest.integration",
-        ":jquery:latest.integration",
+        ":jquery:1.8.3",
         ":crypto:2.0",
-        ":gdt:0.4.2.6") {
+        ":gdt:0.4.2.8.traitfinal"
+	) {
             export = false
         }
 
